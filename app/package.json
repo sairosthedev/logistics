@@ -33,6 +33,7 @@
     "react-router-dom": "^6.0.2",
     "react-spinners": "^0.14.1",
     "react-toastify": "^10.0.5",
+    "recharts": "^2.13.3",
     "zustand": "^5.0.0"
   },
   "devDependencies": {
