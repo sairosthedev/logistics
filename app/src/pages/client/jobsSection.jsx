@@ -350,7 +350,7 @@ const JobsSection = ({setError}) => {
                                 
                                 {/* Map container taking full width */}
                                 <div className="w-full">
-                                    <div className="w-full aspect-[16/9]">
+                                    <div className="w-full aspect-[16/9] relative z-0">
                                         <MapContainer
                                             center={[-17.8203, 31.0696]}
                                             zoom={13}

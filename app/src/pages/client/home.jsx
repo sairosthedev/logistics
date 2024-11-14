@@ -198,9 +198,11 @@ function ClientHome() {
             <option value="in transit">In Transit</option>
             <option value="delivered">Delivered</option>
           </select>
+          
         </div>
+        <div><JobsSection setError={setError}/></div>
 
-        <JobsSection setError={setError}/>
+        
 
         {error && <div className="mb-4 text-red-600">{error}</div>} {/* Display error message */}
 
