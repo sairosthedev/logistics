@@ -70,7 +70,7 @@ function login() {
     return (
         <section className="min-h-screen flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImage})` }}>
             <div className="  w-fit  h-fit">
-                <div className='w-[70vh]'></div>
+            <div className='lg:w-[70vh] md:w-[50vh] w-[30vh] xl:w-[70vh] 2xl:w-[70vh]'></div>
                 <div className="bg-white p-2 rounded-xl shadow-2xl">
                     <div className="text-center">
                         <img className="w-auto h-24 mx-auto mb-1" src={mainLogo} alt="Main Logo" />
@@ -99,10 +99,10 @@ function login() {
                         </div> */}
 
                         <form onSubmit={handleSubmit}>
-                            <div className="space-y-3 p-5">
+                            <div className="space-y-3 p-5 ">
                                 <div>
-                                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
-                                    <input type="email" name="email" id="email" placeholder="you@example.com" className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required aria-label="Email Address" onChange={(e) => setEmail(e.target.value)} />
+                                    <label htmlFor="text" className="block text-sm font-medium text-gray-700">Email Address or Phone Number</label>
+                                    <input type="text" name="email" id="email" placeholder="Enter email or phone number" className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required aria-label="Email Address" onChange={(e) => setEmail(e.target.value)} />
                                 </div>
 
                                 <div>
