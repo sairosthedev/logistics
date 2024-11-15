@@ -3,13 +3,16 @@ import { Bell } from 'lucide-react';
 import axios from 'axios';
 import { BACKEND_Local } from '../../../url';
 import useAuthStore from '../../pages/auth/auth';
+import notificationSound from '../../assets/sounds/notification.mp3';
 
-export const NotificationBell = () => {
+export const NotificationBell = ({ userType }) => {
     const [notifications, setNotifications] = useState([]);
     const [showNotifications, setShowNotifications] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const notificationRef = useRef(null);
-    const { accessToken, clientID, userType } = useAuthStore();
+    const audioRef = useRef(new Audio(notificationSound));
+    const prevNotificationsRef = useRef([]);
+    const { accessToken, clientID } = useAuthStore();
 
     useEffect(() => {
         if (accessToken && clientID) {
@@ -17,7 +20,7 @@ export const NotificationBell = () => {
             const interval = setInterval(fetchNotifications, 30000);
             return () => clearInterval(interval);
         }
-    }, [accessToken, clientID]);
+    }, [accessToken, clientID, userType]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -30,10 +33,49 @@ export const NotificationBell = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    useEffect(() => {
+        const prevCount = prevNotificationsRef.current.length;
+        const currentCount = notifications.length;
+        const hasNewNotifications = currentCount > prevCount;
+        
+        if (hasNewNotifications) {
+            playNotificationSound();
+        }
+        
+        prevNotificationsRef.current = notifications;
+    }, [notifications]);
+
+    const playNotificationSound = () => {
+        try {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(error => {
+                console.log('Error playing notification sound:', error);
+            });
+        } catch (error) {
+            console.log('Error playing notification sound:', error);
+        }
+    };
+
     const fetchNotifications = async () => {
         try {
-            // Determine the endpoint based on user type
-            const endpoint = `${BACKEND_Local}/api/notifications/${userType}/${clientID}`;
+            let endpoint;
+            switch (userType) {
+                case 'app':
+                    endpoint = `${BACKEND_Local}/api/admin/notifications`;
+                    break;
+                case 'client':
+                    endpoint = `${BACKEND_Local}/api/client/notifications/${clientID}`;
+                    break;
+                case 'trucker':
+                    endpoint = `${BACKEND_Local}/api/trucker/notifications/${clientID}`;
+                    break;
+                case 'service':
+                    endpoint = `${BACKEND_Local}/api/service/notifications/${clientID}`;
+                    break;
+                default:
+                    console.error('Invalid user type');
+                    return;
+            }
             
             const response = await axios.get(endpoint, {
                 headers: { Authorization: `Bearer ${accessToken}` }
@@ -51,15 +93,12 @@ export const NotificationBell = () => {
 
     const markAsRead = async (notificationId) => {
         try {
-            await axios.put(
-                `${BACKEND_Local}/api/notifications/mark-read/${notificationId}`,
-                {},
-                {
-                    headers: { Authorization: `Bearer ${accessToken}` }
-                }
-            );
+            let endpoint = `${BACKEND_Local}/api/notifications/mark-read/${notificationId}`;
             
-            // Update local state
+            await axios.put(endpoint, {}, {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+            
             setNotifications(prevNotifications => 
                 prevNotifications.map(notif => 
                     notif._id === notificationId ? { ...notif, read: true } : notif
@@ -89,6 +128,12 @@ export const NotificationBell = () => {
                 return '🚚';
             case 'message':
                 return '✉️';
+            case 'service':
+                return '🔧';
+            case 'admin':
+                return '👨‍💼';
+            case 'system':
+                return '🔔';
             default:
                 return '🔔';
         }
