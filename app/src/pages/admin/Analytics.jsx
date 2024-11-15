@@ -22,6 +22,14 @@ const Analytics = () => {
   });
   const { darkMode } = useDarkMode();
 
+  const chartTheme = {
+    background: darkMode ? '#1F2937' : '#FFFFFF',
+    textColor: darkMode ? '#D1D5DB' : '#374151',
+    gridColor: darkMode ? '#374151' : '#E5E7EB',
+    tooltipBackground: darkMode ? '#374151' : '#FFFFFF',
+    tooltipText: darkMode ? '#F3F4F6' : '#1F2937'
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -51,12 +59,12 @@ const Analytics = () => {
   }, [accessToken]);
 
   const StatCard = ({ title, value, subValue, icon: Icon, trend }) => (
-    <div className="bg-white rounded-xl shadow-lg p-6">
+    <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6`}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-medium text-gray-600">{title}</h3>
+        <h3 className={`text-lg font-medium ${darkMode ? 'text-gray-200' : 'text-gray-600'}`}>{title}</h3>
         <Icon className="h-8 w-8 text-blue-500" />
       </div>
-      <div className="text-3xl font-bold text-gray-800 mb-2">{value}</div>
+      <div className={`text-3xl font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'} mb-2`}>{value}</div>
       <div className="flex items-center text-sm">
         {trend === 'up' ? (
           <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
@@ -81,7 +89,11 @@ const Analytics = () => {
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
-              className="border rounded-lg px-4 py-2"
+              className={`border rounded-lg px-4 py-2 ${
+                darkMode 
+                  ? 'bg-gray-700 text-gray-200 border-gray-600' 
+                  : 'bg-white border-gray-300'
+              }`}
             >
               <option value="week">This Week</option>
               <option value="month">This Month</option>
@@ -90,15 +102,31 @@ const Analytics = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div className="bg-white p-6 rounded-xl shadow-lg">
-              <h2 className="text-xl font-semibold mb-4">User Growth</h2>
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg`}>
+              <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                User Growth
+              </h2>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={data.userGrowth}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridColor} />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke={chartTheme.textColor}
+                    tick={{ fill: chartTheme.textColor }}
+                  />
+                  <YAxis 
+                    stroke={chartTheme.textColor}
+                    tick={{ fill: chartTheme.textColor }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: chartTheme.tooltipBackground,
+                      color: chartTheme.tooltipText,
+                      border: 'none',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Legend wrapperStyle={{ color: chartTheme.textColor }} />
                   <Line type="monotone" dataKey="clients" stroke="#8884d8" />
                   <Line type="monotone" dataKey="truckers" stroke="#82ca9d" />
                   <Line type="monotone" dataKey="serviceProviders" stroke="#ffc658" />
@@ -106,15 +134,31 @@ const Analytics = () => {
               </ResponsiveContainer>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-lg">
-              <h2 className="text-xl font-semibold mb-4">Revenue vs Expenses</h2>
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg`}>
+              <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                Revenue vs Expenses
+              </h2>
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={data.revenueData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridColor} />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke={chartTheme.textColor}
+                    tick={{ fill: chartTheme.textColor }}
+                  />
+                  <YAxis 
+                    stroke={chartTheme.textColor}
+                    tick={{ fill: chartTheme.textColor }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: chartTheme.tooltipBackground,
+                      color: chartTheme.tooltipText,
+                      border: 'none',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Legend wrapperStyle={{ color: chartTheme.textColor }} />
                   <Area type="monotone" dataKey="revenue" stackId="1" stroke="#8884d8" fill="#8884d8" />
                   <Area type="monotone" dataKey="expenses" stackId="1" stroke="#82ca9d" fill="#82ca9d" />
                 </AreaChart>
@@ -123,12 +167,14 @@ const Analytics = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div className="bg-white p-6 rounded-xl shadow-lg">
-              <h2 className="text-xl font-semibold mb-4">Job Distribution</h2>
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg`}>
+              <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                Job Distribution
+              </h2>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={data.jobDistribution || []} // Ensure data is an array
+                    data={data.jobDistribution || []}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -137,24 +183,56 @@ const Analytics = () => {
                     dataKey="value"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   >
-                    {(data.jobDistribution || []).map((entry, index) => ( // Ensure data is an array
+                    {(data.jobDistribution || []).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: chartTheme.tooltipBackground,
+                      color: chartTheme.tooltipText,
+                      border: 'none',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Legend 
+                    wrapperStyle={{ color: chartTheme.textColor }}
+                    formatter={(value) => <span style={{ color: chartTheme.textColor }}>{value}</span>}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-lg">
-              <h2 className="text-xl font-semibold mb-4">Top Routes</h2>
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg`}>
+              <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                Top Routes
+              </h2>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={data.topRoutes} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="name" type="category" />
-                  <Tooltip />
-                  <Legend />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridColor} />
+                  <XAxis 
+                    type="number" 
+                    stroke={chartTheme.textColor}
+                    tick={{ fill: chartTheme.textColor }}
+                  />
+                  <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    stroke={chartTheme.textColor}
+                    tick={{ fill: chartTheme.textColor }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: chartTheme.tooltipBackground,
+                      color: chartTheme.tooltipText,
+                      border: 'none',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Legend 
+                    wrapperStyle={{ color: chartTheme.textColor }}
+                    formatter={(value) => <span style={{ color: chartTheme.textColor }}>{value}</span>}
+                  />
                   <Bar dataKey="value" fill="#8884d8" />
                 </BarChart>
               </ResponsiveContainer>
@@ -162,15 +240,41 @@ const Analytics = () => {
           </div>
 
           <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg mb-8`}>
-            <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : ''}`}>Service Provider Performance</h2>
+            <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+              Service Provider Performance
+            </h2>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={data.serviceProviderPerformance}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
-                <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" />
-                <Tooltip />
-                <Legend />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridColor} />
+                <XAxis 
+                  dataKey="name" 
+                  stroke={chartTheme.textColor}
+                  tick={{ fill: chartTheme.textColor }}
+                />
+                <YAxis 
+                  yAxisId="left" 
+                  orientation="left" 
+                  stroke="#8884d8"
+                  tick={{ fill: chartTheme.textColor }}
+                />
+                <YAxis 
+                  yAxisId="right" 
+                  orientation="right" 
+                  stroke="#82ca9d"
+                  tick={{ fill: chartTheme.textColor }}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: chartTheme.tooltipBackground,
+                    color: chartTheme.tooltipText,
+                    border: 'none',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Legend 
+                  wrapperStyle={{ color: chartTheme.textColor }}
+                  formatter={(value) => <span style={{ color: chartTheme.textColor }}>{value}</span>}
+                />
                 <Bar yAxisId="left" dataKey="rating" fill="#8884d8" />
                 <Bar yAxisId="right" dataKey="jobs" fill="#82ca9d" />
               </BarChart>

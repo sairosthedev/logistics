@@ -88,7 +88,7 @@ function MyLoads() {
       <div className={`p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-lg`}>
         <div className="flex flex-col h-full">
           <div className="p-4">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            <h2 className={`text-2xl font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'} mb-4`}>
               Jobs Management
             </h2>
             <div className="flex justify-between items-center mb-4">
@@ -96,13 +96,19 @@ function MyLoads() {
                 <input
                   type="text"
                   placeholder="Search jobs..."
-                  className="pl-8 pr-4 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`pl-8 pr-4 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    darkMode 
+                      ? 'bg-gray-700 text-gray-200 border-gray-600 placeholder-gray-400' 
+                      : 'bg-white border-gray-300 placeholder-gray-500'
+                  }`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <FaSearch className={`absolute left-2 top-2.5 ${
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                } text-sm`} />
               </div>
-              <div className="text-sm text-gray-600">
+              <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                 Showing {sortedRequests.length} of {clientRequests.length} jobs
               </div>
             </div>
