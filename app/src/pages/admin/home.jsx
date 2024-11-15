@@ -30,6 +30,7 @@ import Analytics from './Analytics';
 import axios from 'axios';
 import useAuthStore from '../auth/auth';
 import { BACKEND_Local } from '../../../url.js'
+import { useDarkMode } from '../../contexts/DarkModeContext';
 
 const AdminDashboard = () => {
   const { accessToken } = useAuthStore(); // Get the accessToken from the store
@@ -66,6 +67,8 @@ const AdminDashboard = () => {
   const [visibleUsers, setVisibleUsers] = useState(5);
 
   const [selectedUserType, setSelectedUserType] = useState(null);
+
+  const { darkMode } = useDarkMode();
 
   const handleUserTypeSelect = (type) => {
     setSelectedUserType(type);
@@ -164,22 +167,22 @@ const AdminDashboard = () => {
   const StatCard = ({ title, value, subValue, icon: Icon, color, trend }) => (
     <motion.div
       whileHover={{ scale: 1.05 }}
-      className={`bg-white rounded-xl shadow-lg p-6 transition-all duration-300`}
+      className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-all duration-300`}
     >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-gray-600">{title}</h3>
-        <div className={`p-2 rounded-lg bg-${color}-100`}>
+        <h3 className={`text-sm font-medium text-gray-800 dark:text-white`}>{title}</h3>
+        <div className={`p-2 rounded-lg bg-gray-100 dark:bg-gray-700`}>
           <Icon className={`h-6 w-6 text-${color}-500`} />
         </div>
       </div>
-      <div className="text-3xl font-bold text-gray-800 mb-2">{value}</div>
+      <div className={`text-3xl font-bold text-gray-800 dark:text-white mb-2`}>{value}</div>
       <div className="flex items-center text-sm">
         {trend === 'up' ? (
           <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
         ) : (
           <TrendingDown className="w-4 h-4 text-red-500 mr-1" />
         )}
-        <span className={`font-medium ${trend === 'up' ? 'text-green-500' : 'text-red-500'}`}>
+        <span className={`font-medium text-green-500 dark:text-green-500`}>
           {subValue}
         </span>
       </div>
@@ -192,7 +195,9 @@ const AdminDashboard = () => {
       whileTap={{ scale: 0.95 }}
       onClick={() => setActiveTab(name)}
       className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 ${
-        activeTab === name ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-100'
+        activeTab === name 
+          ? 'bg-blue-500 text-white' 
+          : `bg-gray-100 dark:bg-gray-700 text-gray-600 dark:hover:bg-gray-600 hover:bg-gray-200`
       }`}
     >
       <Icon className="w-5 h-5 mr-2" />
@@ -391,43 +396,63 @@ const AdminDashboard = () => {
 
   const ServiceProviderTable = ({ users }) => {
     return (
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+      <div className={`bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden`}>
         <div className="overflow-x-auto">
           <table className="min-w-full table-fixed">
             <thead>
-              <tr className="bg-gray-50">
-                <th className="w-[16%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="w-[20%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="w-[16%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Type</th>
-                <th className="w-[16%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                <th className="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
-                <th className="w-[12%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <tr className={darkMode ? 'bg-gray-700' : 'bg-gray-50'}>
+                <th className={`w-[16%] px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
+                  Name
+                </th>
+                <th className={`w-[20%] px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
+                  Email
+                </th>
+                <th className={`w-[16%] px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
+                  Account Type
+                </th>
+                <th className={`w-[16%] px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
+                  Location
+                </th>
+                <th className={`w-[10%] px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
+                  Rating
+                </th>
+                <th className={`w-[12%] px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
+                  Status
+                </th>
+                <th className={`w-[10%] px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
+                  Actions
+                </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className={`${darkMode ? 'bg-gray-800' : 'bg-white'} divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
               {users.map((user, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap truncate">
+                <tr key={index} className={`${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}>
+                  <td className={`px-6 py-4 whitespace-nowrap truncate ${darkMode ? 'text-gray-300' : ''}`}>
                     {user.firstName} {user.lastName}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap truncate">{user.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap truncate capitalize">{user.accountType}</td>
-                  <td className="px-6 py-4 whitespace-nowrap truncate">{user.location || 'N/A'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className={`px-6 py-4 whitespace-nowrap truncate ${darkMode ? 'text-gray-300' : ''}`}>
+                    {user.email}
+                  </td>
+                  <td className={`px-6 py-4 whitespace-nowrap truncate ${darkMode ? 'text-gray-300' : ''} capitalize`}>
+                    {user.accountType}
+                  </td>
+                  <td className={`px-6 py-4 whitespace-nowrap truncate ${darkMode ? 'text-gray-300' : ''}`}>
+                    {user.location || 'N/A'}
+                  </td>
+                  <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-gray-300' : ''}`}>
                     <div className="flex items-center">
-                      <span className="text-yellow-500">★</span>
-                      <span className="ml-1">{user.rating || 'N/A'}</span>
+                      <span className={`text-yellow-500 ${darkMode ? 'text-gray-300' : ''}`}>★</span>
+                      <span className={`ml-1 ${darkMode ? 'text-gray-300' : ''}`}>{user.rating || 'N/A'}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-gray-300' : ''}`}>
                     <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                       user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
                       {user.status || 'inactive'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${darkMode ? 'text-gray-300' : ''}`}>
                     <div className="flex space-x-2">
                       <button 
                         onClick={() => handleEdit(user.id)} 
@@ -449,7 +474,7 @@ const AdminDashboard = () => {
           </table>
         </div>
         {users.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className={`text-center py-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             No users found
           </div>
         )}
@@ -459,18 +484,20 @@ const AdminDashboard = () => {
 
   return (
     <AppLayout>
-      <div className="container mx-auto px-4 py-8" ref={dashboardRef}>
+      <div className={`container mx-auto px-4 py-8 ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100'}`} ref={dashboardRef}>
         {/* Check if stats are defined before rendering */}
         {stats && (
           <>
             <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+              <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Admin Dashboard</h1>
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="Global Search..."
-                    className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white'
+                    }`}
                     value={searchTerm}
                     onChange={handleGlobalSearch}
                   />
@@ -479,7 +506,9 @@ const AdminDashboard = () => {
                 <motion.button 
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 flex items-center"
+                  className={`px-4 py-2 rounded-lg flex items-center ${
+                    darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
+                  }`}
                   onClick={handleSettingsClick}
                 >
                   <Settings className="w-5 h-5 mr-2" />
@@ -647,8 +676,8 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-lg mb-8">
-                  <h2 className="text-xl font-semibold mb-4">Activity Overview</h2>
+                <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg mb-8`}>
+                  <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : ''}`}>Activity Overview</h2>
                   <ResponsiveContainer width="100%" height={400}>
                     <BarChart data={filteredData.chartData}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -676,7 +705,9 @@ const AdminDashboard = () => {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg flex items-center"
+                    className={`px-4 py-2 rounded-lg flex items-center ${
+                      darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'
+                    }`}
                     onClick={handlePrint}
                   >
                     <Printer className="w-5 h-5 mr-2" />
