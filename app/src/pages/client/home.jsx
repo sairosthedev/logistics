@@ -8,7 +8,6 @@ import Modal from 'react-modal';
 import { Link } from 'react-router-dom';
 import JobsModal from './jobsModal';
 import JobsSection from './jobsSection.jsx';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 
 Modal.setAppElement('#root');
 
@@ -227,53 +226,17 @@ function ClientHome() {
           </select>
         </div>
 
-        <div><JobsSection 
-          setError={setError}
-          geocodeAddress={geocodeAddress}
-          setOriginCoords={setOriginCoords} 
-          setDestinationCoords={setDestinationCoords}
-          setShowMap={setShowMap}
-        /></div>
-
-        {error && <div className="mb-4 text-red-600 dark:text-red-400">{error}</div>}
-=======
-
-        {/* Map Section */}
-        {showMap && (
-          <div className="mb-6">
-            <LoadScript googleMapsApiKey="YOUR_GOOGLE_MAPS_API_KEY">
-              <GoogleMap
-                mapContainerStyle={{ width: '100%', height: '400px', marginTop: '20px' }}
-                center={originCoords || { lat: 0, lng: 0 }}
-                zoom={12}
-              >
-                {originCoords && (
-                  <Marker
-                    position={originCoords}
-                    label="P"
-                  />
-                )}
-                {destinationCoords && (
-                  <Marker
-                    position={destinationCoords}
-                    label="D"
-                  />
-                )}
-              </GoogleMap>
-            </LoadScript>
-          </div>
-        )}
-
         <div>
           <JobsSection 
-            setError={setError} 
+            setError={setError}
             geocodeAddress={geocodeAddress}
-            setOriginCoords={setOriginCoords}
+            setOriginCoords={setOriginCoords} 
             setDestinationCoords={setDestinationCoords}
             setShowMap={setShowMap}
           />
         </div>
-        {error && <div className="mb-4 text-red-600">{error}</div>}
+
+        {error && <div className="mb-4 text-red-600 dark:text-red-400">{error}</div>}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
           {filteredJobs.length > 0 ? (

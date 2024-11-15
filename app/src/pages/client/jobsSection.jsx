@@ -55,6 +55,8 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false); // New state for success modal
     const [responseMessage, setResponseMessage] = useState(''); // New state for response message
     const [comments, setComments] = useState('');
+    const [pickupSuggestions, setPickupSuggestions] = useState([]);
+    const [dropoffSuggestions, setDropoffSuggestions] = useState([]);
 
     const { accessToken, clientID } = useAuthStore(); // Get the accessToken and clientID from the store
 
@@ -302,48 +304,141 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
         }
     };
 
+    const fetchLocationSuggestions = async (searchText, type) => {
+        if (searchText.length < 3) {
+            if (type === 'pickup') {
+                setPickupSuggestions([]);
+            } else {
+                setDropoffSuggestions([]);
+            }
+            return;
+        }
+
+        try {
+            const searchQuery = `${searchText}, Harare, Zimbabwe`;
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?` +
+                `format=json&q=${encodeURIComponent(searchQuery)}` +
+                `&countrycodes=zw` +
+                `&limit=5` +
+                `&accept-language=en`
+            );
+            
+            if (!response.ok) throw new Error('Failed to fetch suggestions');
+            
+            const data = await response.json();
+            
+            const suggestions = data.map(item => ({
+                display_name: item.display_name,
+                lat: parseFloat(item.lat),
+                lon: parseFloat(item.lon)
+            }));
+
+            // Update coordinates immediately with the first result if available
+            if (suggestions.length > 0) {
+                const firstResult = suggestions[0];
+                const coords = {
+                    lat: firstResult.lat,
+                    lng: firstResult.lon
+                };
+
+                if (type === 'pickup') {
+                    setPickupCoordinates(coords);
+                    setOriginCoords(coords);
+                    setPickupSuggestions(suggestions);
+                    setDropoffSuggestions([]); // Clear other suggestions
+                } else {
+                    setDropoffCoordinates(coords);
+                    setDestinationCoords(coords);
+                    setDropoffSuggestions(suggestions);
+                    setPickupSuggestions([]); // Clear other suggestions
+                }
+                setShowMap(true);
+
+                // Calculate route if both locations are set
+                if (type === 'pickup' && dropoffCoordinates) {
+                    fetchRoute();
+                } else if (type === 'dropoff' && pickupCoordinates) {
+                    fetchRoute();
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching suggestions:', error);
+            if (type === 'pickup') {
+                setPickupSuggestions([]);
+            } else {
+                setDropoffSuggestions([]);
+            }
+        }
+    };
+
     const handleLocationInput = async (location, type) => {
         if (!location) return;
         
         try {
-            // Add ", Harare, Zimbabwe" to make the search more precise
-            const searchLocation = `${location}, Harare, Zimbabwe`;
+            // Try different search combinations
+            const searchTerms = [
+                `${location}, Harare, Zimbabwe`,  // Full address
+                `${location}, Harare`,            // Just city
+                location                          // Just the input
+            ];
+
+            let found = false;
             
-            // First try to get coordinates from OpenStreetMap's Nominatim service
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchLocation)}`
-            );
-            const data = await response.json();
+            for (const searchTerm of searchTerms) {
+                // Add a delay to avoid rate limiting
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/search?` + 
+                    `format=json&q=${encodeURIComponent(searchTerm)}` +
+                    `&countrycodes=zw` + // Limit to Zimbabwe
+                    `&viewbox=30.8,17.6,31.2,18.0` + // Approximate bounding box for Harare
+                    `&bounded=1`
+                );
+                
+                const data = await response.json();
+                
+                if (data && data.length > 0) {
+                    const coords = {
+                        lat: parseFloat(data[0].lat),
+                        lng: parseFloat(data[0].lon)
+                    };
+                    
+                    if (type === 'pickup') {
+                        setPickupCoordinates(coords);
+                        setOriginCoords(coords);
+                        setPickupLocation(location); // Keep the original input
+                    } else {
+                        setDropoffCoordinates(coords);
+                        setDestinationCoords(coords);
+                        setDropoffLocation(location); // Keep the original input
+                    }
+                    setShowMap(true);
+                    
+                    // After setting coordinates, fetch the route if both locations are set
+                    if (type === 'pickup' && dropoffCoordinates) {
+                        fetchRoute();
+                    } else if (type === 'delivery' && pickupCoordinates) {
+                        fetchRoute();
+                    }
+                    
+                    found = true;
+                    setError(null); // Clear any existing error
+                    break;
+                }
+            }
             
-            if (data && data.length > 0) {
-                const coords = {
-                    lat: parseFloat(data[0].lat),
-                    lng: parseFloat(data[0].lon)
-                };
-                
-                if (type === 'pickup') {
-                    setPickupCoordinates(coords);
-                    setOriginCoords(coords);
-                    setPickupLocation(location); // Keep the original input
-                } else {
-                    setDropoffCoordinates(coords);
-                    setDestinationCoords(coords);
-                    setDropoffLocation(location); // Keep the original input
-                }
-                setShowMap(true);
-                
-                // After setting coordinates, fetch the route if both locations are set
-                if (type === 'pickup' && dropoffCoordinates) {
-                    fetchRoute();
-                } else if (type === 'delivery' && pickupCoordinates) {
-                    fetchRoute();
-                }
-            } else {
-                setError('Location not found. Please try a different address.');
+            if (!found) {
+                setError(
+                    'Location not found. Try adding more details like street name or nearby landmark.'
+                );
             }
         } catch (error) {
             console.error('Error geocoding location:', error);
-            setError('Error finding location. Please try again.');
+            setError(
+                'Error finding location. Please check your internet connection and try again.'
+            );
         }
     };
 
@@ -514,42 +609,111 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
 
                     {/* Location Input Fields */}
                     <div className="mt-2 space-y-2">
-                      <input 
-                        type="text" 
-                        required
-                        placeholder="Pickup Location" 
-                        className="border p-2 rounded w-full text-base
-                          bg-white dark:bg-gray-700 
-                          text-gray-900 dark:text-gray-100
-                          border-gray-300 dark:border-gray-600
-                          placeholder-gray-500 dark:placeholder-gray-400"
-                        value={pickupLocation}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setPickupLocation(value);
-                          if (value.length > 3) { // Only trigger geocoding if input is longer than 3 characters
-                              handleLocationInput(value, 'pickup');
-                          }
-                        }}
-                      />
-                      <input 
-                        type="text" 
-                        required
-                        placeholder="Dropoff Location" 
-                        className="border p-2 rounded w-full text-base
-                          bg-white dark:bg-gray-700 
-                          text-gray-900 dark:text-gray-100
-                          border-gray-300 dark:border-gray-600
-                          placeholder-gray-500 dark:placeholder-gray-400"
-                        value={dropoffLocation}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setDropoffLocation(value);
-                          if (value.length > 3) { // Only trigger geocoding if input is longer than 3 characters
-                              handleLocationInput(value, 'delivery');
-                          }
-                        }}
-                      />
+                        <div className="relative">
+                            <input 
+                                type="text" 
+                                required
+                                placeholder="Pickup Location" 
+                                className="border p-2 rounded w-full text-base
+                                    bg-white dark:bg-gray-700 
+                                    text-gray-900 dark:text-gray-100
+                                    border-gray-300 dark:border-gray-600
+                                    placeholder-gray-500 dark:placeholder-gray-400"
+                                value={pickupLocation}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setPickupLocation(value);
+                                    if (value.length >= 3) {
+                                        fetchLocationSuggestions(value, 'pickup');
+                                    }
+                                }}
+                                onBlur={() => {
+                                    // Hide suggestions after a short delay
+                                    setTimeout(() => setPickupSuggestions([]), 200);
+                                }}
+                            />
+                            {pickupSuggestions.length > 0 && (
+                                <div className="absolute z-50 w-full bg-white dark:bg-gray-700 mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                    {pickupSuggestions.map((suggestion, index) => (
+                                        <div
+                                            key={index}
+                                            className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-900 dark:text-gray-100"
+                                            onClick={() => {
+                                                setPickupLocation(suggestion.display_name);
+                                                setPickupCoordinates({
+                                                    lat: suggestion.lat,
+                                                    lng: suggestion.lon
+                                                });
+                                                setOriginCoords({
+                                                    lat: suggestion.lat,
+                                                    lng: suggestion.lon
+                                                });
+                                                setPickupSuggestions([]);
+                                                setShowMap(true);
+                                                if (dropoffCoordinates) {
+                                                    fetchRoute();
+                                                }
+                                            }}
+                                        >
+                                            {suggestion.display_name}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="relative">
+                            <input 
+                                type="text" 
+                                required
+                                placeholder="Dropoff Location" 
+                                className="border p-2 rounded w-full text-base
+                                    bg-white dark:bg-gray-700 
+                                    text-gray-900 dark:text-gray-100
+                                    border-gray-300 dark:border-gray-600
+                                    placeholder-gray-500 dark:placeholder-gray-400"
+                                value={dropoffLocation}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setDropoffLocation(value);
+                                    if (value.length >= 3) {
+                                        fetchLocationSuggestions(value, 'dropoff');
+                                    }
+                                }}
+                                onBlur={() => {
+                                    // Hide suggestions after a short delay
+                                    setTimeout(() => setDropoffSuggestions([]), 200);
+                                }}
+                            />
+                            {dropoffSuggestions.length > 0 && (
+                                <div className="absolute z-50 w-full bg-white dark:bg-gray-700 mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                    {dropoffSuggestions.map((suggestion, index) => (
+                                        <div
+                                            key={index}
+                                            className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-900 dark:text-gray-100"
+                                            onClick={() => {
+                                                setDropoffLocation(suggestion.display_name);
+                                                setDropoffCoordinates({
+                                                    lat: suggestion.lat,
+                                                    lng: suggestion.lon
+                                                });
+                                                setDestinationCoords({
+                                                    lat: suggestion.lat,
+                                                    lng: suggestion.lon
+                                                });
+                                                setDropoffSuggestions([]);
+                                                setShowMap(true);
+                                                if (pickupCoordinates) {
+                                                    fetchRoute();
+                                                }
+                                            }}
+                                        >
+                                            {suggestion.display_name}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                   </div>
                 </div>
