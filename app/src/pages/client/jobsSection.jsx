@@ -54,6 +54,7 @@ const JobsSection = ({setError}) => {
     const [isSubmitting, setIsSubmitting] = useState(false); // New state for form submission
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false); // New state for success modal
     const [responseMessage, setResponseMessage] = useState(''); // New state for response message
+    const [comments, setComments] = useState('');
 
     const { accessToken, clientID } = useAuthStore(); // Get the accessToken and clientID from the store
 
@@ -178,6 +179,7 @@ const JobsSection = ({setError}) => {
         setIsCalculating(false);
         setSelectingPickup(false);
         setSelectingDropoff(false);
+        setComments('');
     };
 
     const handleSubmit = async (e) => {
@@ -210,7 +212,8 @@ const JobsSection = ({setError}) => {
             estimatedPrice,
             negotiationPrice: parseFloat(negotiationPrice),
             status: "Pending",
-            weight: parseFloat(weight)
+            weight: parseFloat(weight),
+            comments,
         };
 
         try {
@@ -545,6 +548,19 @@ const JobsSection = ({setError}) => {
                                     min="0"
                                     step="0.1"
                                     placeholder="Weight (tonnes)"
+                                />
+                            </div>
+                            {/* Add this block after the Weight Field and before Calculate Price Button */}
+                            <div className="flex flex-col sm:flex-row items-start">
+                                <div className="flex items-center mb-2 sm:mb-0">
+                                    <span className="text-2xl mr-2">💭</span>
+                                    <label className="block text-gray-700 text-base mr-2">Comments:</label>
+                                </div>
+                                <textarea 
+                                    className="border p-2 rounded flex-grow text-base min-h-[100px] resize-y"
+                                    value={comments}
+                                    onChange={(e) => setComments(e.target.value)}
+                                    placeholder="Add any additional details or special requirements..."
                                 />
                             </div>
                             {/* Calculate Price Button */}
