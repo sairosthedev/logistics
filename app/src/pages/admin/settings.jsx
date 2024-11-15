@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AppLayout from '../../components/layouts/appLayout';
 import { Bell, Moon, RefreshCw, ChevronRight } from 'lucide-react';
+import { useDarkMode } from '../../contexts/DarkModeContext'; // Import the useDarkMode hook
 
 // Custom Toggle component
 const Toggle = ({ enabled, onToggle }) => (
@@ -19,13 +20,14 @@ const Toggle = ({ enabled, onToggle }) => (
 );
 
 function Settings() {
+  const { isDarkMode, toggleDarkMode } = useDarkMode(); // Use the hook to get the dark mode state and toggle function
   const [settings, setSettings] = useState({
     notifications: {
       pushNotifications: true,
       emailNotifications: false,
     },
     appearance: {
-      darkMode: false,
+      darkMode: isDarkMode,
     },
     general: {
       autoUpdate: true,
@@ -34,18 +36,11 @@ function Settings() {
 
   // Initialize dark mode from localStorage or system preference
   useEffect(() => {
-    const isDarkMode = localStorage.getItem('darkMode') === 'true' ||
-      (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    
     setSettings(prev => ({
       ...prev,
       appearance: { ...prev.appearance, darkMode: isDarkMode }
     }));
-
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    }
-  }, []);
+  }, [isDarkMode]);
 
   const handleToggle = (category, setting) => {
     setSettings(prevSettings => {
@@ -57,15 +52,9 @@ function Settings() {
         },
       };
 
-      // Handle dark mode toggle specifically
+      // Handle dark mode toggle using context
       if (category === 'appearance' && setting === 'darkMode') {
-        const isDarkMode = newSettings.appearance.darkMode;
-        localStorage.setItem('darkMode', isDarkMode);
-        if (isDarkMode) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
+        toggleDarkMode();
       }
 
       return newSettings;
