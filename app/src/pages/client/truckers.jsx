@@ -83,7 +83,7 @@ function AvailableTrucks() {
   };
 
   const TruckerCard = ({ trucker }) => (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105">
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-3 sm:px-6 sm:py-4">
         <h3 className="text-lg sm:text-xl font-bold text-white flex items-center">
           <User className="mr-2" size={20} />
@@ -91,11 +91,11 @@ function AvailableTrucks() {
         </h3>
       </div>
       <div className="p-4 sm:p-6 space-y-4">
-        <div className="flex items-center text-gray-700">
+        <div className="flex items-center text-gray-700 dark:text-gray-300">
           <Truck className="mr-2" size={18} />
           <span className="font-semibold">{trucker.truckInfo.truckType}</span>
         </div>
-        <div className="flex items-center text-gray-700">
+        <div className="flex items-center text-gray-700 dark:text-gray-300">
           <MapPin className="mr-2" size={18} />
           <span>{trucker.truckInfo.location}</span>
         </div>
@@ -109,11 +109,11 @@ function AvailableTrucks() {
             {trucker.truckInfo.status}
           </span>
         </div>
-        <div className="flex items-center text-gray-700">
+        <div className="flex items-center text-gray-700 dark:text-gray-300">
           <Phone className="mr-2" size={18} />
           <span>{trucker.truckInfo.driverPhone}</span>
         </div>
-        <div className="flex items-center text-gray-700">
+        <div className="flex items-center text-gray-700 dark:text-gray-300">
           <Star className="mr-2" size={18} />
           <div className="flex items-center">
             {[...Array(5)].map((_, i) => (
@@ -130,11 +130,11 @@ function AvailableTrucks() {
             <span className="ml-2 text-sm font-semibold">{trucker.rating}</span>
           </div>
         </div>
-        <div className="flex items-center text-gray-700">
+        <div className="flex items-center text-gray-700 dark:text-gray-300">
           <Weight className="mr-2" size={18} />
           <span>{trucker.truckInfo.maxCarryingWeight}</span>
         </div>
-        <div className="flex items-center text-gray-700">
+        <div className="flex items-center text-gray-700 dark:text-gray-300">
           <DollarSign className="mr-2" size={18} />
           <span>{trucker.offerAmount}</span>
         </div>
@@ -174,19 +174,19 @@ function AvailableTrucks() {
     <ClientLayout>
       <div className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Available Truckers</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4 sm:mb-6">Available Truckers</h1>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <input
                 type="text"
                 placeholder="Search by name, truck, or location..."
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <select
-              className="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               value={filterAvailability}
               onChange={(e) => setFilterAvailability(e.target.value)}
             >

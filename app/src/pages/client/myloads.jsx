@@ -57,14 +57,15 @@ function MyLoads() {
     <ClientLayout>
       <div className="py-6 px-4 mx-auto max-w-7xl sm:px-6 md:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Jobs</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Jobs</h1>
         </div>
 
-        {error && <div className="mb-4 text-red-600">{error}</div>} {/* Display error message */}
+        {error && <div className="mb-4 text-red-600 dark:text-red-400">{error}</div>}
 
         <div className="mb-4">
-          <label htmlFor="filter" className="mr-2 text-sm sm:text-base">Filter by status:</label>
-          <select id="filter" value={filter} onChange={(e) => setFilter(e.target.value)} className="px-2 sm:px-4 py-1 sm:py-2 border rounded-lg">
+          <label htmlFor="filter" className="mr-2 text-sm sm:text-base text-gray-700 dark:text-gray-300">Filter by status:</label>
+          <select id="filter" value={filter} onChange={(e) => setFilter(e.target.value)} 
+            className="px-2 sm:px-4 py-1 sm:py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
             <option value="all">All</option>
             <option value="pending">Pending</option>
             <option value="inTransit">In Transit</option>
@@ -72,13 +73,13 @@ function MyLoads() {
           </select>
         </div>
 
-        <div className="bg-white shadow-md rounded-lg p-4 sm:p-6">
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-4">Jobs</h2>
+        <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Jobs</h2>
           {isLoading ? (
-            <p className="text-gray-600">Loading...</p>
+            <p className="text-gray-600 dark:text-gray-400">Loading...</p>
           ) : filteredLoads.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse border border-gray-200">
+              <table className="min-w-full border-collapse border border-gray-200 dark:border-gray-700">
                 <thead className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
                   <tr>
                     <th className="border border-gray-300 px-2 sm:px-4 py-2">Status</th>
@@ -91,26 +92,26 @@ function MyLoads() {
                     <th className="border border-gray-300 px-2 sm:px-4 py-2">Created At</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="bg-white dark:bg-gray-800">
                   {filteredLoads.map((load) => (
-                    <tr key={load._id} className="hover:bg-gray-100 transition duration-200">
-                      <td className="border border-gray-300 px-2 sm:px-4 py-2">
+                    <tr key={load._id} className="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-200">
+                      <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2">
                         <span className={`font-semibold ${statusColors[load.status]}`}>{load.status}</span>
                       </td>
-                      <td className="border border-gray-300 px-2 sm:px-4 py-2">{load.pickupLocation}</td>
-                      <td className="border border-gray-300 px-2 sm:px-4 py-2">{load.dropoffLocation}</td>
-                      <td className="border border-gray-300 px-2 sm:px-4 py-2">{load.distance} km</td>
-                      <td className="border border-gray-300 px-2 sm:px-4 py-2">{load.goodsType}</td>
-                      <td className="border border-gray-300 px-2 sm:px-4 py-2">{load.numberOfTrucks}</td>
-                      <td className="border border-gray-300 px-2 sm:px-4 py-2">{load.weight} tons</td>
-                      <td className="border border-gray-300 px-2 sm:px-4 py-2">{new Date(load.createdAt).toLocaleDateString('en-GB')}</td>
+                      <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.pickupLocation}</td>
+                      <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.dropoffLocation}</td>
+                      <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.distance} km</td>
+                      <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.goodsType}</td>
+                      <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.numberOfTrucks}</td>
+                      <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.weight} tons</td>
+                      <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{new Date(load.createdAt).toLocaleDateString('en-GB')}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           ) : (
-            <p className="text-gray-600">No job requests at the moment. Keep checking for updates!</p>
+            <p className="text-gray-600 dark:text-gray-400">No job requests at the moment. Keep checking for updates!</p>
           )}
         </div>
       </div>

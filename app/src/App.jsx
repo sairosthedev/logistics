@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import useAuthStore from './pages/auth/auth'
+import { DarkModeProvider } from './contexts/DarkModeContext';
 
 // import the pages
 // landing pages
@@ -57,58 +58,68 @@ function App() {
     return accessToken ? element : <Navigate to="/" />;
   };
 
+  const playNotification = () => {
+    if ('Notification' in window) {
+        new Notification('New Message', {
+            silent: false
+        });
+    }
+  };
+
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <div className="App">
-        <BrowserRouter>
-          <Routes>
-            {/* auth routes */}
-            <Route path="/" element={<Login />} />
+    <DarkModeProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
+          <BrowserRouter>
+            <Routes>
+              {/* auth routes */}
+              <Route path="/" element={<Login />} />
 
-            {/* auth pages */}
-            <Route path="/auth/*" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
+              {/* auth pages */}
+              <Route path="/auth/*" element={<Login />} />
+              <Route path="/signup" element={<SignUp />} />
 
-            {/* admin routes */}
-            <Route path="app" element={<PrivateRoute element={<Home />} />} />
-            <Route path="app/availabletrucks" element={<PrivateRoute element={<Availabletrucks />} />} />
-            <Route path="app/myloads" element={<PrivateRoute element={<AdminMyLoads />} />} />
-            <Route path="app/users" element={<PrivateRoute element={<UserManagement />} />} />
-            <Route path="app/analytics" element={<PrivateRoute element={<Analytics />} />} />
-            <Route path="app/services" element={<PrivateRoute element={<Services />} />} />
-            <Route path="app/settings" element={<PrivateRoute element={<Settings />} />} />
+              {/* admin routes */}
+              <Route path="app" element={<PrivateRoute element={<Home />} />} />
+              <Route path="app/availabletrucks" element={<PrivateRoute element={<Availabletrucks />} />} />
+              <Route path="app/myloads" element={<PrivateRoute element={<AdminMyLoads />} />} />
+              <Route path="app/users" element={<PrivateRoute element={<UserManagement />} />} />
+              <Route path="app/analytics" element={<PrivateRoute element={<Analytics />} />} />
+              <Route path="app/services" element={<PrivateRoute element={<Services />} />} />
+              <Route path="app/settings" element={<PrivateRoute element={<Settings />} />} />
 
-            {/* client routes */}
-            <Route path="client" element={<PrivateRoute element={<ClientHome />} />} />
-            <Route path="client/truckers" element={<PrivateRoute element={<AvailableTrucks />} />} />
-            <Route path="client/myloads" element={<PrivateRoute element={<ClientMyLoads />} />} />
-            <Route path="client/trackload" element={<PrivateRoute element={<ClientTrackLoad />} />} />
-            <Route path="client/settings" element={<PrivateRoute element={<ClientSettings />} />} />
+              {/* client routes */}
+              <Route path="client" element={<PrivateRoute element={<ClientHome />} />} />
+              <Route path="client/truckers" element={<PrivateRoute element={<AvailableTrucks />} />} />
+              <Route path="client/myloads" element={<PrivateRoute element={<ClientMyLoads />} />} />
+              <Route path="client/trackload" element={<PrivateRoute element={<ClientTrackLoad />} />} />
+              <Route path="client/settings" element={<PrivateRoute element={<ClientSettings />} />} />
 
-            {/* trucker routes */}
-            <Route path="trucker" element={<PrivateRoute element={<TruckerHome />} />} />
-            <Route path="trucker/trucks" element={<PrivateRoute element={<Trucks />} />} />
-            <Route path="trucker/myloads" element={<PrivateRoute element={<TruckerMyLoads />} />} />
-          
-            <Route path="trucker/services" element={<PrivateRoute element={<TruckersServices />} />} /> 
-            <Route path="trucker/settings" element={<PrivateRoute element={<TruckerSettings />} />} /> 
+              {/* trucker routes */}
+              <Route path="trucker" element={<PrivateRoute element={<TruckerHome />} />} />
+              <Route path="trucker/trucks" element={<PrivateRoute element={<Trucks />} />} />
+              <Route path="trucker/myloads" element={<PrivateRoute element={<TruckerMyLoads />} />} />
+            
+              <Route path="trucker/services" element={<PrivateRoute element={<TruckersServices />} />} /> 
+              <Route path="trucker/settings" element={<PrivateRoute element={<TruckerSettings />} />} /> 
 
-            {/* service provider routes */}
-            <Route path="service" element={<PrivateRoute element={<ServiceProviderHome />} />} />
-            <Route path="service/myservices" element={<PrivateRoute element={<MyServices />} />} />
-            <Route path="service/trackservice" element={<PrivateRoute element={<TrackService />} />} />
-            <Route path="service/services" element={<PrivateRoute element={<Services />} />} />
-            <Route path="service/settings" element={<PrivateRoute element={<ServiceSettings />} />} />
-            <Route path="/service-details/:id" element={<PrivateRoute element={<ServiceDetails />} />} />
-            <Route path="/client/:id" element={<PrivateRoute element={<ClientDetails />} />} />
-            <Route path="service/serviceRequests" element={<PrivateRoute element={<ServiceRequests />} />} />
-            {/* not found page */}
-            <Route path='*' element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </div>
-    </ThemeProvider>
+              {/* service provider routes */}
+              <Route path="service" element={<PrivateRoute element={<ServiceProviderHome />} />} />
+              <Route path="service/myservices" element={<PrivateRoute element={<MyServices />} />} />
+              <Route path="service/trackservice" element={<PrivateRoute element={<TrackService />} />} />
+              <Route path="service/services" element={<PrivateRoute element={<Services />} />} />
+              <Route path="service/settings" element={<PrivateRoute element={<ServiceSettings />} />} />
+              <Route path="/service-details/:id" element={<PrivateRoute element={<ServiceDetails />} />} />
+              <Route path="/client/:id" element={<PrivateRoute element={<ClientDetails />} />} />
+              <Route path="service/serviceRequests" element={<PrivateRoute element={<ServiceRequests />} />} />
+              {/* not found page */}
+              <Route path='*' element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </div>
+      </ThemeProvider>
+    </DarkModeProvider>
   );
 }
 

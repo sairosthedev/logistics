@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import ClientLayout from '../../components/layouts/clientLayout';
 import { Bell, Moon, RefreshCw, ChevronRight } from 'lucide-react';
+import { useDarkMode } from '../../contexts/DarkModeContext';
 
 // Custom Toggle component
 const Toggle = ({ enabled, onToggle }) => (
@@ -19,33 +20,19 @@ const Toggle = ({ enabled, onToggle }) => (
 );
 
 function Settings() {
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
   const [settings, setSettings] = useState({
     notifications: {
       pushNotifications: true,
       emailNotifications: false,
     },
     appearance: {
-      darkMode: false,
+      darkMode: isDarkMode,
     },
     general: {
       autoUpdate: true,
     },
   });
-
-  // Initialize dark mode from localStorage or system preference
-  useEffect(() => {
-    const isDarkMode = localStorage.getItem('darkMode') === 'true' ||
-      (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    
-    setSettings(prev => ({
-      ...prev,
-      appearance: { ...prev.appearance, darkMode: isDarkMode }
-    }));
-
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    }
-  }, []);
 
   const handleToggle = (category, setting) => {
     setSettings(prevSettings => {
@@ -57,15 +44,9 @@ function Settings() {
         },
       };
 
-      // Handle dark mode toggle specifically
+      // Handle dark mode toggle using context
       if (category === 'appearance' && setting === 'darkMode') {
-        const isDarkMode = newSettings.appearance.darkMode;
-        localStorage.setItem('darkMode', isDarkMode);
-        if (isDarkMode) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
+        toggleDarkMode();
       }
 
       return newSettings;
@@ -101,7 +82,7 @@ function Settings() {
 
   return (
     <ClientLayout>
-      <div className="max-w-4xl mx-auto px-4 py-8 transition-colors duration-200 dark:bg-gray-900">
+      <div className="max-w-4xl mx-auto px-4 py-8 transition-colors duration-200">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Settings</h1>
         </div>

@@ -22,6 +22,7 @@ function ClientHome() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState(null);
   const [isResponseModalOpen, setIsResponseModalOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     const fetchClientJobs = async () => {
@@ -104,7 +105,7 @@ function ClientHome() {
   };
 
   const JobCard = ({ job }) => (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105">
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-3 sm:px-6 sm:py-4">
         <h3 className="text-lg sm:text-xl font-bold text-white flex items-center">
           <User className="mr-2" size={20} />
@@ -112,11 +113,11 @@ function ClientHome() {
         </h3>
       </div>
       <div className="p-4 sm:p-6 space-y-4">
-        <div className="flex items-center text-gray-700">
+        <div className="flex items-center text-gray-700 dark:text-gray-300">
           <Truck className="mr-2" size={18} />
           <span className="font-semibold">{job.truckInfo.truckType}</span>
         </div>
-        <div className="flex items-center text-gray-700">
+        <div className="flex items-center text-gray-700 dark:text-gray-300">
           <MapPin className="mr-2" size={18} />
           <span>{job.pickupLocation}</span>
         </div>
@@ -124,17 +125,17 @@ function ClientHome() {
           <Calendar className="mr-2" size={18} />
           <span className={`px-2 py-1 rounded-full text-xs sm:text-sm font-semibold ${
             job.status === 'active' 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-yellow-100 text-yellow-800'
+              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
           }`}>
             {job.status}
           </span>
         </div>
-        <div className="flex items-center text-gray-700">
+        <div className="flex items-center text-gray-700 dark:text-gray-300">
           <Phone className="mr-2" size={18} />
           <span>{job.truckInfo.driverPhone}</span>
         </div>
-        <div className="flex items-center text-gray-700">
+        <div className="flex items-center text-gray-700 dark:text-gray-300">
           <Star className="mr-2" size={18} />
           <div className="flex items-center">
             {[...Array(5)].map((_, i) => (
@@ -151,17 +152,17 @@ function ClientHome() {
             <span className="ml-2 text-sm font-semibold">{job.rating}</span>
           </div>
         </div>
-        <div className="flex items-center text-gray-700">
+        <div className="flex items-center text-gray-700 dark:text-gray-300">
           <Weight className="mr-2" size={18} />
           <span>{job.truckInfo.maxCarryingWeight}</span>
         </div>
-        <div className="flex items-center text-gray-700">
+        <div className="flex items-center text-gray-700 dark:text-gray-300">
           <DollarSign className="mr-2" size={18} />
           <span>{job.offerAmount}</span>
         </div>
         {job.status === 'bid' && (
           <button 
-            className="w-full mt-4 bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition-colors duration-300"
+            className="w-full mt-4 bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition-colors duration-300 disabled:bg-green-400 disabled:cursor-not-allowed"
             onClick={() => acceptBid(job._id)}
             disabled={isLoading}
           >
@@ -175,21 +176,28 @@ function ClientHome() {
   return (
     <ClientLayout>
       <div className="py-8 px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">Client Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center">Client Dashboard</h1>
         
         <div className="mb-6 flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
           <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
             <input
               type="text"
               placeholder="Search jobs..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500 
+                bg-white dark:bg-gray-800 
+                text-gray-900 dark:text-gray-100 
+                border-gray-300 dark:border-gray-600
+                placeholder-gray-500 dark:placeholder-gray-400"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <select
-            className="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500"
+            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
+              focus:outline-none focus:border-blue-500
+              bg-white dark:bg-gray-800 
+              text-gray-900 dark:text-gray-100"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
@@ -198,13 +206,11 @@ function ClientHome() {
             <option value="in transit">In Transit</option>
             <option value="delivered">Delivered</option>
           </select>
-          
         </div>
+
         <div><JobsSection setError={setError}/></div>
 
-        
-
-        {error && <div className="mb-4 text-red-600">{error}</div>} {/* Display error message */}
+        {error && <div className="mb-4 text-red-600 dark:text-red-400">{error}</div>}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
           {filteredJobs.length > 0 ? (
@@ -213,8 +219,8 @@ function ClientHome() {
             ))
           ) : (
             <div className="text-center py-8 sm:py-10 col-span-full">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-600">No jobs found.</h2>
-              <p className="text-gray-500 mt-2">Try adjusting your search or filters</p>
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-600 dark:text-gray-400">No jobs found.</h2>
+              <p className="text-gray-500 dark:text-gray-400 mt-2">Try adjusting your search or filters</p>
             </div>
           )}
         </div>
@@ -225,12 +231,24 @@ function ClientHome() {
             onRequestClose={() => setIsResponseModalOpen(false)}
             className="modal"
             overlayClassName="modal-overlay"
+            style={{
+              content: {
+                backgroundColor: isDarkMode ? '#1F2937' : 'white',
+                color: isDarkMode ? '#F3F4F6' : '#111827',
+                border: `1px solid ${isDarkMode ? '#374151' : '#E5E7EB'}`,
+              },
+              overlay: {
+                backgroundColor: 'rgba(0, 0, 0, 0.75)',
+              },
+            }}
           >
             <div className="p-4">
-              <h2 className="text-lg font-semibold">{responseMessage.includes('successfully') ? 'Success' : 'Error'}</h2>
-              <p className="mt-2">{responseMessage}</p>
+              <h2 className="text-lg font-semibold dark:text-gray-100">
+                {responseMessage.includes('successfully') ? 'Success' : 'Error'}
+              </h2>
+              <p className="mt-2 dark:text-gray-300">{responseMessage}</p>
               <button 
-                className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+                className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
                 onClick={() => setIsResponseModalOpen(false)}
               >
                 Close
@@ -239,6 +257,7 @@ function ClientHome() {
           </Modal>
         )}
       </div>
+      
       {isModalOpen && (
         <JobsModal 
           isOpen={isModalOpen} 
