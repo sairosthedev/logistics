@@ -23,9 +23,7 @@ function ClientHome() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState(null);
   const [isResponseModalOpen, setIsResponseModalOpen] = useState(false);
-<<<<<<< Updated upstream
   const [isDarkMode, setIsDarkMode] = useState(false);
-=======
   const [showMap, setShowMap] = useState(false);
   const [originCoords, setOriginCoords] = useState(null);
   const [destinationCoords, setDestinationCoords] = useState(null);
@@ -46,7 +44,6 @@ function ClientHome() {
       return null;
     }
   };
->>>>>>> Stashed changes
 
   useEffect(() => {
     const fetchClientJobs = async () => {
@@ -229,9 +226,14 @@ function ClientHome() {
             <option value="delivered">Delivered</option>
           </select>
         </div>
-<<<<<<< Updated upstream
 
-        <div><JobsSection setError={setError}/></div>
+        <div><JobsSection 
+          setError={setError}
+          geocodeAddress={geocodeAddress}
+          setOriginCoords={setOriginCoords} 
+          setDestinationCoords={setDestinationCoords}
+          setShowMap={setShowMap}
+        /></div>
 
         {error && <div className="mb-4 text-red-600 dark:text-red-400">{error}</div>}
 =======
@@ -271,9 +273,7 @@ function ClientHome() {
             setShowMap={setShowMap}
           />
         </div>
-
         {error && <div className="mb-4 text-red-600">{error}</div>}
->>>>>>> Stashed changes
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
           {filteredJobs.length > 0 ? (
