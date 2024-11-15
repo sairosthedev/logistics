@@ -32,7 +32,7 @@ const customStyles = {
   },
 };
 
-const JobsSection = ({setError}) => {
+const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationCoords, setShowMap}) => {
 
     const [isVisible, setIsVisible] = useState(false);
     const [isCalculating, setIsCalculating] = useState(false);
@@ -302,6 +302,24 @@ const JobsSection = ({setError}) => {
         }
     };
 
+    const handleLocationInput = async (location, type) => {
+        try {
+            const coords = await geocodeAddress(location);
+            if (coords) {
+                if (type === 'pickup') {
+                    setOriginCoords(coords);
+                    setPickupCoordinates({ lat: coords.lat, lng: coords.lng });
+                } else {
+                    setDestinationCoords(coords);
+                    setDropoffCoordinates({ lat: coords.lat, lng: coords.lng });
+                }
+                setShowMap(true);
+            }
+        } catch (error) {
+            setError('Error geocoding location');
+        }
+    };
+
   return (
     <div className="w-full m-0 p-0 mb-8">
       <div className="m-0 p-0 flex justify-center">
@@ -349,6 +367,7 @@ const JobsSection = ({setError}) => {
                 </select>
               </div>
 
+<<<<<<< Updated upstream
               {/* Map Container */}
               <div className="flex flex-col">
                 <div className="flex items-center mb-2">
@@ -356,6 +375,160 @@ const JobsSection = ({setError}) => {
                   <label className="block text-gray-700 dark:text-gray-300 text-base">
                     Pickup and Dropoff Location:
                   </label>
+=======
+                                    {distance && (
+                                        <div className="text-center mt-2">
+                                            <p className="text-gray-700">
+                                                Distance: {(distance / 1000).toFixed(2)} km
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Location input fields */}
+                                    <div className="mt-2 space-y-2">
+                                        <input 
+                                            type="text" 
+                                            required
+                                            placeholder="Pickup Location" 
+                                            className="border p-2 rounded w-full text-base"
+                                            value={pickupLocation}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setPickupLocation(value); // Update the local state first
+                                                handleLocationInput(value, 'pickup'); // Then handle geocoding
+                                            }}
+                                        />
+                                        <input 
+                                            type="text" 
+                                            required
+                                            placeholder="Dropoff Location" 
+                                            className="border p-2 rounded w-full text-base"
+                                            value={dropoffLocation}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setDropoffLocation(value); // Update the local state first
+                                                handleLocationInput(value, 'delivery'); // Then handle geocoding
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            {/* Goods Type Field */}
+                            <div className="flex flex-col sm:flex-row items-center">
+                                <span className="text-2xl mr-2">🪑</span>
+                                <label className="block text-gray-700 text-base mr-2">Goods Type:</label>
+                                <select 
+                                    required
+                                    className="border p-2 rounded flex-grow text-base"
+                                    value={goodsType}
+                                    onChange={(e) => setGoodsType(e.target.value)}
+                                >
+                                    <option value="">Select Goods Type</option>
+                                    <option value="Furniture">Furniture</option>
+                                    <option value="Minerals">Minerals</option>
+                                    <option value="Electronics">Electronics</option>
+                                    <option value="Food">Food</option>
+                                    <option value="Clothing">Clothing</option>
+                                    <option value="Machinery">Machinery</option>
+                                    <option value="Chemicals">Chemicals</option>
+                                    <option value="Construction Materials">Construction Materials</option>
+                                    <option value="Livestock">Livestock</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            {/* Pay Terms Field */}
+                            <div className="flex flex-col sm:flex-row items-center">
+                                <span className="text-2xl mr-2">💰</span>
+                                <label className="block text-gray-700 text-base mr-2">Pay Terms:</label>
+                                <select 
+                                    required
+                                    className="border p-2 rounded flex-grow text-base"
+                                    value={payTerms}
+                                    onChange={(e) => setPayTerms(e.target.value)}
+                                >
+                                    <option value="">Select Pay Terms</option>
+                                    <option value="100% on Loading">100% on Loading</option>
+                                    <option value="50% on Loading, 50% on Delivery">50% on Loading, 50% on Delivery</option>
+                                    <option value="100% on Delivery">100% on Delivery</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            {/* Number of Trucks Field */}
+                            <div className="flex flex-col sm:flex-row items-center">
+                                <span className="text-2xl mr-2">🚛</span>
+                                <label className="block text-gray-700 text-base mr-2"># of Trucks:</label>
+                                <input 
+                                    type="number" 
+                                    required
+                                    className="border p-2 rounded flex-grow text-base"
+                                    value={numberOfTrucks}
+                                    onChange={(e) => setNumberOfTrucks(e.target.value)}
+                                    min="1"
+                                    placeholder="Number of Trucks"
+                                />
+                            </div>
+                            {/* Weight Field */}
+                            <div className="flex flex-col sm:flex-row items-center">
+                                <span className="text-2xl mr-2">⚖️</span>
+                                <label className="block text-gray-700 text-base mr-2">Weight (tonnes):</label>
+                                <input 
+                                    type="number" 
+                                    required
+                                    className="border p-2 rounded flex-grow text-base"
+                                    value={weight}
+                                    onChange={(e) => setWeight(e.target.value)}
+                                    min="0"
+                                    step="0.1"
+                                    placeholder="Weight (tonnes)"
+                                />
+                            </div>
+                            {/* Calculate Price Button */}
+                            <div className="flex items-center justify-center">
+                                <button 
+                                    type="button" 
+                                    onClick={calculatePrice} 
+                                    className="bg-blue-500 text-white px-4 py-2 rounded text-base"
+                                >
+                                    {isCalculating ? <ClipLoader size={20} color={"#fff"} /> : 'Calculate Price'}
+                                </button>
+                            </div>
+                            {/* Estimated Price and Negotiation Field */}
+                            {estimatedPrice && (
+                                <div className="flex flex-col sm:flex-row items-center">
+                                    <span className="text-2xl mr-2">💵</span>
+                                    <label className="block text-gray-700 text-base mr-2">Estimated Price:</label>
+                                    <span className="text-base mr-4">${estimatedPrice}</span>
+                                    <label className="block text-gray-700 text-base mr-2">Negotiation Price:</label>
+                                    <input 
+                                        type="number"
+                                        required
+                                        placeholder="Enter your price"
+                                        className="border p-2 rounded flex-grow text-base"
+                                        value={negotiationPrice}
+                                        onChange={(e) => setNegotiationPrice(e.target.value)}
+                                        min="0"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex flex-col sm:flex-row justify-between mt-4">
+                            <button 
+                                disabled={isSubmitting}
+                                type="submit" 
+                                className="bg-green-500 text-white px-4 py-2 rounded text-base disabled:bg-green-300"
+                            >
+                                {isSubmitting ? 'Submitting...' : responseMessage ? 'Submitted' : 'Submit'}
+                            </button>
+                            {/* <button 
+                                type="cancel" 
+                              
+                                className="bg-red-500 text-white px-4 py-2 rounded text-base"
+                            >
+                                Cancel
+                            </button>  */}
+                        </div>
+                    </form>
+>>>>>>> Stashed changes
                 </div>
                 
                 <div className="w-full">
