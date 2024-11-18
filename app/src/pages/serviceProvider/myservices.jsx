@@ -190,52 +190,17 @@ function MyServices() {
         return statusColors[status] || 'bg-gray-100 text-gray-800';
     };
 
-    // Common search bar styles
-    const searchBarClasses = `
-        w-full 
-        pl-10 
-        pr-4 
-        py-2 
-        border 
-        rounded-lg 
-        focus:outline-none 
-        focus:ring-2 
-        focus:ring-blue-500 
-        dark:bg-gray-800 
-        dark:border-gray-700 
-        dark:text-gray-300 
-        dark:placeholder-gray-500
-        transition-colors 
-        duration-200
-    `;
-
-    // Common select/filter styles
-    const selectClasses = `
-        border 
-        rounded-lg 
-        px-4 
-        py-2 
-        focus:outline-none 
-        focus:ring-2 
-        focus:ring-blue-500 
-        dark:bg-gray-800 
-        dark:border-gray-700 
-        dark:text-gray-300
-        transition-colors 
-        duration-200
-    `;
-
     return (
         <ServiceProviderLayout>
             <ToastContainer />
-            <div className="py-6 dark:bg-gray-900">
+            <div className="py-6">
                 <div className="px-4 mx-auto max-w-7xl sm:px-6 md:px-8">
                     {/* Header Section */}
                     <div className="flex justify-between items-center">
-                        <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">My Services</h1>
+                        <h1 className="text-3xl font-semibold text-gray-900">My Services</h1>
                         <button
                             onClick={() => setIsAddServiceModalOpen(true)}
-                            className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 transition duration-200"
+                            className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-200"
                             disabled={isLoading}
                         >
                             <Plus size={20} className="mr-2" />
@@ -247,18 +212,18 @@ function MyServices() {
                     <div className="mt-8 space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                                 <input
                                     type="text"
-                                    placeholder="Search services..."
-                                    className={searchBarClasses}
+                                    placeholder="Search requests..."
+                                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
                             </div>
                             
                             <select
-                                className={selectClasses}
+                                className="border rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
                                 value={filterBy}
                                 onChange={(e) => setFilterBy(e.target.value)}
                             >
@@ -269,7 +234,7 @@ function MyServices() {
                             </select>
 
                             <select
-                                className={selectClasses}
+                                className="border rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
                             >
@@ -282,7 +247,7 @@ function MyServices() {
                             </select>
 
                             <select
-                                className={selectClasses}
+                                className="border rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
                                 value={priorityFilter}
                                 onChange={(e) => setPriorityFilter(e.target.value)}
                             >
@@ -295,15 +260,15 @@ function MyServices() {
                     </div>
 
                     {/* Table Section */}
-                    <div className="mt-8 overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <div className="mt-8 overflow-x-auto bg-white rounded-lg shadow">
                         {isLoading ? (
                             <div className="flex justify-center items-center h-64">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
                             </div>
                         ) : (
                             <>
-                                <table className="min-w-full table-auto text-sm text-left">
-                                    <thead className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">
+                                <table className="w-full table-auto text-sm text-left">
+                                    <thead className="text-gray-700 bg-gray-50">
                                         <tr>
                                             <th className="px-6 py-3">Service Name</th>
                                             <th className="px-6 py-3">Priority</th>
@@ -311,7 +276,7 @@ function MyServices() {
                                             <th className="px-6 py-3">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                                    <tbody className="divide-y divide-gray-200">
                                         {currentItems.map((service) => (
                                             <tr key={service._id} className="hover:bg-gray-50">
                                                 <td className="px-6 py-4">{service.serviceName}</td>
@@ -385,9 +350,9 @@ function MyServices() {
             {/* Add Service Modal */}
             {isAddServiceModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                    <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800 max-w-md">
+                    <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white max-w-md">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-white">Add New Service</h3>
+                            <h3 className="text-lg font-medium text-gray-900">Add New Service</h3>
                             <button
                                 onClick={() => setIsAddServiceModalOpen(false)}
                                 className="text-gray-400 hover:text-gray-500"
