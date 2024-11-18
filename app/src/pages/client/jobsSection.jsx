@@ -77,89 +77,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
         }
     };
 
-    const calculatePrice = () => {
-        setIsCalculating(true);
-
-        // Calculate distance between pickup and dropoff coordinates
-        const distance = getPreciseDistance(
-            { latitude: pickupCoordinates.lat, longitude: pickupCoordinates.lng },
-            { latitude: dropoffCoordinates.lat, longitude: dropoffCoordinates.lng }
-        );
-
-        // Base price per kilometer
-        const basePricePerKm = 2; // Example base price per kilometer
-
-        // Calculate cost based on distance and number of trucks
-        const cost = (distance / 1000) * basePricePerKm * numberOfTrucks;
-
-        // Additional cost based on truck type, goods type, pay terms, and weight
-        let additionalCost = 0;
-
-        switch (truckType) {
-            case 'Furniture Truck':
-                additionalCost += 100;
-                break;
-            case 'Small Ton Truck':
-                additionalCost += 200;
-                break;
-            case '10 Ton Truck':
-                additionalCost += 300;
-                break;
-            case '30 Ton Truck':
-                additionalCost += 400;
-                break;
-            // Add more cases for other truck types
-            default:
-                additionalCost += 50;
-                break;
-        }
-
-        switch (goodsType) {
-            case 'Furniture':
-                additionalCost += 50;
-                break;
-            case 'Minerals':
-                additionalCost += 100;
-                break;
-            case 'Electronics':
-                additionalCost += 150;
-                break;
-            // Add more cases for other goods types
-            default:
-                additionalCost += 20;
-                break;
-        }
-
-        switch (payTerms) {
-            case '100% on Loading':
-                additionalCost += 0;
-                break;
-            case '50% on Loading, 50% on Delivery':
-                additionalCost += 50;
-                break;
-            case '100% on Delivery':
-                additionalCost += 100;
-                break;
-            // Add more cases for other pay terms
-            default:
-                additionalCost += 20;
-                break;
-        }
-
-        // Additional cost based on weight
-        const weightInTonnes = parseFloat(weight);
-        if (!isNaN(weightInTonnes)) {
-            additionalCost += weightInTonnes * 10; // Example cost per tonne
-        }
-
-        const totalCost = cost + additionalCost;
-
-        setTimeout(() => {
-            setEstimatedPrice(totalCost);
-            setIsCalculating(false);
-        }, 2000); // Simulate a delay for the loading animation
-    };
-
     const resetForm = () => {
         setPickupLocation('');
         setDropoffLocation('');
@@ -774,42 +691,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                   placeholder="Add any additional details or special requirements..."
                 />
               </div>
-
-              {/* Calculate Price Button */}
-              <div className="flex items-center justify-center">
-                <button 
-                  type="button" 
-                  onClick={calculatePrice} 
-                  className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700
-                    text-white px-4 py-2 rounded text-base disabled:bg-blue-300 dark:disabled:bg-blue-800
-                    transition-colors duration-300"
-                >
-                  {isCalculating ? <ClipLoader size={20} color={"#fff"} /> : 'Calculate Price'}
-                </button>
-              </div>
-
-              {/* Estimated Price and Negotiation Field */}
-              {estimatedPrice && (
-                <div className="flex flex-col sm:flex-row items-center">
-                  <span className="text-2xl mr-2">💵</span>
-                  <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">Estimated Price:</label>
-                  <span className="text-base mr-4">${estimatedPrice}</span>
-                  <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">Negotiation Price:</label>
-                  <input 
-                    type="number"
-                    required
-                    placeholder="Enter your price"
-                    className="border p-2 rounded flex-grow text-base
-                      bg-white dark:bg-gray-700 
-                      text-gray-900 dark:text-gray-100
-                      border-gray-300 dark:border-gray-600
-                      focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
-                    value={negotiationPrice}
-                    onChange={(e) => setNegotiationPrice(e.target.value)}
-                    min="0"
-                  />
-                </div>
-              )}
 
               {/* Submit Button */}
               <div className="flex flex-col sm:flex-row justify-between mt-4">
