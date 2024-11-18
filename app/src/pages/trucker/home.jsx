@@ -1,31 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import TruckerLayout from '../../components/layouts/truckerLayout';
 import { Link } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import axios from 'axios';
 import { BACKEND_Local } from '../../../url.js';
 import useAuthStore from '../auth/auth';
 import Modal from 'react-modal';
+import { modalStyles } from './modalStyles';
 
 Modal.setAppElement('#root');
-
-const customStyles = {
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    marginRight: '-50%',
-    transform: 'translate(-50%, -50%)',
-    width: '90%',
-    maxWidth: '600px',
-    padding: '20px',
-    borderRadius: '10px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    backgroundColor: 'var(--modal-bg)',
-    color: 'var(--text-primary)',
-  },
-};
 
 function Home() {
   const { accessToken, clientID } = useAuthStore();
@@ -418,78 +401,93 @@ function Home() {
         <Modal
           isOpen={isJobModalOpen}
           onRequestClose={closeJobModal}
-          style={customStyles}
+          style={modalStyles}
           contentLabel="Job Details"
           className="dark:bg-gray-800"
+          overlayClassName="fixed inset-0 bg-black bg-opacity-50"
         >
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 dark:text-white">{selectedLoad.clientName}</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white dark:bg-gray-800">
-              <tbody>
-                <tr>
-                  <td className="py-2 text-gray-700 dark:text-gray-300">Goods Type:</td>
-                  <td className="py-2 dark:text-white">{selectedLoad.goodsType}</td>
-                </tr>
-                <tr>
-                  <td className="py-2 text-gray-700 dark:text-gray-300">Weight:</td>
-                  <td className="py-2">{selectedLoad.weight} Tons</td>
-                </tr>
-                <tr>
-                  <td className="py-2 text-gray-700 dark:text-gray-300">Pay Terms:</td>
-                  <td className="py-2">{selectedLoad.payTerms}</td>
-                </tr>
-                <tr>
-                  <td className="py-2 text-gray-700 dark:text-gray-300">Number of Trucks:</td>
-                  <td className="py-2">{selectedLoad.numberOfTrucks}</td>
-                </tr>
-                <tr>
-                  <td className="py-2 text-gray-700 dark:text-gray-300">Pickup Location:</td>
-                  <td className="py-2">{selectedLoad.pickupLocation || 'N/A'}</td>
-                </tr>
-                <tr>
-                  <td className="py-2 text-gray-700 dark:text-gray-300">Dropoff Location:</td>
-                  <td className="py-2">{selectedLoad.dropoffLocation || 'N/A'}</td>
-                </tr>
-                <tr>
-                  <td className="py-2 text-gray-700 dark:text-gray-300">Status:</td>
-                  <td className="py-2">{selectedLoad.status}</td>
-                </tr>
-                <tr>
-                  <td className="py-2 text-gray-700 dark:text-gray-300">Estimated Price:</td>
-                  <td className="py-2">${selectedLoad.estimatedPrice}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          {selectedLoad.status === 'pending' && (
-            <form onSubmit={handleSubmit} className="mt-4">
-              <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">Counter Offer:</label>
-              <input
-                type="number"
-                value={negotiationPrice}
-                onChange={(e) => setNegotiationPrice(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                placeholder="Enter your counter offer"
-                required
-              />
-              <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">Assign Truck:</label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 dark:text-white">
-                {renderTrucks(trucks)}
+          <div className="relative">
+            <button
+              onClick={closeJobModal}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              <X size={24} />
+            </button>
+            
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 dark:text-white pr-8">
+              {selectedLoad.clientName}
+            </h2>
+            
+            <div className="overflow-y-auto max-h-[70vh]">
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white dark:bg-gray-800">
+                  <tbody>
+                    <tr>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">Goods Type:</td>
+                      <td className="py-2 dark:text-white">{selectedLoad.goodsType}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">Weight:</td>
+                      <td className="py-2">{selectedLoad.weight} Tons</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">Pay Terms:</td>
+                      <td className="py-2">{selectedLoad.payTerms}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">Number of Trucks:</td>
+                      <td className="py-2">{selectedLoad.numberOfTrucks}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">Pickup Location:</td>
+                      <td className="py-2">{selectedLoad.pickupLocation || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">Dropoff Location:</td>
+                      <td className="py-2">{selectedLoad.dropoffLocation || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">Status:</td>
+                      <td className="py-2">{selectedLoad.status}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">Estimated Price:</td>
+                      <td className="py-2">${selectedLoad.estimatedPrice}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
-              <button
-                type="submit"
-                className="mt-4 bg-green-500 text-white px-4 py-2 rounded text-base hover:bg-green-600 transition duration-200"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit Counter Offer'}
-              </button>
-              {responseMessage && (
-                <div className={`mt-4 text-${responseMessage.includes('successfully') ? 'green' : 'red'}-500`}>
-                  {responseMessage}
-                </div>
+              {selectedLoad.status === 'pending' && (
+                <form onSubmit={handleSubmit} className="mt-4">
+                  <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">Counter Offer:</label>
+                  <input
+                    type="number"
+                    value={negotiationPrice}
+                    onChange={(e) => setNegotiationPrice(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    placeholder="Enter your counter offer"
+                    required
+                  />
+                  <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">Assign Truck:</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 dark:text-white">
+                    {renderTrucks(trucks)}
+                  </div>
+                  <button
+                    type="submit"
+                    className="mt-4 bg-green-500 text-white px-4 py-2 rounded text-base hover:bg-green-600 transition duration-200"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Submit Counter Offer'}
+                  </button>
+                  {responseMessage && (
+                    <div className={`mt-4 text-${responseMessage.includes('successfully') ? 'green' : 'red'}-500`}>
+                      {responseMessage}
+                    </div>
+                  )}
+                </form>
               )}
-            </form>
-          )}
+            </div>
+          </div>
         </Modal>
       )}
     </TruckerLayout>
