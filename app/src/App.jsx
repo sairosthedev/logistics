@@ -84,7 +84,6 @@ function App() {
               {/* admin routes */}
               <Route path="app" element={<PrivateRoute element={<Home />} />} />
               <Route path="app/availabletrucks" element={<PrivateRoute element={<Availabletrucks />} />} />
-<<<<<<< Updated upstream
               <Route path="app/myloads" element={
                 <PrivateRoute element={
                   <AppLayout>
@@ -100,11 +99,6 @@ function App() {
                   </AppLayout>
                 } />
               } />
-=======
-              <Route path="app/myloads" element={<PrivateRoute element={<AdminMyLoads />} />} />
-              <Route path="app/users" element={<PrivateRoute element={<UserManagement />} />} />
-              <Route path="app/analytics" element={<PrivateRoute element={<Analytics />} />} />
->>>>>>> Stashed changes
               <Route path="app/services" element={<PrivateRoute element={<Services />} />} />
               <Route path="app/settings" element={<PrivateRoute element={<Settings />} />} />
 

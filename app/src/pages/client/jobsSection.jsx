@@ -444,7 +444,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
 
   return (
     <div className="w-full m-0 p-0 mb-8">
-<<<<<<< Updated upstream
       <div className="m-0 p-0 flex justify-center">
         <div className="w-full m-0 p-0" style={{ maxWidth: '100%' }}>
           <form className="mt-2 bg-white dark:bg-gray-800 p-6 rounded shadow-md" onSubmit={handleSubmit}>
@@ -490,360 +489,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                 </select>
               </div>
 
-=======
-<<<<<<< HEAD
-        {/* Map Container - Positioned before the form */}
-        <div className="w-full mb-4">
-            <div className="flex items-center mb-2">
-                <span className="text-2xl mr-2">📍</span>
-                <label className="block text-gray-700 text-base">Pickup and Dropoff Location:</label>
-            </div>
-            
-            <div className="w-full aspect-[16/9] relative z-0">
-                <MapContainer
-                    center={[-17.8203, 31.0696]}
-                    zoom={13}
-                    style={{ height: "100%", width: "100%" }}
-                    className="rounded-lg shadow-md"
-                >
-                    <TileLayer
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    />
-                    {pickupCoordinates && (
-                        <Marker 
-                            position={[pickupCoordinates.lat, pickupCoordinates.lng]}
-                            icon={new L.Icon({
-                                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-                                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-                                iconSize: [25, 41],
-                                iconAnchor: [12, 41],
-                                popupAnchor: [1, -34],
-                                shadowSize: [41, 41]
-                            })}
-                        >
-                            <Popup>Pickup Location</Popup>
-                        </Marker>
-                    )}
-                    {dropoffCoordinates && (
-                        <Marker 
-                            position={[dropoffCoordinates.lat, dropoffCoordinates.lng]}
-                            icon={new L.Icon({
-                                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-                                iconSize: [25, 41],
-                                iconAnchor: [12, 41],
-                                popupAnchor: [1, -34],
-                                shadowSize: [41, 41]
-                            })}
-                        >
-                            <Popup>Dropoff Location</Popup>
-                        </Marker>
-                    )}
-                    {route.length > 0 && (
-                        <Polyline 
-                            positions={route}
-                            color="blue"
-                            weight={3}
-                            opacity={0.7}
-                        />
-                    )}
-                    <MapClickHandler />
-                </MapContainer>
-            </div>
-            
-            {/* Map controls */}
-            <div className="flex justify-center gap-2 mt-2">
-                <button 
-                    type="button" 
-                    onClick={() => { 
-                        setSelectingPickup(true); 
-                        setSelectingDropoff(false); 
-                    }} 
-                    className={`px-4 py-2 rounded ${
-                        selectingPickup 
-                            ? 'bg-green-600 text-white' 
-                            : 'bg-green-500 text-white hover:bg-green-600'
-                    }`}
-                >
-                    {selectingPickup ? 'Click on map for pickup' : 'Select Pickup Location'}
-                </button>
-                <button 
-                    type="button" 
-                    onClick={() => { 
-                        setSelectingPickup(false); 
-                        setSelectingDropoff(true); 
-                    }} 
-                    className={`px-4 py-2 rounded ${
-                        selectingDropoff 
-                            ? 'bg-red-600 text-white' 
-                            : 'bg-red-500 text-white hover:bg-red-600'
-                    }`}
-                >
-                    {selectingDropoff ? 'Click on map for dropoff' : 'Select Dropoff Location'}
-                </button>
-                {pickupCoordinates && dropoffCoordinates && (
-                    <button 
-                        type="button" 
-                        onClick={fetchRoute} 
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-                        disabled={isCalculating}
-                    >
-                        {isCalculating ? (
-                            <ClipLoader size={20} color={"#ffffff"} />
-                        ) : (
-                            'Calculate Route'
-                        )}
-                    </button>
-                )}
-            </div>
-
-            {distance && (
-                <div className="text-center mt-2">
-                    <p className="text-gray-700">
-                        Distance: {(distance / 1000).toFixed(2)} km
-                    </p>
-                </div>
-            )}
-
-            {/* Location input fields */}
-            <div className="mt-2 space-y-2">
-                <input 
-                    type="text" 
-                    required
-                    placeholder="Pickup Location" 
-                    className="border p-2 rounded w-full text-base"
-                    value={pickupLocation}
-                    onChange={(e) => setPickupLocation(e.target.value)}
-                />
-                <input 
-                    type="text" 
-                    required
-                    placeholder="Dropoff Location" 
-                    className="border p-2 rounded w-full text-base"
-                    value={dropoffLocation}
-                    onChange={(e) => setDropoffLocation(e.target.value)}
-                />
-            </div>
-        </div>
-
-        {/* Form Container */}
-        <div className="m-0 p-0 flex justify-center">
-            <div className="w-full m-0 p-0" style={{ maxWidth: '100%' }}>
-                <form className="mt-2 bg-white p-6 rounded shadow-md" onSubmit={handleSubmit}>
-                    <div className="grid grid-cols-1 gap-4">
-                        <div className="flex flex-col sm:flex-row items-center">
-                            <span className="text-2xl mr-2">🚚</span>
-                            <label className="block text-gray-700 text-base mr-2">Truck Type:</label>
-                            <select 
-                                required
-                                className="border p-2 rounded flex-grow text-base"
-                                value={truckType}
-                                onChange={(e) => setTruckType(e.target.value)}
-                            >
-                                <option value="">Select Truck Type</option>
-                                <option value="Any">Any</option>
-                                <option value="Furniture Truck">Furniture Truck</option>
-                                <option value="Small Ton Truck">Small Ton Truck</option>
-                                <option value="10 Ton Truck">10 Ton Truck</option>
-                                <option value="30 Ton Truck">30 Ton Truck</option>
-                                <option value="30 Ton Flatbed">30 Ton Flatbed</option>
-                                <option value="30 Ton Link">30 Ton Link</option>
-                                <option value="34 Ton Link Flatbed">34 Ton Link Flatbed</option>
-                                <option value="34 Ton Side Tipper">34 Ton Side Tipper</option>
-                                <option value="30 Ton Howo Tipper">30 Ton Howo Tipper</option>
-                                <option value="30 Ton Tipper">30 Ton Tipper</option>
-                                <option value="Lowbed">Lowbed</option>
-                                <option value="Semi Truck">Semi Truck</option>
-                                <option value="Fuel Tanker">Fuel Tanker</option>
-                                <option value="Water Bowser">Water Bowser</option>
-                                <option value="Tautliner">Tautliner</option>
-                                <option value="Abnormal">Abnormal</option>
-                                <option value="Logging">Logging</option>
-                                <option value="Livestock">Livestock</option>
-                                <option value="Refrigerated">Refrigerated</option>
-                                <option value="Crane">Crane</option>
-                                <option value="Tow Truck">Tow Truck</option>
-                                <option value="Car Carrier">Car Carrier</option>
-                            </select>
-                        </div>
-                        {/* Goods Type Field */}
-                        <div className="flex flex-col sm:flex-row items-center">
-                            <span className="text-2xl mr-2">🪑</span>
-                            <label className="block text-gray-700 text-base mr-2">Goods Type:</label>
-                            <select 
-                                required
-                                className="border p-2 rounded flex-grow text-base"
-                                value={goodsType}
-                                onChange={(e) => setGoodsType(e.target.value)}
-                            >
-                                <option value="">Select Goods Type</option>
-                                <option value="Furniture">Furniture</option>
-                                <option value="Minerals">Minerals</option>
-                                <option value="Electronics">Electronics</option>
-                                <option value="Food">Food</option>
-                                <option value="Clothing">Clothing</option>
-                                <option value="Machinery">Machinery</option>
-                                <option value="Chemicals">Chemicals</option>
-                                <option value="Construction Materials">Construction Materials</option>
-                                <option value="Livestock">Livestock</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        {/* Pay Terms Field */}
-                        <div className="flex flex-col sm:flex-row items-center">
-                            <span className="text-2xl mr-2">💰</span>
-                            <label className="block text-gray-700 text-base mr-2">Pay Terms:</label>
-                            <select 
-                                required
-                                className="border p-2 rounded flex-grow text-base"
-                                value={payTerms}
-                                onChange={(e) => setPayTerms(e.target.value)}
-                            >
-                                <option value="">Select Pay Terms</option>
-                                <option value="100% on Loading">100% on Loading</option>
-                                <option value="50% on Loading, 50% on Delivery">50% on Loading, 50% on Delivery</option>
-                                <option value="100% on Delivery">100% on Delivery</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        {/* Number of Trucks Field */}
-                        <div className="flex flex-col sm:flex-row items-center">
-                            <span className="text-2xl mr-2">🚛</span>
-                            <label className="block text-gray-700 text-base mr-2"># of Trucks:</label>
-                            <input 
-                                type="number" 
-                                required
-                                className="border p-2 rounded flex-grow text-base"
-                                value={numberOfTrucks}
-                                onChange={(e) => setNumberOfTrucks(e.target.value)}
-                                min="1"
-                                placeholder="Number of Trucks"
-                            />
-                        </div>
-                        {/* Weight Field */}
-                        <div className="flex flex-col sm:flex-row items-center">
-                            <span className="text-2xl mr-2">⚖️</span>
-                            <label className="block text-gray-700 text-base mr-2">Weight (tonnes):</label>
-                            <input 
-                                type="number" 
-                                required
-                                className="border p-2 rounded flex-grow text-base"
-                                value={weight}
-                                onChange={(e) => setWeight(e.target.value)}
-                                min="0"
-                                step="0.1"
-                                placeholder="Weight (tonnes)"
-                            />
-                        </div>
-                        {/* Add this block after the Weight Field and before Calculate Price Button */}
-                        <div className="flex flex-col sm:flex-row items-start">
-                            <div className="flex items-center mb-2 sm:mb-0">
-                                <span className="text-2xl mr-2">💭</span>
-                                <label className="block text-gray-700 text-base mr-2">Comments:</label>
-                            </div>
-                            <textarea 
-                                className="border p-2 rounded flex-grow text-base min-h-[100px] resize-y"
-                                value={comments}
-                                onChange={(e) => setComments(e.target.value)}
-                                placeholder="Add any additional details or special requirements..."
-                            />
-                        </div>
-                        {/* Calculate Price Button */}
-                        <div className="flex items-center justify-center">
-                            <button 
-                                type="button" 
-                                onClick={calculatePrice} 
-                                className="bg-blue-500 text-white px-4 py-2 rounded text-base"
-                            >
-                                {isCalculating ? <ClipLoader size={20} color={"#fff"} /> : 'Calculate Price'}
-                            </button>
-                        </div>
-                        {/* Estimated Price and Negotiation Field */}
-                        {estimatedPrice && (
-                            <div className="flex flex-col sm:flex-row items-center">
-                                <span className="text-2xl mr-2">💵</span>
-                                <label className="block text-gray-700 text-base mr-2">Estimated Price:</label>
-                                <span className="text-base mr-4">${estimatedPrice}</span>
-                                <label className="block text-gray-700 text-base mr-2">Negotiation Price:</label>
-                                <input 
-                                    type="number"
-                                    required
-                                    placeholder="Enter your price"
-                                    className="border p-2 rounded flex-grow text-base"
-                                    value={negotiationPrice}
-                                    onChange={(e) => setNegotiationPrice(e.target.value)}
-                                    min="0"
-                                />
-                            </div>
-                        )}
-                    </div>
-                    <div className="flex flex-col sm:flex-row justify-between mt-4">
-                        <button 
-                            disabled={isSubmitting}
-                            type="submit" 
-                            className="bg-green-500 text-white px-4 py-2 rounded text-base disabled:bg-green-300"
-                        >
-                            {isSubmitting ? 'Submitting...' : responseMessage ? 'Submitted' : 'Submit'}
-                        </button>
-                        {/* <button 
-                            type="cancel" 
-                          
-                            className="bg-red-500 text-white px-4 py-2 rounded text-base"
-                        >
-                            Cancel
-                        </button>  */}
-                    </div>
-                </form>
-            </div>
-        </div>
-=======
-      <div className="m-0 p-0 flex justify-center">
-        <div className="w-full m-0 p-0" style={{ maxWidth: '100%' }}>
-          <form className="mt-2 bg-white dark:bg-gray-800 p-6 rounded shadow-md" onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 gap-4">
-              {/* Truck Type Field */}
-              <div className="flex flex-col sm:flex-row items-center">
-                <span className="text-2xl mr-2">🚚</span>
-                <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">Truck Type:</label>
-                <select 
-                  required
-                  className="border p-2 rounded flex-grow text-base
-                    bg-white dark:bg-gray-700 
-                    text-gray-900 dark:text-gray-100
-                    border-gray-300 dark:border-gray-600
-                    focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
-                  value={truckType}
-                  onChange={(e) => setTruckType(e.target.value)}
-                >
-                  <option value="">Select Truck Type</option>
-                  <option value="Any">Any</option>
-                  <option value="Furniture Truck">Furniture Truck</option>
-                  <option value="Small Ton Truck">Small Ton Truck</option>
-                  <option value="10 Ton Truck">10 Ton Truck</option>
-                  <option value="30 Ton Truck">30 Ton Truck</option>
-                  <option value="30 Ton Flatbed">30 Ton Flatbed</option>
-                  <option value="30 Ton Link">30 Ton Link</option>
-                  <option value="34 Ton Link Flatbed">34 Ton Link Flatbed</option>
-                  <option value="34 Ton Side Tipper">34 Ton Side Tipper</option>
-                  <option value="30 Ton Howo Tipper">30 Ton Howo Tipper</option>
-                  <option value="30 Ton Tipper">30 Ton Tipper</option>
-                  <option value="Lowbed">Lowbed</option>
-                  <option value="Semi Truck">Semi Truck</option>
-                  <option value="Fuel Tanker">Fuel Tanker</option>
-                  <option value="Water Bowser">Water Bowser</option>
-                  <option value="Tautliner">Tautliner</option>
-                  <option value="Abnormal">Abnormal</option>
-                  <option value="Logging">Logging</option>
-                  <option value="Livestock">Livestock</option>
-                  <option value="Refrigerated">Refrigerated</option>
-                  <option value="Crane">Crane</option>
-                  <option value="Tow Truck">Tow Truck</option>
-                  <option value="Car Carrier">Car Carrier</option>
-                </select>
-              </div>
-
->>>>>>> Stashed changes
               {/* Map Container */}
               <div className="flex flex-col">
                 <div className="flex items-center mb-2">
@@ -962,18 +607,12 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                       </div>
                     )}
 
-<<<<<<< Updated upstream
                     {/* Location input fields with suggestions */}
                     <div className="mt-4 space-y-3 relative">
-=======
-                    {/* Location Input Fields */}
-                    <div className="mt-2 space-y-2">
->>>>>>> Stashed changes
                         <div className="relative">
                             <input 
                                 type="text" 
                                 required
-<<<<<<< Updated upstream
                                 placeholder="🏁 Enter Pickup Location" 
                                 className="border-2 p-3 rounded-lg w-full text-base focus:ring-2 
                                     focus:ring-blue-500 focus:border-transparent transition-all duration-300"
@@ -993,45 +632,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                                                 setPickupLocation(suggestion.display_name);
                                                 setPickupCoordinates({ lat: suggestion.lat, lng: suggestion.lon });
                                                 setPickupSuggestions([]);
-=======
-                                placeholder="Pickup Location" 
-                                className="border p-2 rounded w-full text-base
-                                    bg-white dark:bg-gray-700 
-                                    text-gray-900 dark:text-gray-100
-                                    border-gray-300 dark:border-gray-600
-                                    placeholder-gray-500 dark:placeholder-gray-400"
-                                value={pickupLocation}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setPickupLocation(value);
-                                    if (value.length >= 3) {
-                                        fetchLocationSuggestions(value, 'pickup');
-                                    }
-                                }}
-                                onBlur={() => {
-                                    // Hide suggestions after a short delay
-                                    setTimeout(() => setPickupSuggestions([]), 200);
-                                }}
-                            />
-                            {pickupSuggestions.length > 0 && (
-                                <div className="absolute z-50 w-full bg-white dark:bg-gray-700 mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                    {pickupSuggestions.map((suggestion, index) => (
-                                        <div
-                                            key={index}
-                                            className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-900 dark:text-gray-100"
-                                            onClick={() => {
-                                                setPickupLocation(suggestion.display_name);
-                                                setPickupCoordinates({
-                                                    lat: suggestion.lat,
-                                                    lng: suggestion.lon
-                                                });
-                                                setOriginCoords({
-                                                    lat: suggestion.lat,
-                                                    lng: suggestion.lon
-                                                });
-                                                setPickupSuggestions([]);
-                                                setShowMap(true);
->>>>>>> Stashed changes
                                                 if (dropoffCoordinates) {
                                                     fetchRoute();
                                                 }
@@ -1048,7 +648,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                             <input 
                                 type="text" 
                                 required
-<<<<<<< Updated upstream
                                 placeholder="🏁 Enter Dropoff Location" 
                                 className="border-2 p-3 rounded-lg w-full text-base focus:ring-2 
                                     focus:ring-blue-500 focus:border-transparent transition-all duration-300"
@@ -1068,45 +667,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                                                 setDropoffLocation(suggestion.display_name);
                                                 setDropoffCoordinates({ lat: suggestion.lat, lng: suggestion.lon });
                                                 setDropoffSuggestions([]);
-=======
-                                placeholder="Dropoff Location" 
-                                className="border p-2 rounded w-full text-base
-                                    bg-white dark:bg-gray-700 
-                                    text-gray-900 dark:text-gray-100
-                                    border-gray-300 dark:border-gray-600
-                                    placeholder-gray-500 dark:placeholder-gray-400"
-                                value={dropoffLocation}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setDropoffLocation(value);
-                                    if (value.length >= 3) {
-                                        fetchLocationSuggestions(value, 'dropoff');
-                                    }
-                                }}
-                                onBlur={() => {
-                                    // Hide suggestions after a short delay
-                                    setTimeout(() => setDropoffSuggestions([]), 200);
-                                }}
-                            />
-                            {dropoffSuggestions.length > 0 && (
-                                <div className="absolute z-50 w-full bg-white dark:bg-gray-700 mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                    {dropoffSuggestions.map((suggestion, index) => (
-                                        <div
-                                            key={index}
-                                            className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-900 dark:text-gray-100"
-                                            onClick={() => {
-                                                setDropoffLocation(suggestion.display_name);
-                                                setDropoffCoordinates({
-                                                    lat: suggestion.lat,
-                                                    lng: suggestion.lon
-                                                });
-                                                setDestinationCoords({
-                                                    lat: suggestion.lat,
-                                                    lng: suggestion.lon
-                                                });
-                                                setDropoffSuggestions([]);
-                                                setShowMap(true);
->>>>>>> Stashed changes
                                                 if (pickupCoordinates) {
                                                     fetchRoute();
                                                 }
@@ -1282,10 +842,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
           </form>
         </div>
       </div>
-<<<<<<< Updated upstream
-=======
->>>>>>> 3b47e7407e2f8c37874ea7a3db0e4bd1f3ddfd36
->>>>>>> Stashed changes
     </div>
   );
 };
