@@ -130,8 +130,7 @@ function Home() {
         truckOwnerPhone: selectedTruckDetails.truckOwnerPhone,
         truckOwnerWhatsapp: selectedTruckDetails.truckOwnerWhatsapp,
         status: selectedTruckDetails.status
-      },
-      offerAmount: parseFloat(negotiationPrice)
+      }
     };
 
     console.log('Payload:', payload);
@@ -454,12 +453,16 @@ function Home() {
                       <td className="py-2 text-gray-700 dark:text-gray-300">Estimated Price:</td>
                       <td className="py-2">${selectedLoad.estimatedPrice}</td>
                     </tr>
+                    <tr>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">Comments:</td>
+                      <td className="py-2">{selectedLoad.comments}</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
               {selectedLoad.status === 'pending' && (
                 <form onSubmit={handleSubmit} className="mt-4">
-                  <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">Counter Offer:</label>
+                  {/* <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">Counter Offer:</label>
                   <input
                     type="number"
                     value={negotiationPrice}
@@ -467,7 +470,7 @@ function Home() {
                     className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     placeholder="Enter your counter offer"
                     required
-                  />
+                  /> */}
                   <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">Assign Truck:</label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 dark:text-white">
                     {renderTrucks(trucks)}
@@ -477,7 +480,7 @@ function Home() {
                     className="mt-4 bg-green-500 text-white px-4 py-2 rounded text-base hover:bg-green-600 transition duration-200"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? 'Submitting...' : 'Submit Counter Offer'}
+                    {isSubmitting ? 'Submitting...' : 'Assign Truck'}
                   </button>
                   {responseMessage && (
                     <div className={`mt-4 text-${responseMessage.includes('successfully') ? 'green' : 'red'}-500`}>
