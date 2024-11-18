@@ -10,6 +10,7 @@ import { X } from 'lucide-react';
 Modal.setAppElement('#root');
 
 function MyLoads() {
+  // State management for loads, trucks and UI elements
   const [selectedLoad, setSelectedLoad] = useState(null);
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
   const [negotiationPrice, setNegotiationPrice] = useState('');
@@ -23,6 +24,7 @@ function MyLoads() {
   const [responseMessage, setResponseMessage] = useState('');
 
   useEffect(() => {
+    // Fetch loads and trucks data when component mounts
     const fetchLoads = async () => {
       try {
         const response = await axios.get(`${BACKEND_Local}/api/trucker/truck-requests`, {
@@ -59,6 +61,7 @@ function MyLoads() {
     console.log('Trucks State:', trucks);
   }, [trucks]);
 
+  // Modal control functions
   const openJobModal = (load) => {
     setSelectedLoad(load);
     setIsJobModalOpen(true);
@@ -70,6 +73,7 @@ function MyLoads() {
     setResponseMessage('');
   };
 
+  // Handle truck assignment submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -83,8 +87,8 @@ function MyLoads() {
     const payload = {
       requestID: selectedLoad._id,
       clientID: selectedLoad.clientID,
-      numberOfTrucks: selectedLoad.numberOfTrucks, // Ensure this is set correctly
-      truckerID: clientID, // Ensure this is set correctly
+      numberOfTrucks: selectedLoad.numberOfTrucks,
+      truckerID: clientID,
       pickupLocation: selectedLoad.pickupLocation,
       dropoffLocation: selectedLoad.dropoffLocation,
       pickupCoordinates: {
@@ -99,7 +103,6 @@ function MyLoads() {
       route: selectedLoad.route,
       goodsType: selectedLoad.goodsType,
       payTerms: selectedLoad.payTerms,
-      estimatedPrice: selectedLoad.estimatedPrice,
       negotiationPrice: parseFloat(negotiationPrice),
       weight: selectedLoad.weight,
       truckID: selectedTruckDetails._id,
@@ -135,7 +138,7 @@ function MyLoads() {
     } catch (error) {
       console.error('Error submitting negotiation:', error);
       if (error.response) {
-        console.error('Error details:', error.response.data); // Log error details if available
+        console.error('Error details:', error.response.data);
       }
       setResponseMessage('Failed to assign truck. Please try again.');
     } finally {
@@ -304,42 +307,22 @@ function MyLoads() {
                       <td className="py-2 text-gray-700 dark:text-gray-300">Status:</td>
                       <td className="py-2">{selectedLoad.status}</td>
                     </tr>
-                    <tr>
-                      <td className="py-2 text-gray-700 dark:text-gray-300">Estimated Price:</td>
-                      <td className="py-2">${selectedLoad.estimatedPrice}</td>
-                    </tr>
                   </tbody>
                 </table>
 
-                {filter === 'pending' && (
+                {selectedLoad.status === 'pending' && (
                   <form onSubmit={handleSubmit} className="mt-4">
-                    <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">
-                      Counter Offer:
-                    </label>
-                    <input
-                      type="number"
-                      value={negotiationPrice}
-                      onChange={(e) => setNegotiationPrice(e.target.value)}
-                      className="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
-                      placeholder="Enter your counter offer"
-                      required
-                    />
-                    
-                    <label className="block text-gray-700 dark:text-gray-300 text-base mb-2 mt-4">
-                      Assign Truck:
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 dark:text-gray-200">
+                    <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">Assign Truck:</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 dark:text-white">
                       {renderTrucks(trucks)}
                     </div>
-                    
                     <button
                       type="submit"
-                      className="mt-4 bg-green-500 text-white px-4 py-2 rounded text-base hover:bg-green-600 transition duration-200 w-full"
+                      className="mt-4 bg-green-500 text-white px-4 py-2 rounded text-base hover:bg-green-600 transition duration-200"
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? 'Submitting...' : 'Submit Counter Offer'}
+                      {isSubmitting ? 'Submitting...' : 'Assign Truck'}
                     </button>
-                    
                     {responseMessage && (
                       <div className={`mt-4 text-${responseMessage.includes('successfully') ? 'green' : 'red'}-500`}>
                         {responseMessage}
