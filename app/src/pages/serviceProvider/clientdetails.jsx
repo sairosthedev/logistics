@@ -65,9 +65,9 @@ function ClientDetails() {
     return (
       <ServiceProviderLayout>
         <div className="max-w-4xl mx-auto mt-10">
-          <Link to="/service" className="text-blue-500 hover:underline mb-4 inline-block">&larr; Back to Dashboard</Link>
-          <h1 className="text-3xl font-bold mb-6">Client Not Found</h1>
-          <p className="text-gray-500">The client with ID {id} does not exist.</p>
+          <Link to="/service" className="text-blue-500 hover:underline mb-4 inline-block dark:text-blue-400">&larr; Back to Dashboard</Link>
+          <h1 className="text-3xl font-bold mb-6 dark:text-white">Client Not Found</h1>
+          <p className="text-gray-500 dark:text-gray-400">The client with ID {id} does not exist.</p>
         </div>
       </ServiceProviderLayout>
     );
@@ -76,45 +76,47 @@ function ClientDetails() {
   return (
     <ServiceProviderLayout>
       <div className="max-w-4xl mx-auto mt-10">
-        <Link to="/service" className="text-blue-500 hover:underline mb-4 inline-block">&larr; Back to Dashboard</Link>
-        <h1 className="text-3xl font-bold mb-6">Client Details</h1>
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+        <Link to="/service" className="text-blue-500 hover:underline mb-4 inline-block dark:text-blue-400">&larr; Back to Dashboard</Link>
+        <h1 className="text-3xl font-bold mb-6 dark:text-white">Client Details</h1>
+        <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
           <div className="px-4 py-5 sm:px-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
+            <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
               {clientData.name}
             </h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+            <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
               Personal details and service history.
             </p>
           </div>
-          <div className="border-t border-gray-200">
+          <div className="border-t border-gray-200 dark:border-gray-700">
             <dl>
-              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">Email address</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{clientData.email}</dd>
+              <div className="bg-gray-50 dark:bg-gray-900 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Email address</dt>
+                <dd className="mt-1 text-sm text-gray-900 dark:text-gray-300 sm:mt-0 sm:col-span-2">{clientData.email}</dd>
               </div>
-              <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">Phone number</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{clientData.phone}</dd>
+              <div className="bg-white dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Phone number</dt>
+                <dd className="mt-1 text-sm text-gray-900 dark:text-gray-300 sm:mt-0 sm:col-span-2">{clientData.phone}</dd>
               </div>
-              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">Address</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{clientData.address}</dd>
+              <div className="bg-gray-50 dark:bg-gray-900 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Address</dt>
+                <dd className="mt-1 text-sm text-gray-900 dark:text-gray-300 sm:mt-0 sm:col-span-2">{clientData.address}</dd>
               </div>
-              <div className="bg-white px-4 py-5 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500 mb-2">Service History</dt>
-                <dd className="mt-1 text-sm text-gray-900">
-                  <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
+              <div className="bg-white dark:bg-gray-800 px-4 py-5 sm:px-6">
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Service History</dt>
+                <dd className="mt-1 text-sm text-gray-900 dark:text-gray-300">
+                  <ul className="border border-gray-200 dark:border-gray-700 rounded-md divide-y divide-gray-200 dark:divide-gray-700">
                     {clientData.serviceHistory.map((service, index) => (
                       <li key={index} className="pl-3 pr-4 py-3 flex items-center justify-between text-sm">
                         <div className="w-0 flex-1 flex items-center">
-                          <span className="ml-2 flex-1 w-0 truncate">
+                          <span className="ml-2 flex-1 w-0 truncate dark:text-gray-300">
                             {service.date} - {service.service}
                           </span>
                         </div>
                         <div className="ml-4 flex-shrink-0">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            service.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                            service.status === 'Completed' 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
+                              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
                           }`}>
                             {service.status}
                           </span>
