@@ -3,9 +3,9 @@ import { MapContainer, TileLayer, Marker, useMapEvents, Polyline, Popup } from '
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { getPreciseDistance, getPathLength } from 'geolib';
-import { ClipLoader } from 'react-spinners'; // Import a loading spinner
-import { BACKEND_Local } from '../../../url.js'; // Import the backend URL
-import useAuthStore from '../auth/auth'; // Import the auth store
+import { ClipLoader } from 'react-spinners';
+import { BACKEND_Local } from '../../../url.js';
+import useAuthStore from '../auth/auth';
 
 // Fix for default marker icon issue in Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -35,6 +35,7 @@ const customStyles = {
 const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationCoords, setShowMap}) => {
 
     const [isVisible, setIsVisible] = useState(false);
+    const [isCalculating, setIsCalculating] = useState(false);
     const [estimatedPrice, setEstimatedPrice] = useState(null);
     const [negotiationPrice, setNegotiationPrice] = useState('');
     const [pickupLocation, setPickupLocation] = useState('');
@@ -49,21 +50,20 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
     const [truckType, setTruckType] = useState('');
     const [goodsType, setGoodsType] = useState('');
     const [payTerms, setPayTerms] = useState('');
-    const [weight, setWeight] = useState(''); // New state for weight
-    const [isSubmitting, setIsSubmitting] = useState(false); // New state for form submission
-    const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false); // New state for success modal
-    const [responseMessage, setResponseMessage] = useState(''); // New state for response message
+    const [weight, setWeight] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+    const [responseMessage, setResponseMessage] = useState('');
     const [comments, setComments] = useState('');
     const [pickupSuggestions, setPickupSuggestions] = useState([]);
     const [dropoffSuggestions, setDropoffSuggestions] = useState([]);
 
-    const { accessToken, clientID } = useAuthStore(); // Get the accessToken and clientID from the store
+    const { accessToken, clientID } = useAuthStore();
 
     const toggleFormVisibility = () => {
         setIsVisible(!isVisible);
     };
 
-    // Function to get address from coordinates using reverse geocoding
     const getAddressFromCoordinates = async (coordinates) => {
         try {
             const response = await fetch(
@@ -77,8 +77,90 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
         }
     };
 
+    const calculatePrice = () => {
+        setIsCalculating(true);
+
+        // Calculate distance between pickup and dropoff coordinates
+        const distance = getPreciseDistance(
+            { latitude: pickupCoordinates.lat, longitude: pickupCoordinates.lng },
+            { latitude: dropoffCoordinates.lat, longitude: dropoffCoordinates.lng }
+        );
+
+        // Base price per kilometer
+        const basePricePerKm = 2; // Example base price per kilometer
+
+        // Calculate cost based on distance and number of trucks
+        const cost = (distance / 1000) * basePricePerKm * numberOfTrucks;
+
+        // Additional cost based on truck type, goods type, pay terms, and weight
+        let additionalCost = 0;
+
+        switch (truckType) {
+            case 'Furniture Truck':
+                additionalCost += 100;
+                break;
+            case 'Small Ton Truck':
+                additionalCost += 200;
+                break;
+            case '10 Ton Truck':
+                additionalCost += 300;
+                break;
+            case '30 Ton Truck':
+                additionalCost += 400;
+                break;
+            // Add more cases for other truck types
+            default:
+                additionalCost += 50;
+                break;
+        }
+
+        switch (goodsType) {
+            case 'Furniture':
+                additionalCost += 50;
+                break;
+            case 'Minerals':
+                additionalCost += 100;
+                break;
+            case 'Electronics':
+                additionalCost += 150;
+                break;
+            // Add more cases for other goods types
+            default:
+                additionalCost += 20;
+                break;
+        }
+
+        switch (payTerms) {
+            case '100% on Loading':
+                additionalCost += 0;
+                break;
+            case '50% on Loading, 50% on Delivery':
+                additionalCost += 50;
+                break;
+            case '100% on Delivery':
+                additionalCost += 100;
+                break;
+            // Add more cases for other pay terms
+            default:
+                additionalCost += 20;
+                break;
+        }
+
+        // Additional cost based on weight
+        const weightInTonnes = parseFloat(weight);
+        if (!isNaN(weightInTonnes)) {
+            additionalCost += weightInTonnes * 10; // Example cost per tonne
+        }
+
+        const totalCost = cost + additionalCost;
+
+        setTimeout(() => {
+            setEstimatedPrice(totalCost);
+            setIsCalculating(false);
+        }, 2000); // Simulate a delay for the loading animation
+    };
+
     const resetForm = () => {
-        // Reset all form fields to their initial values
         setPickupLocation('');
         setDropoffLocation('');
         setPickupCoordinates({ lat: -17.8203, lng: 31.0696 });
@@ -94,6 +176,7 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
         setNegotiationPrice('');
         setResponseMessage('');
         setError(null);
+        setIsCalculating(false);
         setSelectingPickup(false);
         setSelectingDropoff(false);
         setComments('');
@@ -121,8 +204,8 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                 latitude: dropoffCoordinates.lat,
                 longitude: dropoffCoordinates.lng
             },
-            distance: distance / 1000, // Convert distance to kilometers
-            route: "I-55 N", // Example route
+            distance: distance / 1000,
+            route: "I-55 N",
             goodsType,
             payTerms,
             numberOfTrucks,
@@ -150,10 +233,8 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                 setIsSuccessModalOpen(true);
                 setIsVisible(false);
                 
-                // First show "Submitted" message
                 setTimeout(() => {
                     setIsSuccessModalOpen(false);
-                    // Then reset the form
                     resetForm();
                 }, 4000);
                 
@@ -169,11 +250,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
         } finally {
             setIsSubmitting(false);
         }
-    };
-
-    const handleCancel = () => {
-        setIsVisible(false); // Close request modal
-        onRequestClose(); // Call the onRequestClose prop to handle any additional cleanup
     };
 
     const MapClickHandler = () => {
@@ -199,13 +275,13 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
     };
 
     const fetchRoute = async () => {
+        setIsCalculating(true); // Start loading animation
         try {
             const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${pickupCoordinates.lng},${pickupCoordinates.lat};${dropoffCoordinates.lng},${dropoffCoordinates.lat}?overview=full&geometries=geojson`);
             const data = await response.json();
             if (data.routes && data.routes.length > 0) {
                 const coordinates = data.routes[0].geometry.coordinates.map(coord => ({ lat: coord[1], lng: coord[0] }));
                 setRoute(coordinates);
-                // Calculate the distance of the route using the fetched coordinates
                 const routeDistance = getPathLength(coordinates);
                 setDistance(routeDistance);
             } else {
@@ -213,6 +289,8 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
             }
         } catch (error) {
             console.error('Error fetching route:', error);
+        } finally {
+            setIsCalculating(false); // End loading animation
         }
     };
 
@@ -246,7 +324,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                 lon: parseFloat(item.lon)
             }));
 
-            // Update coordinates immediately with the first result if available
             if (suggestions.length > 0) {
                 const firstResult = suggestions[0];
                 const coords = {
@@ -258,16 +335,15 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                     setPickupCoordinates(coords);
                     setOriginCoords(coords);
                     setPickupSuggestions(suggestions);
-                    setDropoffSuggestions([]); // Clear other suggestions
+                    setDropoffSuggestions([]);
                 } else {
                     setDropoffCoordinates(coords);
                     setDestinationCoords(coords);
                     setDropoffSuggestions(suggestions);
-                    setPickupSuggestions([]); // Clear other suggestions
+                    setPickupSuggestions([]);
                 }
                 setShowMap(true);
 
-                // Calculate route if both locations are set
                 if (type === 'pickup' && dropoffCoordinates) {
                     fetchRoute();
                 } else if (type === 'dropoff' && pickupCoordinates) {
@@ -288,24 +364,22 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
         if (!location) return;
         
         try {
-            // Try different search combinations
             const searchTerms = [
-                `${location}, Harare, Zimbabwe`,  // Full address
-                `${location}, Harare`,            // Just city
-                location                          // Just the input
+                `${location}, Harare, Zimbabwe`,
+                `${location}, Harare`,
+                location
             ];
 
             let found = false;
             
             for (const searchTerm of searchTerms) {
-                // Add a delay to avoid rate limiting
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 
                 const response = await fetch(
                     `https://nominatim.openstreetmap.org/search?` + 
                     `format=json&q=${encodeURIComponent(searchTerm)}` +
-                    `&countrycodes=zw` + // Limit to Zimbabwe
-                    `&viewbox=30.8,17.6,31.2,18.0` + // Approximate bounding box for Harare
+                    `&countrycodes=zw` +
+                    `&viewbox=30.8,17.6,31.2,18.0` +
                     `&bounded=1`
                 );
                 
@@ -320,15 +394,14 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                     if (type === 'pickup') {
                         setPickupCoordinates(coords);
                         setOriginCoords(coords);
-                        setPickupLocation(location); // Keep the original input
+                        setPickupLocation(location);
                     } else {
                         setDropoffCoordinates(coords);
                         setDestinationCoords(coords);
-                        setDropoffLocation(location); // Keep the original input
+                        setDropoffLocation(location);
                     }
                     setShowMap(true);
                     
-                    // After setting coordinates, fetch the route if both locations are set
                     if (type === 'pickup' && dropoffCoordinates) {
                         fetchRoute();
                     } else if (type === 'delivery' && pickupCoordinates) {
@@ -336,7 +409,7 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                     }
                     
                     found = true;
-                    setError(null); // Clear any existing error
+                    setError(null);
                     break;
                 }
             }
@@ -356,7 +429,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
 
   return (
     <div className="w-full m-0 p-0 mb-8">
-<<<<<<< Updated upstream
       <div className="m-0 p-0 flex justify-center">
         <div className="w-full m-0 p-0" style={{ maxWidth: '100%' }}>
           <form className="mt-2 bg-white dark:bg-gray-800 p-6 rounded shadow-md" onSubmit={handleSubmit}>
@@ -402,360 +474,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                 </select>
               </div>
 
-=======
-<<<<<<< HEAD
-        {/* Map Container - Positioned before the form */}
-        <div className="w-full mb-4">
-            <div className="flex items-center mb-2">
-                <span className="text-2xl mr-2">📍</span>
-                <label className="block text-gray-700 text-base">Pickup and Dropoff Location:</label>
-            </div>
-            
-            <div className="w-full aspect-[16/9] relative z-0">
-                <MapContainer
-                    center={[-17.8203, 31.0696]}
-                    zoom={13}
-                    style={{ height: "100%", width: "100%" }}
-                    className="rounded-lg shadow-md"
-                >
-                    <TileLayer
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    />
-                    {pickupCoordinates && (
-                        <Marker 
-                            position={[pickupCoordinates.lat, pickupCoordinates.lng]}
-                            icon={new L.Icon({
-                                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-                                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-                                iconSize: [25, 41],
-                                iconAnchor: [12, 41],
-                                popupAnchor: [1, -34],
-                                shadowSize: [41, 41]
-                            })}
-                        >
-                            <Popup>Pickup Location</Popup>
-                        </Marker>
-                    )}
-                    {dropoffCoordinates && (
-                        <Marker 
-                            position={[dropoffCoordinates.lat, dropoffCoordinates.lng]}
-                            icon={new L.Icon({
-                                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-                                iconSize: [25, 41],
-                                iconAnchor: [12, 41],
-                                popupAnchor: [1, -34],
-                                shadowSize: [41, 41]
-                            })}
-                        >
-                            <Popup>Dropoff Location</Popup>
-                        </Marker>
-                    )}
-                    {route.length > 0 && (
-                        <Polyline 
-                            positions={route}
-                            color="blue"
-                            weight={3}
-                            opacity={0.7}
-                        />
-                    )}
-                    <MapClickHandler />
-                </MapContainer>
-            </div>
-            
-            {/* Map controls */}
-            <div className="flex justify-center gap-2 mt-2">
-                <button 
-                    type="button" 
-                    onClick={() => { 
-                        setSelectingPickup(true); 
-                        setSelectingDropoff(false); 
-                    }} 
-                    className={`px-4 py-2 rounded ${
-                        selectingPickup 
-                            ? 'bg-green-600 text-white' 
-                            : 'bg-green-500 text-white hover:bg-green-600'
-                    }`}
-                >
-                    {selectingPickup ? 'Click on map for pickup' : 'Select Pickup Location'}
-                </button>
-                <button 
-                    type="button" 
-                    onClick={() => { 
-                        setSelectingPickup(false); 
-                        setSelectingDropoff(true); 
-                    }} 
-                    className={`px-4 py-2 rounded ${
-                        selectingDropoff 
-                            ? 'bg-red-600 text-white' 
-                            : 'bg-red-500 text-white hover:bg-red-600'
-                    }`}
-                >
-                    {selectingDropoff ? 'Click on map for dropoff' : 'Select Dropoff Location'}
-                </button>
-                {pickupCoordinates && dropoffCoordinates && (
-                    <button 
-                        type="button" 
-                        onClick={fetchRoute} 
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-                        disabled={isCalculating}
-                    >
-                        {isCalculating ? (
-                            <ClipLoader size={20} color={"#ffffff"} />
-                        ) : (
-                            'Calculate Route'
-                        )}
-                    </button>
-                )}
-            </div>
-
-            {distance && (
-                <div className="text-center mt-2">
-                    <p className="text-gray-700">
-                        Distance: {(distance / 1000).toFixed(2)} km
-                    </p>
-                </div>
-            )}
-
-            {/* Location input fields */}
-            <div className="mt-2 space-y-2">
-                <input 
-                    type="text" 
-                    required
-                    placeholder="Pickup Location" 
-                    className="border p-2 rounded w-full text-base"
-                    value={pickupLocation}
-                    onChange={(e) => setPickupLocation(e.target.value)}
-                />
-                <input 
-                    type="text" 
-                    required
-                    placeholder="Dropoff Location" 
-                    className="border p-2 rounded w-full text-base"
-                    value={dropoffLocation}
-                    onChange={(e) => setDropoffLocation(e.target.value)}
-                />
-            </div>
-        </div>
-
-        {/* Form Container */}
-        <div className="m-0 p-0 flex justify-center">
-            <div className="w-full m-0 p-0" style={{ maxWidth: '100%' }}>
-                <form className="mt-2 bg-white p-6 rounded shadow-md" onSubmit={handleSubmit}>
-                    <div className="grid grid-cols-1 gap-4">
-                        <div className="flex flex-col sm:flex-row items-center">
-                            <span className="text-2xl mr-2">🚚</span>
-                            <label className="block text-gray-700 text-base mr-2">Truck Type:</label>
-                            <select 
-                                required
-                                className="border p-2 rounded flex-grow text-base"
-                                value={truckType}
-                                onChange={(e) => setTruckType(e.target.value)}
-                            >
-                                <option value="">Select Truck Type</option>
-                                <option value="Any">Any</option>
-                                <option value="Furniture Truck">Furniture Truck</option>
-                                <option value="Small Ton Truck">Small Ton Truck</option>
-                                <option value="10 Ton Truck">10 Ton Truck</option>
-                                <option value="30 Ton Truck">30 Ton Truck</option>
-                                <option value="30 Ton Flatbed">30 Ton Flatbed</option>
-                                <option value="30 Ton Link">30 Ton Link</option>
-                                <option value="34 Ton Link Flatbed">34 Ton Link Flatbed</option>
-                                <option value="34 Ton Side Tipper">34 Ton Side Tipper</option>
-                                <option value="30 Ton Howo Tipper">30 Ton Howo Tipper</option>
-                                <option value="30 Ton Tipper">30 Ton Tipper</option>
-                                <option value="Lowbed">Lowbed</option>
-                                <option value="Semi Truck">Semi Truck</option>
-                                <option value="Fuel Tanker">Fuel Tanker</option>
-                                <option value="Water Bowser">Water Bowser</option>
-                                <option value="Tautliner">Tautliner</option>
-                                <option value="Abnormal">Abnormal</option>
-                                <option value="Logging">Logging</option>
-                                <option value="Livestock">Livestock</option>
-                                <option value="Refrigerated">Refrigerated</option>
-                                <option value="Crane">Crane</option>
-                                <option value="Tow Truck">Tow Truck</option>
-                                <option value="Car Carrier">Car Carrier</option>
-                            </select>
-                        </div>
-                        {/* Goods Type Field */}
-                        <div className="flex flex-col sm:flex-row items-center">
-                            <span className="text-2xl mr-2">🪑</span>
-                            <label className="block text-gray-700 text-base mr-2">Goods Type:</label>
-                            <select 
-                                required
-                                className="border p-2 rounded flex-grow text-base"
-                                value={goodsType}
-                                onChange={(e) => setGoodsType(e.target.value)}
-                            >
-                                <option value="">Select Goods Type</option>
-                                <option value="Furniture">Furniture</option>
-                                <option value="Minerals">Minerals</option>
-                                <option value="Electronics">Electronics</option>
-                                <option value="Food">Food</option>
-                                <option value="Clothing">Clothing</option>
-                                <option value="Machinery">Machinery</option>
-                                <option value="Chemicals">Chemicals</option>
-                                <option value="Construction Materials">Construction Materials</option>
-                                <option value="Livestock">Livestock</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        {/* Pay Terms Field */}
-                        <div className="flex flex-col sm:flex-row items-center">
-                            <span className="text-2xl mr-2">💰</span>
-                            <label className="block text-gray-700 text-base mr-2">Pay Terms:</label>
-                            <select 
-                                required
-                                className="border p-2 rounded flex-grow text-base"
-                                value={payTerms}
-                                onChange={(e) => setPayTerms(e.target.value)}
-                            >
-                                <option value="">Select Pay Terms</option>
-                                <option value="100% on Loading">100% on Loading</option>
-                                <option value="50% on Loading, 50% on Delivery">50% on Loading, 50% on Delivery</option>
-                                <option value="100% on Delivery">100% on Delivery</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        {/* Number of Trucks Field */}
-                        <div className="flex flex-col sm:flex-row items-center">
-                            <span className="text-2xl mr-2">🚛</span>
-                            <label className="block text-gray-700 text-base mr-2"># of Trucks:</label>
-                            <input 
-                                type="number" 
-                                required
-                                className="border p-2 rounded flex-grow text-base"
-                                value={numberOfTrucks}
-                                onChange={(e) => setNumberOfTrucks(e.target.value)}
-                                min="1"
-                                placeholder="Number of Trucks"
-                            />
-                        </div>
-                        {/* Weight Field */}
-                        <div className="flex flex-col sm:flex-row items-center">
-                            <span className="text-2xl mr-2">⚖️</span>
-                            <label className="block text-gray-700 text-base mr-2">Weight (tonnes):</label>
-                            <input 
-                                type="number" 
-                                required
-                                className="border p-2 rounded flex-grow text-base"
-                                value={weight}
-                                onChange={(e) => setWeight(e.target.value)}
-                                min="0"
-                                step="0.1"
-                                placeholder="Weight (tonnes)"
-                            />
-                        </div>
-                        {/* Add this block after the Weight Field and before Calculate Price Button */}
-                        <div className="flex flex-col sm:flex-row items-start">
-                            <div className="flex items-center mb-2 sm:mb-0">
-                                <span className="text-2xl mr-2">💭</span>
-                                <label className="block text-gray-700 text-base mr-2">Comments:</label>
-                            </div>
-                            <textarea 
-                                className="border p-2 rounded flex-grow text-base min-h-[100px] resize-y"
-                                value={comments}
-                                onChange={(e) => setComments(e.target.value)}
-                                placeholder="Add any additional details or special requirements..."
-                            />
-                        </div>
-                        {/* Calculate Price Button */}
-                        <div className="flex items-center justify-center">
-                            <button 
-                                type="button" 
-                                onClick={calculatePrice} 
-                                className="bg-blue-500 text-white px-4 py-2 rounded text-base"
-                            >
-                                {isCalculating ? <ClipLoader size={20} color={"#fff"} /> : 'Calculate Price'}
-                            </button>
-                        </div>
-                        {/* Estimated Price and Negotiation Field */}
-                        {estimatedPrice && (
-                            <div className="flex flex-col sm:flex-row items-center">
-                                <span className="text-2xl mr-2">💵</span>
-                                <label className="block text-gray-700 text-base mr-2">Estimated Price:</label>
-                                <span className="text-base mr-4">${estimatedPrice}</span>
-                                <label className="block text-gray-700 text-base mr-2">Negotiation Price:</label>
-                                <input 
-                                    type="number"
-                                    required
-                                    placeholder="Enter your price"
-                                    className="border p-2 rounded flex-grow text-base"
-                                    value={negotiationPrice}
-                                    onChange={(e) => setNegotiationPrice(e.target.value)}
-                                    min="0"
-                                />
-                            </div>
-                        )}
-                    </div>
-                    <div className="flex flex-col sm:flex-row justify-between mt-4">
-                        <button 
-                            disabled={isSubmitting}
-                            type="submit" 
-                            className="bg-green-500 text-white px-4 py-2 rounded text-base disabled:bg-green-300"
-                        >
-                            {isSubmitting ? 'Submitting...' : responseMessage ? 'Submitted' : 'Submit'}
-                        </button>
-                        {/* <button 
-                            type="cancel" 
-                          
-                            className="bg-red-500 text-white px-4 py-2 rounded text-base"
-                        >
-                            Cancel
-                        </button>  */}
-                    </div>
-                </form>
-            </div>
-        </div>
-=======
-      <div className="m-0 p-0 flex justify-center">
-        <div className="w-full m-0 p-0" style={{ maxWidth: '100%' }}>
-          <form className="mt-2 bg-white dark:bg-gray-800 p-6 rounded shadow-md" onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 gap-4">
-              {/* Truck Type Field */}
-              <div className="flex flex-col sm:flex-row items-center">
-                <span className="text-2xl mr-2">🚚</span>
-                <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">Truck Type:</label>
-                <select 
-                  required
-                  className="border p-2 rounded flex-grow text-base
-                    bg-white dark:bg-gray-700 
-                    text-gray-900 dark:text-gray-100
-                    border-gray-300 dark:border-gray-600
-                    focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
-                  value={truckType}
-                  onChange={(e) => setTruckType(e.target.value)}
-                >
-                  <option value="">Select Truck Type</option>
-                  <option value="Any">Any</option>
-                  <option value="Furniture Truck">Furniture Truck</option>
-                  <option value="Small Ton Truck">Small Ton Truck</option>
-                  <option value="10 Ton Truck">10 Ton Truck</option>
-                  <option value="30 Ton Truck">30 Ton Truck</option>
-                  <option value="30 Ton Flatbed">30 Ton Flatbed</option>
-                  <option value="30 Ton Link">30 Ton Link</option>
-                  <option value="34 Ton Link Flatbed">34 Ton Link Flatbed</option>
-                  <option value="34 Ton Side Tipper">34 Ton Side Tipper</option>
-                  <option value="30 Ton Howo Tipper">30 Ton Howo Tipper</option>
-                  <option value="30 Ton Tipper">30 Ton Tipper</option>
-                  <option value="Lowbed">Lowbed</option>
-                  <option value="Semi Truck">Semi Truck</option>
-                  <option value="Fuel Tanker">Fuel Tanker</option>
-                  <option value="Water Bowser">Water Bowser</option>
-                  <option value="Tautliner">Tautliner</option>
-                  <option value="Abnormal">Abnormal</option>
-                  <option value="Logging">Logging</option>
-                  <option value="Livestock">Livestock</option>
-                  <option value="Refrigerated">Refrigerated</option>
-                  <option value="Crane">Crane</option>
-                  <option value="Tow Truck">Tow Truck</option>
-                  <option value="Car Carrier">Car Carrier</option>
-                </select>
-              </div>
-
->>>>>>> Stashed changes
               {/* Map Container */}
               <div className="flex flex-col">
                 <div className="flex items-center mb-2">
@@ -855,8 +573,13 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                           onClick={fetchRoute} 
                           className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 
                             text-white px-4 py-2 rounded transition-colors"
+                          disabled={isCalculating}
                         >
-                          Calculate Route
+                          {isCalculating ? (
+                            <ClipLoader size={20} color={"#ffffff"} />
+                          ) : (
+                            'Calculate Route'
+                          )}
                         </button>
                       )}
                     </div>
@@ -869,18 +592,12 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                       </div>
                     )}
 
-<<<<<<< Updated upstream
                     {/* Location input fields with suggestions */}
                     <div className="mt-4 space-y-3 relative">
-=======
-                    {/* Location Input Fields */}
-                    <div className="mt-2 space-y-2">
->>>>>>> Stashed changes
                         <div className="relative">
                             <input 
                                 type="text" 
                                 required
-<<<<<<< Updated upstream
                                 placeholder="🏁 Enter Pickup Location" 
                                 className="border-2 p-3 rounded-lg w-full text-base focus:ring-2 
                                     focus:ring-blue-500 focus:border-transparent transition-all duration-300"
@@ -900,45 +617,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                                                 setPickupLocation(suggestion.display_name);
                                                 setPickupCoordinates({ lat: suggestion.lat, lng: suggestion.lon });
                                                 setPickupSuggestions([]);
-=======
-                                placeholder="Pickup Location" 
-                                className="border p-2 rounded w-full text-base
-                                    bg-white dark:bg-gray-700 
-                                    text-gray-900 dark:text-gray-100
-                                    border-gray-300 dark:border-gray-600
-                                    placeholder-gray-500 dark:placeholder-gray-400"
-                                value={pickupLocation}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setPickupLocation(value);
-                                    if (value.length >= 3) {
-                                        fetchLocationSuggestions(value, 'pickup');
-                                    }
-                                }}
-                                onBlur={() => {
-                                    // Hide suggestions after a short delay
-                                    setTimeout(() => setPickupSuggestions([]), 200);
-                                }}
-                            />
-                            {pickupSuggestions.length > 0 && (
-                                <div className="absolute z-50 w-full bg-white dark:bg-gray-700 mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                    {pickupSuggestions.map((suggestion, index) => (
-                                        <div
-                                            key={index}
-                                            className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-900 dark:text-gray-100"
-                                            onClick={() => {
-                                                setPickupLocation(suggestion.display_name);
-                                                setPickupCoordinates({
-                                                    lat: suggestion.lat,
-                                                    lng: suggestion.lon
-                                                });
-                                                setOriginCoords({
-                                                    lat: suggestion.lat,
-                                                    lng: suggestion.lon
-                                                });
-                                                setPickupSuggestions([]);
-                                                setShowMap(true);
->>>>>>> Stashed changes
                                                 if (dropoffCoordinates) {
                                                     fetchRoute();
                                                 }
@@ -955,7 +633,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                             <input 
                                 type="text" 
                                 required
-<<<<<<< Updated upstream
                                 placeholder="🏁 Enter Dropoff Location" 
                                 className="border-2 p-3 rounded-lg w-full text-base focus:ring-2 
                                     focus:ring-blue-500 focus:border-transparent transition-all duration-300"
@@ -975,45 +652,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                                                 setDropoffLocation(suggestion.display_name);
                                                 setDropoffCoordinates({ lat: suggestion.lat, lng: suggestion.lon });
                                                 setDropoffSuggestions([]);
-=======
-                                placeholder="Dropoff Location" 
-                                className="border p-2 rounded w-full text-base
-                                    bg-white dark:bg-gray-700 
-                                    text-gray-900 dark:text-gray-100
-                                    border-gray-300 dark:border-gray-600
-                                    placeholder-gray-500 dark:placeholder-gray-400"
-                                value={dropoffLocation}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setDropoffLocation(value);
-                                    if (value.length >= 3) {
-                                        fetchLocationSuggestions(value, 'dropoff');
-                                    }
-                                }}
-                                onBlur={() => {
-                                    // Hide suggestions after a short delay
-                                    setTimeout(() => setDropoffSuggestions([]), 200);
-                                }}
-                            />
-                            {dropoffSuggestions.length > 0 && (
-                                <div className="absolute z-50 w-full bg-white dark:bg-gray-700 mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                    {dropoffSuggestions.map((suggestion, index) => (
-                                        <div
-                                            key={index}
-                                            className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-900 dark:text-gray-100"
-                                            onClick={() => {
-                                                setDropoffLocation(suggestion.display_name);
-                                                setDropoffCoordinates({
-                                                    lat: suggestion.lat,
-                                                    lng: suggestion.lon
-                                                });
-                                                setDestinationCoords({
-                                                    lat: suggestion.lat,
-                                                    lng: suggestion.lon
-                                                });
-                                                setDropoffSuggestions([]);
-                                                setShowMap(true);
->>>>>>> Stashed changes
                                                 if (pickupCoordinates) {
                                                     fetchRoute();
                                                 }
@@ -1137,6 +775,42 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                 />
               </div>
 
+              {/* Calculate Price Button */}
+              <div className="flex items-center justify-center">
+                <button 
+                  type="button" 
+                  onClick={calculatePrice} 
+                  className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700
+                    text-white px-4 py-2 rounded text-base disabled:bg-blue-300 dark:disabled:bg-blue-800
+                    transition-colors duration-300"
+                >
+                  {isCalculating ? <ClipLoader size={20} color={"#fff"} /> : 'Calculate Price'}
+                </button>
+              </div>
+
+              {/* Estimated Price and Negotiation Field */}
+              {estimatedPrice && (
+                <div className="flex flex-col sm:flex-row items-center">
+                  <span className="text-2xl mr-2">💵</span>
+                  <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">Estimated Price:</label>
+                  <span className="text-base mr-4">${estimatedPrice}</span>
+                  <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">Negotiation Price:</label>
+                  <input 
+                    type="number"
+                    required
+                    placeholder="Enter your price"
+                    className="border p-2 rounded flex-grow text-base
+                      bg-white dark:bg-gray-700 
+                      text-gray-900 dark:text-gray-100
+                      border-gray-300 dark:border-gray-600
+                      focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
+                    value={negotiationPrice}
+                    onChange={(e) => setNegotiationPrice(e.target.value)}
+                    min="0"
+                  />
+                </div>
+              )}
+
               {/* Submit Button */}
               <div className="flex flex-col sm:flex-row justify-between mt-4">
                 <button 
@@ -1153,10 +827,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
           </form>
         </div>
       </div>
-<<<<<<< Updated upstream
-=======
->>>>>>> 3b47e7407e2f8c37874ea7a3db0e4bd1f3ddfd36
->>>>>>> Stashed changes
     </div>
   );
 };
