@@ -35,7 +35,6 @@ const customStyles = {
 const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationCoords, setShowMap}) => {
 
     const [isVisible, setIsVisible] = useState(false);
-    const [isCalculating, setIsCalculating] = useState(false);
     const [estimatedPrice, setEstimatedPrice] = useState(null);
     const [negotiationPrice, setNegotiationPrice] = useState('');
     const [pickupLocation, setPickupLocation] = useState('');
@@ -77,81 +76,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
         }
     };
 
-    const calculatePrice = () => {
-        setIsCalculating(true);
-
-        const distance = getPreciseDistance(
-            { latitude: pickupCoordinates.lat, longitude: pickupCoordinates.lng },
-            { latitude: dropoffCoordinates.lat, longitude: dropoffCoordinates.lng }
-        );
-
-        const basePricePerKm = 2;
-
-        const cost = (distance / 1000) * basePricePerKm * numberOfTrucks;
-
-        let additionalCost = 0;
-
-        switch (truckType) {
-            case 'Furniture Truck':
-                additionalCost += 100;
-                break;
-            case 'Small Ton Truck':
-                additionalCost += 200;
-                break;
-            case '10 Ton Truck':
-                additionalCost += 300;
-                break;
-            case '30 Ton Truck':
-                additionalCost += 400;
-                break;
-            default:
-                additionalCost += 50;
-                break;
-        }
-
-        switch (goodsType) {
-            case 'Furniture':
-                additionalCost += 50;
-                break;
-            case 'Minerals':
-                additionalCost += 100;
-                break;
-            case 'Electronics':
-                additionalCost += 150;
-                break;
-            default:
-                additionalCost += 20;
-                break;
-        }
-
-        switch (payTerms) {
-            case '100% on Loading':
-                additionalCost += 0;
-                break;
-            case '50% on Loading, 50% on Delivery':
-                additionalCost += 50;
-                break;
-            case '100% on Delivery':
-                additionalCost += 100;
-                break;
-            default:
-                additionalCost += 20;
-                break;
-        }
-
-        const weightInTonnes = parseFloat(weight);
-        if (!isNaN(weightInTonnes)) {
-            additionalCost += weightInTonnes * 10;
-        }
-
-        const totalCost = cost + additionalCost;
-
-        setTimeout(() => {
-            setEstimatedPrice(totalCost);
-            setIsCalculating(false);
-        }, 2000);
-    };
-
     const resetForm = () => {
         setPickupLocation('');
         setDropoffLocation('');
@@ -168,7 +92,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
         setNegotiationPrice('');
         setResponseMessage('');
         setError(null);
-        setIsCalculating(false);
         setSelectingPickup(false);
         setSelectingDropoff(false);
         setComments('');
@@ -267,7 +190,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
     };
 
     const fetchRoute = async () => {
-        setIsCalculating(true);
         try {
             const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${pickupCoordinates.lng},${pickupCoordinates.lat};${dropoffCoordinates.lng},${dropoffCoordinates.lat}?overview=full&geometries=geojson`);
             const data = await response.json();
@@ -281,8 +203,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
             }
         } catch (error) {
             console.error('Error fetching route:', error);
-        } finally {
-            setIsCalculating(false);
         }
     };
 
@@ -565,13 +485,8 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                           onClick={fetchRoute} 
                           className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 
                             text-white px-4 py-2 rounded transition-colors"
-                          disabled={isCalculating}
                         >
-                          {isCalculating ? (
-                            <ClipLoader size={20} color={"#ffffff"} />
-                          ) : (
-                            'Calculate Route'
-                          )}
+                          Calculate Route
                         </button>
                       )}
                     </div>
@@ -800,42 +715,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                   placeholder="Add any additional details or special requirements..."
                 />
               </div>
-
-              {/* Calculate Price Button */}
-              <div className="flex items-center justify-center">
-                <button 
-                  type="button" 
-                  onClick={calculatePrice} 
-                  className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700
-                    text-white px-4 py-2 rounded text-base disabled:bg-blue-300 dark:disabled:bg-blue-800
-                    transition-colors duration-300"
-                >
-                  {isCalculating ? <ClipLoader size={20} color={"#fff"} /> : 'Calculate Price'}
-                </button>
-              </div>
-
-              {/* Estimated Price and Negotiation Field */}
-              {estimatedPrice && (
-                <div className="flex flex-col sm:flex-row items-center">
-                  <span className="text-2xl mr-2">💵</span>
-                  <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">Estimated Price:</label>
-                  <span className="text-base mr-4">${estimatedPrice}</span>
-                  <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">Negotiation Price:</label>
-                  <input 
-                    type="number"
-                    required
-                    placeholder="Enter your price"
-                    className="border p-2 rounded flex-grow text-base
-                      bg-white dark:bg-gray-700 
-                      text-gray-900 dark:text-gray-100
-                      border-gray-300 dark:border-gray-600
-                      focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
-                    value={negotiationPrice}
-                    onChange={(e) => setNegotiationPrice(e.target.value)}
-                    min="0"
-                  />
-                </div>
-              )}
 
               {/* Submit Button */}
               <div className="flex flex-col sm:flex-row justify-between mt-4">
