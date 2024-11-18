@@ -592,48 +592,31 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                       </div>
                     )}
 
-                    {/* Location Input Fields */}
-                    <div className="mt-2 space-y-2">
+                    {/* Location input fields with suggestions */}
+                    <div className="mt-4 space-y-3 relative">
                         <div className="relative">
                             <input 
                                 type="text" 
                                 required
-                                placeholder="Pickup Location" 
-                                className="border p-2 rounded w-full text-base
-                                    bg-white dark:bg-gray-700 
-                                    text-gray-900 dark:text-gray-100
-                                    border-gray-300 dark:border-gray-600
-                                    placeholder-gray-500 dark:placeholder-gray-400"
+                                placeholder="🏁 Enter Pickup Location" 
+                                className="border-2 p-3 rounded-lg w-full text-base focus:ring-2 
+                                    focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                                 value={pickupLocation}
                                 onChange={(e) => {
-                                    const value = e.target.value;
-                                    setPickupLocation(value);
-                                    if (value.length >= 3) {
-                                        fetchLocationSuggestions(value, 'pickup');
-                                    }
-                                }}
-                                onBlur={() => {
-                                    setTimeout(() => setPickupSuggestions([]), 200);
+                                    setPickupLocation(e.target.value);
+                                    fetchLocationSuggestions(e.target.value, 'pickup');
                                 }}
                             />
                             {pickupSuggestions.length > 0 && (
-                                <div className="absolute z-50 w-full bg-white dark:bg-gray-700 mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                <div className="absolute z-10 w-full bg-white mt-1 rounded-lg shadow-lg border border-gray-200">
                                     {pickupSuggestions.map((suggestion, index) => (
                                         <div
                                             key={index}
-                                            className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-900 dark:text-gray-100"
+                                            className="p-2 hover:bg-gray-100 cursor-pointer"
                                             onClick={() => {
                                                 setPickupLocation(suggestion.display_name);
-                                                setPickupCoordinates({
-                                                    lat: suggestion.lat,
-                                                    lng: suggestion.lon
-                                                });
-                                                setOriginCoords({
-                                                    lat: suggestion.lat,
-                                                    lng: suggestion.lon
-                                                });
+                                                setPickupCoordinates({ lat: suggestion.lat, lng: suggestion.lon });
                                                 setPickupSuggestions([]);
-                                                setShowMap(true);
                                                 if (dropoffCoordinates) {
                                                     fetchRoute();
                                                 }
@@ -650,42 +633,25 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
                             <input 
                                 type="text" 
                                 required
-                                placeholder="Dropoff Location" 
-                                className="border p-2 rounded w-full text-base
-                                    bg-white dark:bg-gray-700 
-                                    text-gray-900 dark:text-gray-100
-                                    border-gray-300 dark:border-gray-600
-                                    placeholder-gray-500 dark:placeholder-gray-400"
+                                placeholder="🏁 Enter Dropoff Location" 
+                                className="border-2 p-3 rounded-lg w-full text-base focus:ring-2 
+                                    focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                                 value={dropoffLocation}
                                 onChange={(e) => {
-                                    const value = e.target.value;
-                                    setDropoffLocation(value);
-                                    if (value.length >= 3) {
-                                        fetchLocationSuggestions(value, 'dropoff');
-                                    }
-                                }}
-                                onBlur={() => {
-                                    setTimeout(() => setDropoffSuggestions([]), 200);
+                                    setDropoffLocation(e.target.value);
+                                    fetchLocationSuggestions(e.target.value, 'dropoff');
                                 }}
                             />
                             {dropoffSuggestions.length > 0 && (
-                                <div className="absolute z-50 w-full bg-white dark:bg-gray-700 mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                <div className="absolute z-10 w-full bg-white mt-1 rounded-lg shadow-lg border border-gray-200">
                                     {dropoffSuggestions.map((suggestion, index) => (
                                         <div
                                             key={index}
-                                            className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-900 dark:text-gray-100"
+                                            className="p-2 hover:bg-gray-100 cursor-pointer"
                                             onClick={() => {
                                                 setDropoffLocation(suggestion.display_name);
-                                                setDropoffCoordinates({
-                                                    lat: suggestion.lat,
-                                                    lng: suggestion.lon
-                                                });
-                                                setDestinationCoords({
-                                                    lat: suggestion.lat,
-                                                    lng: suggestion.lon
-                                                });
+                                                setDropoffCoordinates({ lat: suggestion.lat, lng: suggestion.lon });
                                                 setDropoffSuggestions([]);
-                                                setShowMap(true);
                                                 if (pickupCoordinates) {
                                                     fetchRoute();
                                                 }
@@ -861,7 +827,6 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
           </form>
         </div>
       </div>
-
     </div>
   );
 };
