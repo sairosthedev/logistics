@@ -20,6 +20,8 @@ const customStyles = {
     padding: '20px',
     borderRadius: '10px',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'var(--modal-bg)',
+    color: 'var(--text-primary)',
   },
 };
 
@@ -217,18 +219,48 @@ function MyLoads() {
   return (
     <TruckerLayout>
       <div className="py-8 px-4 sm:px-6 lg:px-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Jobs</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6">Jobs</h1>
         <div className="mb-4 flex flex-wrap">
-          <button className={`px-4 py-2 mr-2 mb-2 ${filter === 'pending' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`} onClick={() => setFilter('pending')}>Pending Requests</button>
-          <button className={`px-4 py-2 mr-2 mb-2 ${filter === 'inTransit' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`} onClick={() => setFilter('inTransit')}>In Transit</button>
-          <button className={`px-4 py-2 mb-2 ${filter === 'delivered' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`} onClick={() => setFilter('delivered')}>Delivered</button>
+          <button className={`px-4 py-2 mr-2 mb-2 ${filter === 'pending' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200'}`} onClick={() => setFilter('pending')}>Pending Requests</button>
+          <button className={`px-4 py-2 mr-2 mb-2 ${filter === 'inTransit' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200'}`} onClick={() => setFilter('inTransit')}>In Transit</button>
+          <button className={`px-4 py-2 mb-2 ${filter === 'delivered' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200'}`} onClick={() => setFilter('delivered')}>Delivered</button>
         </div>
         <div className="overflow-x-auto">
-          {renderTable(filteredLoads)}
+          <div className={`p-2 ${filteredLoads.length === 0 ? 'w-full' : 'w-fit'} shadow-lg bg-white dark:bg-gray-800 rounded-xl`}>
+            <table className={`${filteredLoads.length === 0 ? 'w-full' : 'w-fit'} border-separate border-spacing-2`}>
+              <thead>
+                <tr>
+                  <th className='border border-slate-600 rounded-md bg-sky-800 dark:bg-sky-900 text-white text-sm p-2'>Client Name</th>
+                  <th className='border border-slate-600 rounded-md bg-sky-800 dark:bg-sky-900 text-white text-sm p-2'>Goods Type</th>
+                  <th className='border border-slate-600 rounded-md bg-sky-800 dark:bg-sky-900 text-white text-sm p-2'>Pickup Location</th>
+                  <th className='border border-slate-600 rounded-md bg-sky-800 dark:bg-sky-900 text-white text-sm p-2'>Dropoff Location</th>
+                  <th className='border border-slate-600 rounded-md bg-sky-800 dark:bg-sky-900 text-white text-sm p-2'>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLoads.slice(0, visibleLoads).map((load, index) => (
+                  <tr key={index} className='hover:bg-blue-500 hover:text-white dark:hover:bg-blue-600'>
+                    <td className='border border-slate-600 dark:border-slate-500 rounded-md text-center text-xs p-1 w-1/5 dark:text-gray-200'>{load.clientName}</td>
+                    <td className='border border-slate-600 dark:border-slate-500 rounded-md text-center text-xs p-1 w-1/5 dark:text-gray-200'>{load.goodsType}</td>
+                    <td className='border border-slate-600 dark:border-slate-500 rounded-md text-center text-xs p-1 w-1/5 dark:text-gray-200'>{load.pickupLocation || 'N/A'}</td>
+                    <td className='border border-slate-600 dark:border-slate-500 rounded-md text-center text-xs p-1 w-1/5 dark:text-gray-200'>{load.dropoffLocation || 'N/A'}</td>
+                    <td className='border border-slate-600 dark:border-slate-500 rounded-md text-center p-1 w-1/5'>
+                      <button
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-800 transition duration-200"
+                        onClick={() => openJobModal(load)}
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           {filteredLoads.length > visibleLoads && (
             <button
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-200"
-              onClick={() => setVisibleLoads(visibleLoads + 6)} // Load more loads
+              onClick={() => setVisibleLoads(visibleLoads + 6)}
             >
               View More
             </button>
@@ -241,41 +273,42 @@ function MyLoads() {
           onRequestClose={closeJobModal}
           style={customStyles}
           contentLabel="Job Details"
+          className="dark:bg-gray-800"
         >
-          <h2 className="text-xl sm:text-2xl font-bold mb-4">{selectedLoad.clientName}</h2>
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 dark:text-white">{selectedLoad.clientName}</h2>
           <div className="overflow-x-auto">
-            <table className="min-w-full bg-white">
+            <table className="min-w-full bg-white dark:bg-gray-800">
               <tbody>
                 <tr>
-                  <td className="py-2 text-gray-700">Goods Type:</td>
-                  <td className="py-2">{selectedLoad.goodsType}</td>
+                  <td className="py-2 text-gray-700 dark:text-gray-300">Goods Type:</td>
+                  <td className="py-2 dark:text-white">{selectedLoad.goodsType}</td>
                 </tr>
                 <tr>
-                  <td className="py-2 text-gray-700">Weight:</td>
+                  <td className="py-2 text-gray-700 dark:text-gray-300">Weight:</td>
                   <td className="py-2">{selectedLoad.weight} kg</td>
                 </tr>
                 <tr>
-                  <td className="py-2 text-gray-700">Pay Terms:</td>
+                  <td className="py-2 text-gray-700 dark:text-gray-300">Pay Terms:</td>
                   <td className="py-2">{selectedLoad.payTerms}</td>
                 </tr>
                 <tr>
-                  <td className="py-2 text-gray-700">Number of Trucks:</td>
+                  <td className="py-2 text-gray-700 dark:text-gray-300">Number of Trucks:</td>
                   <td className="py-2">{selectedLoad.numberOfTrucks}</td>
                 </tr>
                 <tr>
-                  <td className="py-2 text-gray-700">Pickup Location:</td>
+                  <td className="py-2 text-gray-700 dark:text-gray-300">Pickup Location:</td>
                   <td className="py-2">{selectedLoad.pickupLocation || 'N/A'}</td>
                 </tr>
                 <tr>
-                  <td className="py-2 text-gray-700">Dropoff Location:</td>
+                  <td className="py-2 text-gray-700 dark:text-gray-300">Dropoff Location:</td>
                   <td className="py-2">{selectedLoad.dropoffLocation || 'N/A'}</td>
                 </tr>
                 <tr>
-                  <td className="py-2 text-gray-700">Status:</td>
+                  <td className="py-2 text-gray-700 dark:text-gray-300">Status:</td>
                   <td className="py-2">{selectedLoad.status}</td>
                 </tr>
                 <tr>
-                  <td className="py-2 text-gray-700">Estimated Price:</td>
+                  <td className="py-2 text-gray-700 dark:text-gray-300">Estimated Price:</td>
                   <td className="py-2">${selectedLoad.estimatedPrice}</td>
                 </tr>
               </tbody>
@@ -283,17 +316,17 @@ function MyLoads() {
           </div>
           {filter === 'pending' && (
             <form onSubmit={handleSubmit} className="mt-4">
-              <label className="block text-gray-700 text-base mb-2">Counter Offer:</label>
+              <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">Counter Offer:</label>
               <input
                 type="number"
                 value={negotiationPrice}
                 onChange={(e) => setNegotiationPrice(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md"
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
                 placeholder="Enter your counter offer"
                 required
               />
-              <label className="block text-gray-700 text-base mb-2">Assign Truck:</label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">Assign Truck:</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 dark:text-gray-200">
                 {renderTrucks(trucks)}
               </div>
               <button

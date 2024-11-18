@@ -11,9 +11,9 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-            <div className="bg-white p-6 rounded-lg shadow-xl">
-                <h3 className="text-lg font-bold mb-4">Confirm Delete</h3>
-                <p className="mb-6">Are you sure you want to delete this truck?</p>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl">
+                <h3 className="text-lg font-bold mb-4 dark:text-white">Confirm Delete</h3>
+                <p className="mb-6 dark:text-gray-300">Are you sure you want to delete this truck?</p>
                 <div className="flex justify-end gap-4">
                     <button
                         className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
@@ -46,37 +46,37 @@ const TruckerCard = ({ truck, onEdit, onDelete }) => {
     };
 
     return (
-        <div className="bg-white rounded-t-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105  h-full">
-           <div className='flex flex-col justify-between h-full bg-sky-800 '>
-            <div className=" px-4 py-2">
+        <div className="bg-white dark:bg-gray-800 rounded-t-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 h-full">
+           <div className='flex flex-col justify-between h-full bg-sky-800 dark:bg-sky-900'>
+            <div className="px-4 py-2">
                 <h3 className="text-lg sm:text-md font-bold text-white flex items-center">
                     <User className="mr-2" size={20} />
                     {truck.driverName}
                 </h3>
             </div>
-            <div className="p-4 sm:p-3 space-y-2 bg-white rounded-t-xl">
-                <div className="flex items-center text-gray-700">
+            <div className="p-4 sm:p-3 space-y-2 bg-white dark:bg-gray-800 rounded-t-xl">
+                <div className="flex items-center text-gray-700 dark:text-gray-200">
                     <Truck className="mr-2" size={18} />
                     <span className="font-semibold text-sm sm:text-base">{truck.truckType}</span>
                 </div>
-                <div className="flex items-center text-gray-700">
+                <div className="flex items-center text-gray-700 dark:text-gray-200">
                     <MapPin className="mr-2" size={18} />
                     <span className="text-sm sm:text-base">{truck.location}</span>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center text-gray-700 dark:text-gray-200">
                     <Calendar className="mr-2" size={18} />
                     <span className={`px-2 py-1 rounded-full text-xs font-semibold ${truck.status === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
                         }`}>
                         {truck.status}
                     </span>
                 </div>
-                <div className="flex items-center text-gray-700">
+                <div className="flex items-center text-gray-700 dark:text-gray-200">
                     <Phone className="mr-2" size={18} />
                     <a href={`tel:${truck.driverPhone}`} className="text-sm sm:text-base">{truck.driverPhone}</a>
                 </div>
-                <div className="flex items-center text-gray-700">
+                <div className="flex items-center text-gray-700 dark:text-gray-200">
                     <Star className="mr-2" size={18} />
                     <div className="flex items-center">
                         {[...Array(5)].map((_, i) => (
@@ -85,14 +85,14 @@ const TruckerCard = ({ truck, onEdit, onDelete }) => {
                                 size={16}
                                 className={`${i < Math.floor(truck.rating)
                                     ? 'text-yellow-400 fill-yellow-400'
-                                    : 'text-gray-300'
+                                    : 'text-gray-300 dark:text-gray-600'
                                     }`}
                             />
                         ))}
                         <span className="ml-2 text-xs font-semibold">{truck.rating}</span>
                     </div>
                 </div>
-                <div className="flex items-center text-gray-700">
+                <div className="flex items-center text-gray-700 dark:text-gray-200">
                     <Weight className="mr-2" size={18} />
                     <span className="text-sm sm:text-base">{truck.maximumWeight} t</span>
                 </div>
@@ -269,19 +269,19 @@ function Trucks() {
         <TruckerLayout>
             <div className="py-8 px-4 sm:px-6 lg:px-8">
                 <div className="mb-8">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Available Trucks</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6">Available Trucks</h1>
                     <div className="flex flex-col sm:flex-row gap-4 mb-6">
                         <div className="flex-1">
                             <input
                                 type="text"
                                 placeholder="Search by name, truck, or location..."
-                                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
                         <select
-                            className="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             value={filterAvailability}
                             onChange={(e) => setFilterAvailability(e.target.value)}
                         >
@@ -298,15 +298,15 @@ function Trucks() {
                     </div>
 
                     {showForm && (
-                        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg mb-8">
+                        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Truck Type</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Truck Type</label>
                                     <select
                                         name="truckType"
                                         value={truckType}
                                         onChange={(e) => setTruckType(e.target.value)}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                         required
                                     >
                                         <option value="">Select Truck Type</option>
@@ -339,74 +339,74 @@ function Trucks() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Horse Reg</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Horse Reg</label>
                                     <input
                                         type="text"
                                         name="horse"
                                         value={horse}
                                         onChange={(e) => setHorse(e.target.value)}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Trailer 1 Reg</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Trailer 1 Reg</label>
                                     <input
                                         type="text"
                                         name="trailer1"
                                         value={trailer1}
                                         onChange={(e) => setTrailer1(e.target.value)}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Trailer 2 Reg</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Trailer 2 Reg</label>
                                     <input
                                         type="text"
                                         name="trailer2"
                                         value={trailer2}
                                         onChange={(e) => setTrailer2(e.target.value)}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Driver Name</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Driver Name</label>
                                     <input
                                         type="text"
                                         name="driverName"
                                         value={driverName}
                                         onChange={(e) => setDriverName(e.target.value)}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Driver Licence</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Driver Licence</label>
                                     <input
                                         type="text"
                                         name="licence"
                                         value={licence}
                                         onChange={(e) => setLicence(e.target.value)}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Driver Passport</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Driver Passport</label>
                                     <input
                                         type="text"
                                         name="passport"
                                         value={passport}
                                         onChange={(e) => setPassport(e.target.value)}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Driver Phone</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Driver Phone</label>
                                     <div className="flex">
-                                        <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                                        <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-500 sm:text-sm">
                                             +263
                                         </span>
                                         <input
@@ -414,15 +414,15 @@ function Trucks() {
                                             name="driverPhone"
                                             value={driverPhone}
                                             onChange={(e) => setDriverPhone(e.target.value)}
-                                            className="mt-1 block w-full border border-gray-300 rounded-r-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-r-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                             required
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Truck Owner Phone</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Truck Owner Phone</label>
                                     <div className="flex">
-                                        <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                                        <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-500 sm:text-sm">
                                             +263
                                         </span>
                                         <input
@@ -430,15 +430,15 @@ function Trucks() {
                                             name="truckOwnerPhone"
                                             value={truckOwnerPhone}
                                             onChange={(e) => setTruckOwnerPhone(e.target.value)}
-                                            className="mt-1 block w-full border border-gray-300 rounded-r-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-r-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                             required
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Truck Owner WhatsApp</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Truck Owner WhatsApp</label>
                                     <div className="flex">
-                                        <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                                        <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-500 sm:text-sm">
                                             +263
                                         </span>
                                         <input
@@ -446,30 +446,30 @@ function Trucks() {
                                             name="truckOwnerWhatsapp"
                                             value={truckOwnerWhatsapp}
                                             onChange={(e) => setTruckOwnerWhatsapp(e.target.value)}
-                                            className="mt-1 block w-full border border-gray-300 rounded-r-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-r-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                             required
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Maximum Weight (tons)</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Maximum Weight (tons)</label>
                                     <input
                                         type="number"
                                         name="maximumWeight"
                                         value={maximumWeight}
                                         onChange={(e) => setMaximumWeight(e.target.value)}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Location</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Location</label>
                                     <input
                                         type="text"
                                         name="location"
                                         value={location}
                                         onChange={(e) => setLocation(e.target.value)}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                         required
                                     />
                                 </div>
