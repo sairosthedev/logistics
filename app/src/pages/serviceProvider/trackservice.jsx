@@ -72,43 +72,20 @@ function TrackServices() {
     return (
         <ServiceProviderLayout>
             <ToastContainer />
-            <div className="py-4 sm:py-6 dark:bg-gray-900">
+            <div className="py-4 sm:py-6">
                 <div className="px-2 sm:px-4 mx-auto max-w-7xl">
-                    <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Track Services</h1>
+                    <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Track Services</h1>
                     <div className="mt-4 space-y-4 sm:space-y-6">
                         {services.slice(0, visibleServices).map((service) => (
-                            <div key={service.id} className="border rounded-lg p-4 sm:p-6 bg-white dark:bg-gray-800 dark:border-gray-700">
-                                <h2 className="text-lg sm:text-2xl font-bold text-gray-800 dark:text-white">
-                                    {service.clientName}
-                                </h2>
-                                <p className="mt-1 text-base sm:text-lg text-gray-600 dark:text-gray-300">
-                                    Service Details: {service.serviceDetails}
-                                </p>
-                                <p className="mt-1 text-base sm:text-lg text-gray-600 dark:text-gray-300">
-                                    Status: <span className={`font-semibold ${
-                                        service.status === "Pending" 
-                                            ? "text-yellow-600 dark:text-yellow-400" 
-                                            : service.status === "In Progress" 
-                                                ? "text-blue-600 dark:text-blue-400" 
-                                                : "text-green-600 dark:text-green-400"
-                                    }`}>
-                                        {service.status}
-                                    </span>
-                                </p>
+                            <div key={service.id} className="border rounded-lg p-4 sm:p-6 bg-white">
+                                <h2 className="text-lg sm:text-2xl font-bold text-gray-800">{service.clientName}</h2>
+                                <p className="mt-1 text-base sm:text-lg text-gray-600">Service Details: {service.serviceDetails}</p>
+                                <p className="mt-1 text-base sm:text-lg text-gray-600">Status: <span className={`font-semibold ${service.status === "Pending" ? "text-yellow-600" : service.status === "In Progress" ? "text-blue-600" : "text-green-600"}`}>{service.status}</span></p>
                                 <div className="mt-2">
-                                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 sm:h-4">
-                                        <div 
-                                            className={`h-3 sm:h-4 rounded-full ${
-                                                service.progress === 100 
-                                                    ? "bg-green-600 dark:bg-green-500" 
-                                                    : "bg-blue-600 dark:bg-blue-500"
-                                            }`} 
-                                            style={{ width: `${service.progress}%` }}
-                                        ></div>
+                                    <div className="w-full bg-gray-200 rounded-full h-3 sm:h-4">
+                                        <div className={`h-3 sm:h-4 rounded-full ${service.progress === 100 ? "bg-green-600" : "bg-blue-600"}`} style={{ width: `${service.progress}%` }}></div>
                                     </div>
-                                    <p className="mt-1 text-right text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                                        {service.progress}%
-                                    </p>
+                                    <p className="mt-1 text-right text-xs sm:text-sm text-gray-600">{service.progress}%</p>
                                 </div>
                             </div>
                         ))}
@@ -117,7 +94,7 @@ function TrackServices() {
                         <div className="mt-4">
                             <button 
                                 onClick={handleViewMore} 
-                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition duration-200"
+                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200"
                             >
                                 View More
                             </button>
