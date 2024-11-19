@@ -15,6 +15,7 @@ function AvailableTrucks() {
   const [isResponseModalOpen, setIsResponseModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [selectedTrucker, setSelectedTrucker] = useState(null);
+  const [acceptedTruckers, setAcceptedTruckers] = useState([]);
   const { accessToken, clientID } = useAuthStore();
 
   useEffect(() => {
@@ -67,10 +68,8 @@ function AvailableTrucks() {
           Authorization: `Bearer ${accessToken}`
         }
       });
-      // Update the trucker status in the truckers state
-      setTruckers(prevTruckers => prevTruckers.map(trucker => 
-        trucker._id === selectedTrucker._id ? { ...trucker, truckInfo: { ...trucker.truckInfo, status: 'accepted' } } : trucker
-      ));
+      setAcceptedTruckers(prevAccepted => [...prevAccepted, { ...selectedTrucker, truckInfo: { ...selectedTrucker.truckInfo, status: 'accepted' } }]);
+      setTruckers(prevTruckers => prevTruckers.filter(trucker => trucker._id !== selectedTrucker._id));
       setResponseMessage('Offer accepted successfully!');
     } catch (error) {
       console.error('Error accepting bid:', error);
@@ -138,13 +137,15 @@ function AvailableTrucks() {
           <DollarSign className="mr-2" size={18} />
           <span>{trucker.offerAmount}</span>
         </div>
-        <button 
-          className="w-full mt-4 bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition-colors duration-300"
-          onClick={() => openConfirmModal(trucker)}
-          disabled={isLoading}
-        >
-          {isLoading ? 'Accepting...' : 'Accept Offer'}
-        </button>
+        {trucker.truckInfo.status !== 'accepted' && (
+          <button 
+            className="w-full mt-4 bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition-colors duration-300"
+            onClick={() => openConfirmModal(trucker)}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Accepting...' : 'Accept Offer'}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -209,6 +210,13 @@ function AvailableTrucks() {
             <p className="text-gray-500 mt-2">Try adjusting your search or filters</p>
           </div>
         )}
+      </div>
+
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4 sm:mb-6">Accepted Offers</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {acceptedTruckers.map((trucker, index) => (
+          <TruckerCard key={index} trucker={trucker} />
+        ))}
       </div>
 
       {isConfirmModalOpen && (
