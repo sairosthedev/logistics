@@ -22,52 +22,54 @@ function Home() {
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
   const [negotiationPrice, setNegotiationPrice] = useState('');
   const [trucks, setTrucks] = useState([]);
-  const [selectedTruck, setSelectedTruck] = useState(null);
+  const [selectedTrucks, setSelectedTrucks] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [responseMessage, setResponseMessage] = useState('');
 
+  const fetchLoads = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_Local}/api/trucker/truck-requests`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+      setLoads(response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+    } catch (error) {
+      console.error('Error fetching loads:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAcceptedBids = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_Local}/api/trucker/request-bids/trucker/${clientID}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+      // Filter out delivered bids before setting state
+      const nonDeliveredBids = response.data.filter(bid => bid.status !== 'delivered');
+      setAcceptedBids(nonDeliveredBids.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+    } catch (error) {
+      console.error('Error fetching accepted bids:', error);
+    }
+  };
+
+  const fetchTrucks = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_Local}/api/trucker/trucks/${clientID}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+      setTrucks(response.data);
+    } catch (error) {
+      console.error('Error fetching trucks:', error);
+    }
+  };
+
   useEffect(() => {
-    const fetchLoads = async () => {
-      try {
-        const response = await axios.get(`${BACKEND_Local}/api/trucker/truck-requests`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        });
-        setLoads(response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
-      } catch (error) {
-        console.error('Error fetching loads:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchAcceptedBids = async () => {
-      try {
-        const response = await axios.get(`${BACKEND_Local}/api/trucker/request-bids/trucker/${clientID}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        });
-        setAcceptedBids(response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
-      } catch (error) {
-        console.error('Error fetching accepted bids:', error);
-      }
-    };
-
-    const fetchTrucks = async () => {
-      try {
-        const response = await axios.get(`${BACKEND_Local}/api/trucker/trucks/${clientID}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        });
-        setTrucks(response.data);
-      } catch (error) {
-        console.error('Error fetching trucks:', error);
-      }
-    };
-
     fetchLoads();
     fetchAcceptedBids();
     fetchTrucks();
@@ -76,82 +78,97 @@ function Home() {
   const openJobModal = (load) => {
     setSelectedLoad(load);
     setIsJobModalOpen(true);
+    setSelectedTrucks([]);
   };
 
   const closeJobModal = () => {
-    setIsJobModalOpen(false);
-    setSelectedLoad(null);
+    setSelectedLoad(null); // Move this after modal closes
     setResponseMessage('');
+    setSelectedTrucks([]);
+    setIsJobModalOpen(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const selectedTruckDetails = trucks.find(truck => truck._id === selectedTruck);
-    if (!selectedTruckDetails) {
-      console.error('Selected truck not found');
-      setResponseMessage('Please assign a truck first.');
+
+    if (selectedTrucks.length === 0) {
+      setResponseMessage('Please assign at least one truck.');
       setIsSubmitting(false);
       return;
     }
 
-    const payload = {
-      requestID: selectedLoad._id,
-      clientID: selectedLoad.clientID,
-      numberOfTrucks: selectedLoad.numberOfTrucks,
-      truckerID: clientID,
-      pickupLocation: selectedLoad.pickupLocation,
-      dropoffLocation: selectedLoad.dropoffLocation,
-      pickupCoordinates: {
-        latitude: selectedLoad.pickupCoordinates.lat,
-        longitude: selectedLoad.pickupCoordinates.lng
-      },
-      dropoffCoordinates: {
-        latitude: selectedLoad.dropoffCoordinates.lat,
-        longitude: selectedLoad.dropoffCoordinates.lng
-      },
-      distance: selectedLoad.distance,
-      route: selectedLoad.route,
-      goodsType: selectedLoad.goodsType,
-      payTerms: selectedLoad.payTerms,
-      estimatedPrice: selectedLoad.estimatedPrice,
-      negotiationPrice: parseFloat(negotiationPrice),
-      weight: selectedLoad.weight,
-      truckID: selectedTruckDetails._id,
-      truckInfo: {
-        truckType: selectedTruckDetails.truckType,
-        horse: selectedTruckDetails.horse,
-        trailer1: selectedTruckDetails.trailer1,
-        trailer2: selectedTruckDetails.trailer2,
-        driverName: selectedTruckDetails.driverName,
-        licence: selectedTruckDetails.licence,
-        passport: selectedTruckDetails.passport,
-        driverPhone: selectedTruckDetails.driverPhone,
-        truckOwnerPhone: selectedTruckDetails.truckOwnerPhone,
-        truckOwnerWhatsapp: selectedTruckDetails.truckOwnerWhatsapp,
-        status: selectedTruckDetails.status
-      }
-    };
-
-    console.log('Payload:', payload);
+    if (selectedTrucks.length > selectedLoad.numberOfTrucks) {
+      setResponseMessage(`You can only assign up to ${selectedLoad.numberOfTrucks} trucks for this load.`);
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
-      const response = await axios.post(`${BACKEND_Local}/api/trucker/truck-requests/bid`, payload, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
+      const assignmentPromises = selectedTrucks.map(async (truckId) => {
+        const selectedTruckDetails = trucks.find(truck => truck._id === truckId);
+        
+        const payload = {
+          requestID: selectedLoad._id,
+          clientID: selectedLoad.clientID,
+          numberOfTrucks: selectedLoad.numberOfTrucks,
+          truckerID: clientID,
+          pickupLocation: selectedLoad.pickupLocation,
+          dropoffLocation: selectedLoad.dropoffLocation,
+          pickupCoordinates: {
+            latitude: selectedLoad.pickupCoordinates.lat,
+            longitude: selectedLoad.pickupCoordinates.lng
+          },
+          dropoffCoordinates: {
+            latitude: selectedLoad.dropoffCoordinates.lat,
+            longitude: selectedLoad.dropoffCoordinates.lng
+          },
+          distance: selectedLoad.distance,
+          route: selectedLoad.route,
+          goodsType: selectedLoad.goodsType,
+          payTerms: selectedLoad.payTerms,
+          estimatedPrice: selectedLoad.estimatedPrice,
+          negotiationPrice: parseFloat(negotiationPrice),
+          weight: selectedLoad.weight,
+          truckID: selectedTruckDetails._id,
+          truckInfo: {
+            truckType: selectedTruckDetails.truckType,
+            horse: selectedTruckDetails.horse,
+            trailer1: selectedTruckDetails.trailer1,
+            trailer2: selectedTruckDetails.trailer2,
+            driverName: selectedTruckDetails.driverName,
+            licence: selectedTruckDetails.licence,
+            passport: selectedTruckDetails.passport,
+            driverPhone: selectedTruckDetails.driverPhone,
+            truckOwnerPhone: selectedTruckDetails.truckOwnerPhone,
+            truckOwnerWhatsapp: selectedTruckDetails.truckOwnerWhatsapp,
+            status: selectedTruckDetails.status
+          }
+        };
+
+        return axios.post(`${BACKEND_Local}/api/trucker/truck-requests/bid`, payload, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
       });
-      console.log('Negotiation Response:', response);
-      setResponseMessage('Truck assigned successfully!');
+
+      await Promise.all(assignmentPromises);
+      setResponseMessage('Trucks assigned successfully!');
+      
+      // Refresh data after successful submission
+      await fetchLoads();
+      await fetchAcceptedBids();
+      
       setTimeout(() => {
         closeJobModal();
       }, 2000);
     } catch (error) {
-      console.error('Error submitting negotiation:', error);
+      console.error('Error submitting truck assignments:', error);
       if (error.response) {
         console.error('Error details:', error.response.data);
       }
-      setResponseMessage('Failed to assign truck. Please try again.');
+      setResponseMessage('Failed to assign trucks. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -159,12 +176,25 @@ function Home() {
 
   const updateRequestStatus = async (requestID, status) => {
     try {
-      const response = await axios.put(`${BACKEND_Local}/api/trucker/truck-requests/status/${requestID}`, { status }, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
+      await axios.put(`${BACKEND_Local}/api/trucker/truck-requests/status/${requestID}`, 
+        { status: status }, 
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
         }
-      });
-      console.log('Status Update Response:', response);
+      );
+      
+      // If status is delivered, remove the bid from acceptedBids immediately
+      if (status === 'delivered') {
+        setAcceptedBids(prev => prev.filter(bid => bid.requestID !== requestID));
+      } else {
+        // Only refresh data if not delivered
+        await fetchLoads();
+        await fetchAcceptedBids();
+      }
+      
       setResponseMessage('Status updated successfully!');
       setTimeout(() => {
         setResponseMessage('');
@@ -181,14 +211,23 @@ function Home() {
   const filteredLoads = loads.filter(load => load.status === 'pending');
   const filteredAcceptedBids = acceptedBids.filter(bid => bid.status === 'accepted');
 
+  const handleTruckSelection = (truckId) => {
+    setSelectedTrucks(prev => {
+      if (prev.includes(truckId)) {
+        return prev.filter(id => id !== truckId);
+      } else {
+        return [...prev, truckId];
+      }
+    });
+  };
+
   function renderTrucks(trucks) {
     return trucks.map(truck => (
       <div key={truck._id} className="flex items-center">
         <input
-          type="radio"
-          name="selectedTruck"
-          value={truck._id}
-          onChange={(e) => setSelectedTruck(e.target.value)}
+          type="checkbox"
+          checked={selectedTrucks.includes(truck._id)}
+          onChange={() => handleTruckSelection(truck._id)}
           className="mr-2 dark:bg-gray-700 dark:border-gray-600"
         />
         <span className="dark:text-gray-200">{truck.truckType} - {truck.driverName}</span>
@@ -353,18 +392,24 @@ function Home() {
                               <span>Status: {bid.status}</span>
                             </div>
                             <div className="flex items-center space-x-4">
-                              <label className="flex items-center text-gray-700 dark:text-gray-200">
-                                <input type="checkbox" className="mr-2" onChange={() => updateRequestStatus(bid.requestID, 'pending')} />
+                              <button 
+                                className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
+                                onClick={() => updateRequestStatus(bid.requestID, 'pending')}
+                              >
                                 Pending
-                              </label>
-                              <label className="flex items-center text-gray-700 dark:text-gray-200">
-                                <input type="checkbox" className="mr-2" onChange={() => updateRequestStatus(bid.requestID, 'inTransit')} />
+                              </button>
+                              <button
+                                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                                onClick={() => updateRequestStatus(bid.requestID, 'inTransit')}
+                              >
                                 In Transit
-                              </label>
-                              <label className="flex items-center text-gray-700 dark:text-gray-200">
-                                <input type="checkbox" className="mr-2" onChange={() => updateRequestStatus(bid.requestID, 'delivered')} />
+                              </button>
+                              <button
+                                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                                onClick={() => updateRequestStatus(bid.requestID, 'delivered')}
+                              >
                                 Delivered
-                              </label>
+                              </button>
                             </div>
                             <button
                               className="mt-2 sm:mt-4 px-4 py-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition duration-200 transform hover:scale-105"
@@ -462,25 +507,16 @@ function Home() {
               </div>
               {selectedLoad.status === 'pending' && (
                 <form onSubmit={handleSubmit} className="mt-4">
-                  {/* <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">Counter Offer:</label>
-                  <input
-                    type="number"
-                    value={negotiationPrice}
-                    onChange={(e) => setNegotiationPrice(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    placeholder="Enter your counter offer"
-                    required
-                  /> */}
-                  <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">Assign Truck:</label>
+                  <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">Assign Trucks ({selectedTrucks.length}/{selectedLoad.numberOfTrucks} selected):</label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 dark:text-white">
                     {renderTrucks(trucks)}
                   </div>
                   <button
                     type="submit"
                     className="mt-4 bg-green-500 text-white px-4 py-2 rounded text-base hover:bg-green-600 transition duration-200"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || selectedTrucks.length === 0 || selectedTrucks.length > selectedLoad.numberOfTrucks}
                   >
-                    {isSubmitting ? 'Submitting...' : 'Assign Truck'}
+                    {isSubmitting ? 'Submitting...' : 'Assign Trucks'}
                   </button>
                   {responseMessage && (
                     <div className={`mt-4 text-${responseMessage.includes('successfully') ? 'green' : 'red'}-500`}>
