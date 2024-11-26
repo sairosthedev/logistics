@@ -222,7 +222,7 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
         }
 
         try {
-            const searchQuery = `${searchText}, Harare, Zimbabwe`;
+            const searchQuery = `${searchText}, Zimbabwe`;
             const response = await fetch(
                 `https://nominatim.openstreetmap.org/search?` +
                 `format=json&q=${encodeURIComponent(searchQuery)}` +
