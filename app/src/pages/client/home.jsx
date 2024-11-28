@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 import JobsModal from './jobsModal';
 import JobsSection from './jobsSection.jsx';
 
-Modal.setAppElement('#root');
+Modal.setAppElement('#root'); //abc
 
 function ClientHome() {
   const [searchTerm, setSearchTerm] = useState('');

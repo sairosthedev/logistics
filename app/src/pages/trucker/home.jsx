@@ -17,6 +17,8 @@ function Home() {
   const [loads, setLoads] = useState([]);
   const [acceptedBids, setAcceptedBids] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loadsPerPage] = useState(10);
   const [visibleLoads, setVisibleLoads] = useState(6);
   const [selectedLoad, setSelectedLoad] = useState(null);
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
@@ -25,6 +27,8 @@ function Home() {
   const [selectedTrucks, setSelectedTrucks] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [responseMessage, setResponseMessage] = useState('');
+  const [currentBidPage, setCurrentBidPage] = useState(1);
+  const [bidsPerPage] = useState(10);
 
   const fetchLoads = async () => {
     try {
@@ -208,8 +212,17 @@ function Home() {
     }
   };
 
-  const filteredLoads = loads.filter(load => load.status === 'pending');
-  const filteredAcceptedBids = acceptedBids.filter(bid => bid.status === 'accepted');
+  const indexOfLastLoad = currentPage * loadsPerPage;
+  const indexOfFirstLoad = indexOfLastLoad - loadsPerPage;
+  const filteredLoads = loads.filter(load => {
+    const matchesSearch = load.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         load.goodsType.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterStatus === 'all' || load.status === filterStatus;
+    return matchesSearch && matchesFilter;
+  });
+  const currentLoads = filteredLoads.slice(indexOfFirstLoad, indexOfLastLoad);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const handleTruckSelection = (truckId) => {
     setSelectedTrucks(prev => {
@@ -235,33 +248,18 @@ function Home() {
     ));
   }
 
+  // Get current bids
+  const indexOfLastBid = currentBidPage * bidsPerPage;
+  const indexOfFirstBid = indexOfLastBid - bidsPerPage;
+  const currentBids = acceptedBids.slice(indexOfFirstBid, indexOfLastBid);
+
+  // Change bid page
+  const paginateBids = (pageNumber) => setCurrentBidPage(pageNumber);
+
   return (
     <TruckerLayout>
       <div className="py-8 px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Trucker Dashboard</h1>
-
-        <div className="mb-6 flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Search loads..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <select
-            className="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="in transit">In Transit</option>
-            <option value="delivered">Delivered</option>
-          </select>
-        </div>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 text-center">Trucker Dashboard</h1>
 
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <Link to="myloads" className="flex-1">
@@ -286,157 +284,345 @@ function Home() {
           </Link>
         </div>
 
-        <div className="flex flex-col md:flex-row lg:gap-32 gap-6 ">
-          <div className="loadHighlights mt-10 flex-1">
+        <div className="mb-6 flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Search loads..."
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <select
+            className="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="all">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="in transit">In Transit</option>
+            <option value="delivered">Delivered</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-8">
+          {/* Pending Requests Section */}
+          <div className="loadHighlights">
             <div className="max-w-screen-xl mx-auto">
-              <div className="items-start justify-between md:flex">
-                <div className="max-w-lg">
+              <div className="items-center justify-between md:flex">
+                <div className="max-w-lg mx-auto text-center">
                   <h3 className="text-gray-800 dark:text-white text-2xl font-bold sm:text-3xl">
                     Pending Requests
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300 mt-2">
-                    All your pending requests at a glance.
+                    View and manage your pending load requests
                   </p>
                 </div>
               </div>
-              <div className="mt-12 flex flex-col gap-10 w-full">
-                {loading ? (
-                  <div className="text-center py-10">
-                    <h2 className="text-lg sm:text-xl font-semibold text-gray-600 dark:text-gray-300">Loading...</h2>
-                  </div>
-                ) : (
-                  filteredLoads.length > 0 ? (
-                    filteredLoads.slice(0, visibleLoads).map((load, index) => (
-                      <div key={index} className="bg-sky-800 dark:bg-sky-900 rounded-t-lg rounded-b-sm shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105">
-                        <div className='w-full h-full bg-blue-800'>
-                          <div className=" px-4 py-3 sm:px-6 sm:py-4 flex-shrink-0">
-                            <h3 className="text-lg sm:text-xl font-bold text-white flex items-center">
-                              {load.clientName}
-                            </h3>
+              <div className="mt-12">
+                <div className="block lg:hidden">
+                  {/* Mobile view */}
+                  <div className="space-y-4">
+                    {currentLoads.map((load) => (
+                      <div key={load._id} className="bg-white rounded-lg shadow p-4 space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium text-gray-900">{load.clientName}</div>
+                            <div className="text-sm text-gray-600">{load.goodsType}</div>
                           </div>
-                          <div className="p-4 sm:p-6 space-y-4 flex-grow bg-white dark:bg-gray-800 rounded-t-xl rounded-b-sm">
-                          <div className="flex items-center text-gray-700 dark:text-gray-200">
-                            <span className="font-semibold">Goods Type: {load.goodsType}</span>
+                          <button
+                            onClick={() => openJobModal(load)}
+                            className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                          >
+                            View
+                          </button>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <div className="text-xs font-medium text-gray-500">Pick Up</div>
+                            <div className="text-sm text-gray-900 break-words">{load.pickupLocation}</div>
                           </div>
-                          <div className="flex items-center text-gray-700 dark:text-gray-200">
-                            <span>Pickup: {load.pickupLocation || 'N/A'}</span>
-                          </div>
-                          <div className="flex items-center text-gray-700 dark:text-gray-200">
-                            <span>Dropoff: {load.dropoffLocation || 'N/A'}</span>
-                          </div>
-                          <div className="flex items-center text-gray-700 dark:text-gray-200">
-                            <span>Status: {load.status}</span>
-                          </div>
-                          <button className="mt-2 sm:mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-200 transform hover:scale-105" onClick={() => openJobModal(load)}>View Details</button>
+                          <div>
+                            <div className="text-xs font-medium text-gray-500">Drop Off</div>
+                            <div className="text-sm text-gray-900 break-words">{load.dropoffLocation}</div>
                           </div>
                         </div>
+                        <div>
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full 
+                            ${load.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                              load.status === 'accepted' ? 'bg-green-100 text-green-800' : 
+                              'bg-gray-100 text-gray-800'}`}>
+                            {load.status}
+                          </span>
+                        </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 sm:py-10">
-                      <h2 className="text-lg sm:text-xl font-semibold text-gray-600 dark:text-gray-300">No pending requests found.</h2>
-                      <p className="text-gray-500 dark:text-gray-400 mt-2">Try adjusting your search or filters</p>
-                    </div>
-                  )
-                )}
+                    ))}
+                  </div>
+                </div>
+
+                {/* Desktop view */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="min-w-full table-fixed bg-white border border-gray-300 rounded-lg">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th className="w-[15%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Goods Type</th>
+                        <th className="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pick Up</th>
+                        <th className="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Drop Off</th>
+                        <th className="w-[15%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {currentLoads.map((load) => (
+                        <tr key={load._id} className="hover:bg-gray-50">
+                          <td className="px-4 py-4 text-sm text-gray-900">
+                            <div className="break-words">{load.clientName}</div>
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-900">
+                            <div className="break-words">{load.goodsType}</div>
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-900">
+                            <div className="break-words">{load.pickupLocation}</div>
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-900">
+                            <div className="break-words">{load.dropoffLocation}</div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                              ${load.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                load.status === 'accepted' ? 'bg-green-100 text-green-800' : 
+                                'bg-gray-100 text-gray-800'}`}>
+                              {load.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 text-sm">
+                            <button
+                              onClick={() => openJobModal(load)}
+                              className="text-indigo-600 hover:text-indigo-900 font-medium"
+                            >
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex justify-center mt-4">
+                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <button
+                      onClick={() => paginate(1)}
+                      disabled={currentPage === 1}
+                      className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                        currentPage === 1 ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      {'<<'}
+                    </button>
+                    <button
+                      onClick={() => paginate(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                        currentPage === 1 ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                      Page {currentPage} of {Math.ceil(filteredLoads.length / loadsPerPage)}
+                    </span>
+                    <button
+                      onClick={() => paginate(currentPage + 1)}
+                      disabled={currentPage === Math.ceil(filteredLoads.length / loadsPerPage)}
+                      className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                        currentPage === Math.ceil(filteredLoads.length / loadsPerPage)
+                          ? 'text-gray-300'
+                          : 'text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      Next
+                    </button>
+                    <button
+                      onClick={() => paginate(Math.ceil(filteredLoads.length / loadsPerPage))}
+                      disabled={currentPage === Math.ceil(filteredLoads.length / loadsPerPage)}
+                      className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                        currentPage === Math.ceil(filteredLoads.length / loadsPerPage)
+                          ? 'text-gray-300'
+                          : 'text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      {'>>'}
+                    </button>
+                  </nav>
+                </div>
               </div>
-              {filteredLoads.length > visibleLoads && (
-                <button
-                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-200 transform hover:scale-105"
-                  onClick={() => setVisibleLoads(visibleLoads + 6)}
-                >
-                  View More
-                </button>
-              )}
             </div>
           </div>
-
-          <div className="acceptedBids mt-10 flex-1">
+{/* horizontal line */}
+<hr className="my-8 border-gray-400" />
+          {/* Accepted Bids Section */}
+          <div className="acceptedBids">
             <div className="max-w-screen-xl mx-auto">
               <div className="items-start justify-between md:flex">
-                <div className="max-w-lg">
+                <div className="max-w-lg mx-auto text-center">
                   <h3 className="text-gray-800 dark:text-white text-2xl font-bold sm:text-3xl">
                     Accepted Bids
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300 mt-2">
-                    All your accepted bids at a glance.
+                    View and manage your accepted bids
                   </p>
                 </div>
               </div>
-              <div className="mt-12 flex flex-col gap-6">
-                {loading ? (
-                  <div className="text-center py-10">
-                    <h2 className="text-lg sm:text-xl font-semibold text-gray-600 dark:text-gray-300">Loading...</h2>
-                  </div>
-                ) : (
-                  filteredAcceptedBids.length > 0 ? (
-                    filteredAcceptedBids.slice(0, visibleLoads).map((bid, index) => (
-                      <div key={index} className="bg-white dark:bg-gray-800 rounded-t-lg rounded-b-sm shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105">
-                        <div className='w-full h-full bg-sky-800 dark:bg-sky-900'>
-                          <div className="px-4 py-3 sm:px-6 sm:py-4 flex-shrink-0">
-                            <h3 className="text-lg sm:text-xl font-bold text-white flex items-center">
-                              {bid.clientName}
-                            </h3>
+              <div className="mt-12">
+                <div className="block lg:hidden">
+                  {/* Mobile view for bids */}
+                  <div className="space-y-4">
+                    {currentBids.map((bid) => (
+                      <div key={bid._id} className="bg-white rounded-lg shadow p-4 space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium text-gray-900">{bid.clientName}</div>
+                            <div className="text-sm text-gray-600">{bid.goodsType}</div>
                           </div>
-                          <div className="p-4 sm:p-6 space-y-4 flex-grow bg-white dark:bg-gray-800 rounded-t-xl rounded-b-sm">
-                            <div className="flex items-center text-gray-700 dark:text-gray-200">
-                              <span className="font-semibold">Goods Type: {bid.goodsType}</span>
-                            </div>
-                            <div className="flex items-center text-gray-700 dark:text-gray-200">
-                              <span>Pickup: {bid.pickupLocation || 'N/A'}</span>
-                            </div>
-                            <div className="flex items-center text-gray-700 dark:text-gray-200">
-                              <span>Dropoff: {bid.dropoffLocation || 'N/A'}</span>
-                            </div>
-                            <div className="flex items-center text-gray-700 dark:text-gray-200">
-                              <span>Status: {bid.status}</span>
-                            </div>
-                            <div className="flex items-center space-x-4">
-                              <button 
-                                className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
-                                onClick={() => updateRequestStatus(bid.requestID, 'pending')}
-                              >
-                                Pending
-                              </button>
-                              <button
-                                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                                onClick={() => updateRequestStatus(bid.requestID, 'inTransit')}
-                              >
-                                In Transit
-                              </button>
-                              <button
-                                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                                onClick={() => updateRequestStatus(bid.requestID, 'delivered')}
-                              >
-                                Delivered
-                              </button>
-                            </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium text-gray-900">${bid.amount}</div>
                             <button
-                              className="mt-2 sm:mt-4 px-4 py-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition duration-200 transform hover:scale-105"
                               onClick={() => openJobModal(bid)}
+                              className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
                             >
-                              View Details
+                              View
                             </button>
                           </div>
                         </div>
+                        <div className="space-y-2">
+                          <div>
+                            <div className="text-xs font-medium text-gray-500">Pick Up</div>
+                            <div className="text-sm text-gray-900 break-words">{bid.pickupLocation}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs font-medium text-gray-500">Drop Off</div>
+                            <div className="text-sm text-gray-900 break-words">{bid.dropoffLocation}</div>
+                          </div>
+                        </div>
+                        <div>
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full 
+                            ${bid.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                              bid.status === 'accepted' ? 'bg-green-100 text-green-800' : 
+                              'bg-gray-100 text-gray-800'}`}>
+                            {bid.status}
+                          </span>
+                        </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 sm:py-10">
-                      <h2 className="text-lg sm:text-xl font-semibold text-gray-600 dark:text-gray-300">No accepted bids found.</h2>
-                      <p className="text-gray-500 dark:text-gray-400 mt-2">Try adjusting your search or filters</p>
-                    </div>
-                  )
-                )}
+                    ))}
+                  </div>
+                </div>
+
+                {/* Desktop view for bids */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="min-w-full table-fixed bg-white border border-gray-300 rounded-lg">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client Name</th>
+                        <th className="w-[15%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Goods Type</th>
+                        <th className="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pick Up</th>
+                        <th className="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Drop Off</th>
+                        <th className="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th className="w-[5%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {currentBids.map((bid) => (
+                        <tr key={bid._id} className="hover:bg-gray-50">
+                          <td className="px-4 py-4 text-sm text-gray-900">
+                            <div className="break-words">{bid.clientName}</div>
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-900">
+                            <div className="break-words">{bid.goodsType}</div>
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-900">
+                            <div className="break-words">{bid.pickupLocation}</div>
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-900">
+                            <div className="break-words">{bid.dropoffLocation}</div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                              ${bid.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                bid.status === 'accepted' ? 'bg-green-100 text-green-800' : 
+                                'bg-gray-100 text-gray-800'}`}>
+                              {bid.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-900">
+                            <div className="break-words">${bid.amount}</div>
+                          </td>
+                          <td className="px-4 py-4 text-sm">
+                            <button
+                              onClick={() => openJobModal(bid)}
+                              className="text-indigo-600 hover:text-indigo-900 font-medium"
+                            >
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination for Bids */}
+                <div className="flex justify-center mt-4">
+                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <button
+                      onClick={() => paginateBids(1)}
+                      disabled={currentBidPage === 1}
+                      className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                        currentBidPage === 1 ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      {'<<'}
+                    </button>
+                    <button
+                      onClick={() => paginateBids(currentBidPage - 1)}
+                      disabled={currentBidPage === 1}
+                      className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                        currentBidPage === 1 ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                      Page {currentBidPage} of {Math.ceil(acceptedBids.length / bidsPerPage)}
+                    </span>
+                    <button
+                      onClick={() => paginateBids(currentBidPage + 1)}
+                      disabled={currentBidPage === Math.ceil(acceptedBids.length / bidsPerPage)}
+                      className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                        currentBidPage === Math.ceil(acceptedBids.length / bidsPerPage)
+                          ? 'text-gray-300'
+                          : 'text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      Next
+                    </button>
+                    <button
+                      onClick={() => paginateBids(Math.ceil(acceptedBids.length / bidsPerPage))}
+                      disabled={currentBidPage === Math.ceil(acceptedBids.length / bidsPerPage)}
+                      className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                        currentBidPage === Math.ceil(acceptedBids.length / bidsPerPage)
+                          ? 'text-gray-300'
+                          : 'text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      {'>>'}
+                    </button>
+                  </nav>
+                </div>
               </div>
-              {filteredAcceptedBids.length > visibleLoads && (
-                <button
-                  className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition duration-200 transform hover:scale-105"
-                  onClick={() => setVisibleLoads(visibleLoads + 6)}
-                >
-                  View More
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -458,7 +644,7 @@ function Home() {
               <X size={24} />
             </button>
             
-            <h2 className="text-xl sm:text-2xl font-bold mb-4 dark:text-white pr-8">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 dark:text-white pr-8 text-center">
               {selectedLoad.clientName}
             </h2>
             
