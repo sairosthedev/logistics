@@ -121,7 +121,7 @@ function ClientHome() {
       console.log('Removing modal')
     }
   };
-
+// make this a component  
   const JobCard = ({ job }) => (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105">
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-3 sm:px-6 sm:py-4">
@@ -238,7 +238,7 @@ function ClientHome() {
 
         {error && <div className="mb-4 text-red-600 dark:text-red-400">{error}</div>}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+        {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
           {filteredJobs.length > 0 ? (
             filteredJobs.map((job, index) => (
               <JobCard key={index} job={job} />
@@ -249,7 +249,7 @@ function ClientHome() {
               <p className="text-gray-500 dark:text-gray-400 mt-2">Try adjusting your search or filters</p>
             </div>
           )}
-        </div>
+        </div> */}
 
         {isResponseModalOpen && (
           <Modal

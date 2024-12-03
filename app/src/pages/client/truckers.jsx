@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, User, MapPin, Phone, Star, Weight, Calendar, DollarSign } from 'lucide-react';
+import { Truck, User, MapPin, Phone, Star, Weight, Calendar, DollarSign, ChevronUp, ChevronDown, Search } from 'lucide-react';
 import ClientLayout from '../../components/layouts/clientLayout';
 import axios from 'axios';
 import { BACKEND_Local } from '../../../url.js';
@@ -16,19 +16,35 @@ function AvailableTrucks() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [selectedTrucker, setSelectedTrucker] = useState(null);
   const [acceptedTruckers, setAcceptedTruckers] = useState([]);
+  const [isAcceptedOffersVisible, setIsAcceptedOffersVisible] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [acceptedOffersPage, setAcceptedOffersPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const { accessToken, clientID } = useAuthStore();
 
   useEffect(() => {
     const fetchTruckers = async () => {
       try {
+        setIsLoading(true);
         const response = await axios.get(`${BACKEND_Local}/api/client/request-bids/${clientID}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`
           }
         });
-        setTruckers(response.data);
+        
+        // Separate truckers into accepted and non-accepted
+        const allTruckers = response.data;
+        const accepted = allTruckers.filter(trucker => trucker.status === 'accepted');
+        const available = allTruckers.filter(trucker => trucker.status !== 'accepted');
+        
+        setAcceptedTruckers(accepted);
+        setTruckers(available);
       } catch (error) {
         console.error('Error fetching truckers:', error);
+        setResponseMessage('Error fetching truckers. Please try again.');
+        setIsResponseModalOpen(true);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -39,15 +55,74 @@ function AvailableTrucks() {
     const matchesSearch = searchTerm === '' || (
       (trucker.truckInfo.driverName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (trucker.truckInfo.truckType?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (trucker.truckInfo.location?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+      (trucker.truckInfo.driverPhone?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     );
     
     const matchesAvailability = 
       filterAvailability === 'all' || 
-      (trucker.truckInfo.status?.toLowerCase() || '') === filterAvailability.toLowerCase();
+      (trucker.status?.toLowerCase() || '') === filterAvailability.toLowerCase();
 
     return matchesSearch && matchesAvailability;
   });
+
+  // Calculate pagination for available truckers
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentTruckers = filteredTruckers.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredTruckers.length / itemsPerPage);
+
+  // Calculate pagination for accepted offers
+  const acceptedLastItem = acceptedOffersPage * itemsPerPage;
+  const acceptedFirstItem = acceptedLastItem - itemsPerPage;
+  const currentAcceptedTruckers = acceptedTruckers.slice(acceptedFirstItem, acceptedLastItem);
+  const totalAcceptedPages = Math.ceil(acceptedTruckers.length / itemsPerPage);
+
+  // Pagination controls
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleAcceptedPageChange = (pageNumber) => {
+    setAcceptedOffersPage(pageNumber);
+  };
+
+  const PaginationControls = ({ totalPages, currentPage, onPageChange }) => {
+    return (
+      <div className="flex justify-center items-center space-x-4 mt-4 mb-6">
+        <button
+          onClick={() => onPageChange(1)}
+          disabled={currentPage === 1}
+          className="px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-600"
+        >
+          &lt;&lt;
+        </button>
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-600"
+        >
+          &lt;
+        </button>
+        <span className="text-sm text-gray-700 dark:text-gray-200">
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-600"
+        >
+          &gt;
+        </button>
+        <button
+          onClick={() => onPageChange(totalPages)}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-600"
+        >
+          &gt;&gt;
+        </button>
+      </div>
+    );
+  };
 
   const openConfirmModal = (trucker) => {
     setSelectedTrucker(trucker);
@@ -68,7 +143,7 @@ function AvailableTrucks() {
           Authorization: `Bearer ${accessToken}`
         }
       });
-      setAcceptedTruckers(prevAccepted => [...prevAccepted, { ...selectedTrucker, truckInfo: { ...selectedTrucker.truckInfo, status: 'accepted' } }]);
+      setAcceptedTruckers(prevAccepted => [...prevAccepted, { ...selectedTrucker, status: 'accepted' }]);
       setTruckers(prevTruckers => prevTruckers.filter(trucker => trucker._id !== selectedTrucker._id));
       setResponseMessage('Offer accepted successfully!');
     } catch (error) {
@@ -80,75 +155,6 @@ function AvailableTrucks() {
       setIsResponseModalOpen(true);
     }
   };
-
-  const TruckerCard = ({ trucker }) => (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105">
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-3 sm:px-6 sm:py-4">
-        <h3 className="text-lg sm:text-xl font-bold text-white flex items-center">
-          <User className="mr-2" size={20} />
-          {trucker.truckInfo.driverName}
-        </h3>
-      </div>
-      <div className="p-4 sm:p-6 space-y-4">
-        <div className="flex items-center text-gray-700 dark:text-gray-300">
-          <Truck className="mr-2" size={18} />
-          <span className="font-semibold">{trucker.truckInfo.truckType}</span>
-        </div>
-        <div className="flex items-center text-gray-700 dark:text-gray-300">
-          <MapPin className="mr-2" size={18} />
-          <span>{trucker.truckInfo.location}</span>
-        </div>
-        <div className="flex items-center">
-          <Calendar className="mr-2" size={18} />
-          <span className={`px-2 py-1 rounded-full text-xs sm:text-sm font-semibold ${
-            trucker.truckInfo.status === 'active' 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-yellow-100 text-yellow-800'
-          }`}>
-            {trucker.truckInfo.status}
-          </span>
-        </div>
-        <div className="flex items-center text-gray-700 dark:text-gray-300">
-          <Phone className="mr-2" size={18} />
-          <span>{trucker.truckInfo.driverPhone}</span>
-        </div>
-        <div className="flex items-center text-gray-700 dark:text-gray-300">
-          <Star className="mr-2" size={18} />
-          <div className="flex items-center">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                size={16}
-                className={`${
-                  i < Math.floor(trucker.rating)
-                    ? 'text-yellow-400 fill-yellow-400'
-                    : 'text-gray-300'
-                }`}
-              />
-            ))}
-            <span className="ml-2 text-sm font-semibold">{trucker.rating}</span>
-          </div>
-        </div>
-        <div className="flex items-center text-gray-700 dark:text-gray-300">
-          <Weight className="mr-2" size={18} />
-          <span>{trucker.truckInfo.maxCarryingWeight}</span>
-        </div>
-        <div className="flex items-center text-gray-700 dark:text-gray-300">
-          <DollarSign className="mr-2" size={18} />
-          <span>{trucker.offerAmount}</span>
-        </div>
-        {trucker.truckInfo.status !== 'accepted' && (
-          <button 
-            className="w-full mt-4 bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition-colors duration-300"
-            onClick={() => openConfirmModal(trucker)}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Accepting...' : 'Accept Offer'}
-          </button>
-        )}
-      </div>
-    </div>
-  );
 
   const modalStyles = {
     content: {
@@ -175,51 +181,176 @@ function AvailableTrucks() {
     <ClientLayout>
       <div className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4 sm:mb-6">Available Truckers</h1>
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Truckers</h1>
+            <button
+              onClick={() => setIsAcceptedOffersVisible(!isAcceptedOffersVisible)}
+              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              {isAcceptedOffersVisible ? (
+                <>
+                  <ChevronUp className="w-5 h-5 mr-2" />
+                  Hide Accepted Offers ({acceptedTruckers.length})
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-5 h-5 mr-2" />
+                  Show Accepted Offers ({acceptedTruckers.length})
+                </>
+              )}
+            </button>
+          </div>
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
+            <div className="relative w-full sm:w-64">
               <input
                 type="text"
-                placeholder="Search by name, truck, or location..."
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                placeholder="Search truckers..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
+              <Search className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
             </div>
             <select
-              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               value={filterAvailability}
               onChange={(e) => setFilterAvailability(e.target.value)}
+              className="w-full sm:w-48 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             >
-              <option value="all">All Statuses</option>
-              <option value="available">Available</option>
-              <option value="in transit">In Transit</option>
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="bid">Bid</option>
             </select>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTruckers.map((trucker, index) => (
-            <TruckerCard key={index} trucker={trucker} />
-          ))}
+        {/* Available Truckers Table */}
+        <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg mb-6">
+          <div className="p-4 border-b dark:border-gray-700">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Available Truckers</h2>
+          </div>
+          <div className="w-full min-w-full">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-400">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Driver Name</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Truck Type</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Contact</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Action</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {currentTruckers.map((trucker, index) => (
+                  <tr 
+                    key={trucker._id || index} 
+                    className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 ${
+                      index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'
+                    }`}
+                  >
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {trucker.truckInfo.driverName}
+                      </div>
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {trucker.truckInfo.truckType}
+                      </div>
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        trucker.status === 'active'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                      }`}>
+                        {trucker.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {trucker.truckInfo.driverPhone}
+                      </div>
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      {trucker.status !== 'accepted' && (
+                        <button 
+                          className="px-2 py-1 text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-green-400 disabled:cursor-not-allowed"
+                          onClick={() => openConfirmModal(trucker)}
+                          disabled={isLoading}
+                        >
+                          {isLoading ? 'Accepting...' : 'Accept'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <PaginationControls
+            totalPages={totalPages}
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
+          />
         </div>
 
-        {filteredTruckers.length === 0 && (
-          <div className="text-center py-8 sm:py-10">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-600">No truckers found</h2>
-            <p className="text-gray-500 mt-2">Try adjusting your search or filters</p>
+        {/* Accepted Offers Table - Collapsible */}
+        <div className={`transition-all duration-300 ease-in-out ${isAcceptedOffersVisible ? 'opacity-100 max-h-[2000px] mb-6' : 'opacity-0 max-h-0 overflow-hidden mb-0'}`}>
+          <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+            <div className="p-4 border-b dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Accepted Offers</h2>
+            </div>
+            <div className="w-full min-w-full">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-400">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Driver Name</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Truck Type</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Contact</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {currentAcceptedTruckers.map((trucker, index) => (
+                    <tr 
+                      key={trucker._id || index}
+                      className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 ${
+                        index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'
+                      }`}
+                    >
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          {trucker.truckInfo.driverName}
+                        </div>
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <div className="text-sm text-gray-900 dark:text-white">
+                          {trucker.truckInfo.truckType}
+                        </div>
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <div className="text-sm text-gray-900 dark:text-white">
+                          {trucker.truckInfo.driverPhone}
+                        </div>
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                          {trucker.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <PaginationControls
+              totalPages={totalAcceptedPages}
+              currentPage={acceptedOffersPage}
+              onPageChange={handleAcceptedPageChange}
+            />
           </div>
-        )}
-      </div>
+        </div>
 
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4 sm:mb-6">Accepted Offers</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {acceptedTruckers.map((trucker, index) => (
-          <TruckerCard key={index} trucker={trucker} />
-        ))}
-      </div>
-
-      {isConfirmModalOpen && (
         <Modal
           isOpen={isConfirmModalOpen}
           onRequestClose={closeConfirmModal}
@@ -235,7 +366,7 @@ function AvailableTrucks() {
               <p><strong>Driver Name:</strong> {selectedTrucker?.truckInfo.driverName}</p>
               <p><strong>Truck Type:</strong> {selectedTrucker?.truckInfo.truckType}</p>
               <p><strong>Location:</strong> {selectedTrucker?.truckInfo.location}</p>
-              <p><strong>Max Carrying Weight:</strong> {selectedTrucker?.truckInfo.maxCarryingWeight}</p>
+              <p><strong>Max Carrying Weight:</strong> {selectedTrucker?.maxCarryingWeight}</p>
               <p><strong>Offer Amount:</strong> {selectedTrucker?.offerAmount}</p>
             </div>
             <div className="mt-4 flex justify-end space-x-4">
@@ -255,9 +386,7 @@ function AvailableTrucks() {
             </div>
           </div>
         </Modal>
-      )}
 
-      {isResponseModalOpen && (
         <Modal
           isOpen={isResponseModalOpen}
           onRequestClose={() => setIsResponseModalOpen(false)}
@@ -278,7 +407,7 @@ function AvailableTrucks() {
             </button>
           </div>
         </Modal>
-      )}
+      </div>
     </ClientLayout>
   );
 }
