@@ -1,3 +1,9 @@
+// Material UI font imports
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
+
 import React from 'react';
 import AppLayout from './components/layouts/appLayout';
 
@@ -6,6 +12,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import useAuthStore from './pages/auth/auth'
 import { DarkModeProvider } from './contexts/DarkModeContext';
+import { TruckProvider } from './pages/trucker/truckContext';
 
 // import the pages
 // landing pages
@@ -71,7 +78,8 @@ function App() {
     <DarkModeProvider>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
+        <TruckProvider>
+          <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
           <BrowserRouter>
             <Routes>
               {/* auth routes */}
@@ -131,6 +139,7 @@ function App() {
             </Routes>
           </BrowserRouter>
         </div>
+        </TruckProvider>
       </ThemeProvider>
     </DarkModeProvider>
   );
