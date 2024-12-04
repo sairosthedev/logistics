@@ -109,7 +109,20 @@ function Home() {
     }
 
     try {
-      const assignmentPromises = selectedTrucks.map(async (truckId) => {
+      // First, update the load status to 'accepted'
+      await axios.put(
+        `${BACKEND_Local}/api/trucker/truck-requests/status/${selectedLoad._id}`,
+        { status: 'accepted' },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      // Process each truck assignment
+      for (const truckId of selectedTrucks) {
         const selectedTruckDetails = trucks.find(truck => truck._id === truckId);
         
         const payload = {
@@ -146,27 +159,37 @@ function Home() {
             driverPhone: selectedTruckDetails.driverPhone,
             truckOwnerPhone: selectedTruckDetails.truckOwnerPhone,
             truckOwnerWhatsapp: selectedTruckDetails.truckOwnerWhatsapp,
-            status: selectedTruckDetails.status
+            status: 'accepted'  // Set the status to accepted
           }
         };
 
-        return axios.post(`${BACKEND_Local}/api/trucker/truck-requests/bid`, payload, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
+        await axios.post(
+          `${BACKEND_Local}/api/trucker/truck-requests/bid`,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`
+            }
           }
-        });
-      });
+        );
+      }
 
-      await Promise.all(assignmentPromises);
       setResponseMessage('Trucks assigned successfully!');
       
-      // Refresh data after successful submission
-      await fetchLoads();
-      await fetchAcceptedBids();
+      // Immediately update the local state
+      setLoads(prevLoads => prevLoads.filter(load => load._id !== selectedLoad._id));
       
+      // Fetch fresh data
+      await Promise.all([
+        fetchLoads(),
+        fetchAcceptedBids()
+      ]);
+
+      // Close the modal after a short delay
       setTimeout(() => {
         closeJobModal();
       }, 2000);
+
     } catch (error) {
       console.error('Error submitting truck assignments:', error);
       if (error.response) {
