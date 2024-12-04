@@ -19,7 +19,10 @@ module.exports = {
           50: '#F9FAFB',
         },
       },
+      fontFamily: {
+        sans: ['Roboto', 'ui-sans-serif', 'system-ui'], // Add Roboto font here
+      },
     },
   },
   plugins: [],
-}; 
+};
