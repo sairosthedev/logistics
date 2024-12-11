@@ -21,6 +21,8 @@ function AvailableTrucks() {
   const [acceptedOffersPage, setAcceptedOffersPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const { accessToken, clientID } = useAuthStore();
+  const [isViewMoreModalOpen, setIsViewMoreModalOpen] = useState(false);
+  const [selectedBidDetails, setSelectedBidDetails] = useState(null);
 
   useEffect(() => {
     const fetchTruckers = async () => {
@@ -134,6 +136,16 @@ function AvailableTrucks() {
     setIsConfirmModalOpen(false);
   };
 
+  const openViewMoreModal = (trucker) => {
+    setSelectedBidDetails(trucker);
+    setIsViewMoreModalOpen(true);
+  };
+
+  const closeViewMoreModal = () => {
+    setSelectedBidDetails(null);
+    setIsViewMoreModalOpen(false);
+  };
+
   const acceptBid = async () => {
     setIsLoading(true);
     setResponseMessage('');
@@ -156,24 +168,40 @@ function AvailableTrucks() {
     }
   };
 
+  const rejectBid = () => {
+    // Remove the bid locally from the truckers list
+    const updatedTruckers = truckers.filter(trucker => trucker._id !== selectedTrucker._id);
+    setTruckers(updatedTruckers);
+    
+    // Show success message with driver's name for better context
+    setResponseMessage(`You have declined the bid from ${selectedTrucker.truckInfo.driverName}. This bid will no longer appear in your list.`);
+    setIsResponseModalOpen(true);
+    closeConfirmModal();
+  };
+
   const modalStyles = {
     content: {
       position: 'absolute',
-      top: '50%',
+      top: '10%',
       left: '50%',
       right: 'auto',
       bottom: 'auto',
       marginRight: '-50%',
-      transform: 'translate(-50%, -50%)',
-      zIndex: 1000, // Ensure the modal content is above other elements
-      backgroundColor: 'white', // Ensure background is set
+      transform: 'translate(-50%, 0)',
+      zIndex: 1000,
+      backgroundColor: 'white',
       border: '1px solid #ccc',
       padding: '20px',
       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+      maxHeight: '80vh',
+      overflowY: 'auto',
+      width: '90%',
+      maxWidth: '800px',
+      borderRadius: '8px',
     },
     overlay: {
-      zIndex: 999, // Ensure the overlay is above other elements
-      backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dim the background
+      zIndex: 999,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
   };
 
@@ -182,7 +210,7 @@ function AvailableTrucks() {
       <div className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
         <div className="mb-6 sm:mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Truckers</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Bids</h1>
             <button
               onClick={() => setIsAcceptedOffersVisible(!isAcceptedOffersVisible)}
               className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -190,12 +218,12 @@ function AvailableTrucks() {
               {isAcceptedOffersVisible ? (
                 <>
                   <ChevronUp className="w-5 h-5 mr-2" />
-                  Hide Accepted Offers ({acceptedTruckers.length})
+                  Hide Accepted Bids ({acceptedTruckers.length})
                 </>
               ) : (
                 <>
                   <ChevronDown className="w-5 h-5 mr-2" />
-                  Show Accepted Offers ({acceptedTruckers.length})
+                  Show Accepted Bids ({acceptedTruckers.length})
                 </>
               )}
             </button>
@@ -204,7 +232,7 @@ function AvailableTrucks() {
             <div className="relative w-full sm:w-64">
               <input
                 type="text"
-                placeholder="Search truckers..."
+                placeholder="Search bids..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -223,10 +251,10 @@ function AvailableTrucks() {
           </div>
         </div>
 
-        {/* Available Truckers Table */}
+        {/* Available Bids Table */}
         <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg mb-6">
           <div className="p-4 border-b dark:border-gray-700">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Available Truckers</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Available Bids</h2>
           </div>
           <div className="w-full min-w-full">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -272,15 +300,14 @@ function AvailableTrucks() {
                       </div>
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
-                      {trucker.status !== 'accepted' && (
-                        <button 
-                          className="px-2 py-1 text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-green-400 disabled:cursor-not-allowed"
-                          onClick={() => openConfirmModal(trucker)}
-                          disabled={isLoading}
+                      <div className="flex space-x-2">
+                        <button
+                          className="px-2 py-1 text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          onClick={() => openViewMoreModal(trucker)}
                         >
-                          {isLoading ? 'Accepting...' : 'Accept'}
+                          View More
                         </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -294,11 +321,11 @@ function AvailableTrucks() {
           />
         </div>
 
-        {/* Accepted Offers Table - Collapsible */}
+        {/* Accepted Bids Table - Collapsible */}
         <div className={`transition-all duration-300 ease-in-out ${isAcceptedOffersVisible ? 'opacity-100 max-h-[2000px] mb-6' : 'opacity-0 max-h-0 overflow-hidden mb-0'}`}>
           <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg">
             <div className="p-4 border-b dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Accepted Offers</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Accepted Bids</h2>
             </div>
             <div className="w-full min-w-full">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -351,6 +378,182 @@ function AvailableTrucks() {
           </div>
         </div>
 
+        {/* View More Modal */}
+        <Modal
+          isOpen={isViewMoreModalOpen}
+          onRequestClose={closeViewMoreModal}
+          className="modal"
+          overlayClassName="modal-overlay"
+          shouldCloseOnOverlayClick={true}
+          shouldCloseOnEsc={true}
+          style={modalStyles}
+        >
+          <div className="p-4 sm:p-6 w-full max-w-[95vw] sm:max-w-2xl mx-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-semibold">
+                Bid Details
+              </h2>
+              <button
+                onClick={closeViewMoreModal}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <span className="sr-only">Close</span>
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {selectedBidDetails && (
+              <div className="space-y-6">
+                {/* Load Details */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Load Details</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium w-24 mb-1 sm:mb-0">Pickup:</span>
+                        <span className="flex-1">{selectedBidDetails.pickupLocation}</span>
+                      </p>
+                      <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium w-24 mb-1 sm:mb-0">Dropoff:</span>
+                        <span className="flex-1">{selectedBidDetails.dropoffLocation}</span>
+                      </p>
+                      <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium w-24 mb-1 sm:mb-0">Distance:</span>
+                        <span>{selectedBidDetails.distance} km</span>
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium w-24 mb-1 sm:mb-0">Goods:</span>
+                        <span>{selectedBidDetails.goodsType}</span>
+                      </p>
+                      <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium w-24 mb-1 sm:mb-0">Weight:</span>
+                        <span>{selectedBidDetails.weight} tons</span>
+                      </p>
+                      <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium w-24 mb-1 sm:mb-0">Payment:</span>
+                        <span>{selectedBidDetails.payTerms}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pricing */}
+                <div className="bg-green-50 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Pricing</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                      <span className="font-medium w-24 mb-1 sm:mb-0">Estimated:</span>
+                      <span className="text-lg font-semibold">${selectedBidDetails.estimatedPrice}</span>
+                    </p>
+                    <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                      <span className="font-medium w-24 mb-1 sm:mb-0">Bid Price:</span>
+                      <span className="text-lg font-semibold text-green-600">${selectedBidDetails.negotiationPrice}</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Driver and Truck Info */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h3 className="text-sm font-medium text-gray-900 mb-3">Driver Information</h3>
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium w-20 mb-1 sm:mb-0">Name:</span>
+                        <span>{selectedBidDetails.truckInfo.driverName}</span>
+                      </p>
+                      <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium w-20 mb-1 sm:mb-0">Phone:</span>
+                        <span>{selectedBidDetails.truckInfo.driverPhone}</span>
+                      </p>
+                      <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium w-20 mb-1 sm:mb-0">License:</span>
+                        <span>{selectedBidDetails.truckInfo.licence}</span>
+                      </p>
+                      {selectedBidDetails.truckInfo.passport && (
+                        <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                          <span className="font-medium w-20 mb-1 sm:mb-0">Passport:</span>
+                          <span>{selectedBidDetails.truckInfo.passport}</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h3 className="text-sm font-medium text-gray-900 mb-3">Vehicle Information</h3>
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium w-20 mb-1 sm:mb-0">Type:</span>
+                        <span>{selectedBidDetails.truckInfo.truckType}</span>
+                      </p>
+                      <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium w-20 mb-1 sm:mb-0">Horse:</span>
+                        <span>{selectedBidDetails.truckInfo.horse}</span>
+                      </p>
+                      <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium w-20 mb-1 sm:mb-0">Trailer:</span>
+                        <span>
+                          {selectedBidDetails.truckInfo.trailer1}
+                          {selectedBidDetails.truckInfo.trailer2 && `, ${selectedBidDetails.truckInfo.trailer2}`}
+                        </span>
+                      </p>
+                      <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium w-20 mb-1 sm:mb-0">Weight:</span>
+                        <span>{selectedBidDetails.truckInfo.maximumWeight} tons</span>
+                      </p>
+                      <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium w-20 mb-1 sm:mb-0">Location:</span>
+                        <span>{selectedBidDetails.truckInfo.location || 'Not specified'}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Contact Information</h3>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                      <span className="font-medium w-24 mb-1 sm:mb-0">Phone:</span>
+                      <span>{selectedBidDetails.truckInfo.truckOwnerPhone}</span>
+                    </p>
+                    <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
+                      <span className="font-medium w-24 mb-1 sm:mb-0">WhatsApp:</span>
+                      <span>{selectedBidDetails.truckInfo.truckOwnerWhatsapp}</span>
+                    </p>
+                  </div>
+                </div>
+
+                {selectedBidDetails.status !== 'accepted' && (
+                  <div className="mt-6 flex justify-end space-x-4">
+                    <button
+                      className="px-4 py-2 text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                      onClick={() => {
+                        closeViewMoreModal();
+                        openConfirmModal({ ...selectedBidDetails, action: 'reject' });
+                      }}
+                    >
+                      Reject Bid
+                    </button>
+                    <button
+                      className="px-4 py-2 text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+                      onClick={() => {
+                        closeViewMoreModal();
+                        openConfirmModal({ ...selectedBidDetails, action: 'accept' });
+                      }}
+                    >
+                      Accept Bid
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </Modal>
+
+        {/* Confirm Modal */}
         <Modal
           isOpen={isConfirmModalOpen}
           onRequestClose={closeConfirmModal}
@@ -361,7 +564,11 @@ function AvailableTrucks() {
           style={modalStyles}
         >
           <div className="p-4">
-            <h2 className="text-lg font-semibold">Are you sure you want to accept this offer?</h2>
+            <h2 className="text-lg font-semibold">
+              {selectedTrucker?.action === 'reject' 
+                ? 'Are you sure you want to reject this bid?' 
+                : 'Are you sure you want to accept this bid?'}
+            </h2>
             <div className="mt-4">
               <p><strong>Driver Name:</strong> {selectedTrucker?.truckInfo.driverName}</p>
               <p><strong>Truck Type:</strong> {selectedTrucker?.truckInfo.truckType}</p>
@@ -377,11 +584,15 @@ function AvailableTrucks() {
                 Cancel
               </button>
               <button 
-                className="bg-green-500 text-white px-4 py-2 rounded"
-                onClick={acceptBid}
+                className={`text-white px-4 py-2 rounded ${
+                  selectedTrucker?.action === 'reject' 
+                    ? 'bg-red-500 hover:bg-red-600' 
+                    : 'bg-green-500 hover:bg-green-600'
+                }`}
+                onClick={selectedTrucker?.action === 'reject' ? rejectBid : acceptBid}
                 disabled={isLoading}
               >
-                {isLoading ? 'Accepting...' : 'Accept'}
+                {isLoading ? 'Processing...' : selectedTrucker?.action === 'reject' ? 'Reject' : 'Accept'}
               </button>
             </div>
           </div>
@@ -397,7 +608,10 @@ function AvailableTrucks() {
           style={modalStyles}
         >
           <div className="p-4">
-            <h2 className="text-lg font-semibold">{responseMessage.includes('successfully') ? 'Success' : 'Error'}</h2>
+            <h2 className="text-lg font-semibold">
+              {responseMessage.includes('declined') ? 'Notice' : 
+               responseMessage.includes('successfully') ? 'Success' : 'Error'}
+            </h2>
             <p className="mt-2">{responseMessage}</p>
             <button 
               className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"

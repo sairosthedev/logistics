@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ClientLayout from '../../components/layouts/clientLayout';
-import { Search, Star, User, Truck, MapPin, Calendar, Phone, Weight, DollarSign } from 'lucide-react';
+import { Star, User, Truck, MapPin, Calendar, Phone, Weight, DollarSign } from 'lucide-react';
 import axios from 'axios';
 import { BACKEND_Local } from '../../../url.js';
 import useAuthStore from '../auth/auth';
@@ -12,8 +12,6 @@ import JobsSection from './jobsSection.jsx';
 Modal.setAppElement('#root'); //abc
 
 function ClientHome() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
   const [clientJobs, setClientJobs] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -26,23 +24,6 @@ function ClientHome() {
   const [showMap, setShowMap] = useState(false);
   const [originCoords, setOriginCoords] = useState(null);
   const [destinationCoords, setDestinationCoords] = useState(null);
-
-  const geocodeAddress = async (address) => {
-    try {
-      const response = await axios.get(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-          address
-        )}&key=YOUR_GOOGLE_MAPS_API_KEY`
-      );
-      if (response.data.results.length > 0) {
-        return response.data.results[0].geometry.location;
-      }
-      return null;
-    } catch (error) {
-      console.error('Geocoding error:', error);
-      return null;
-    }
-  };
 
   useEffect(() => {
     const fetchClientJobs = async () => {
@@ -61,23 +42,14 @@ function ClientHome() {
     fetchClientJobs();
   }, [accessToken, clientID]);
 
-  const filteredJobs = clientJobs.filter(job => {
-    const matchesSearch = 
-      (job.goodsType?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-
-    const matchesStatus = 
-      filterStatus === 'all' || 
-      (job.status?.toLowerCase() || '') === filterStatus.toLowerCase();
-
-    return matchesSearch && matchesStatus;
-  });
-
   const openModal = (job) => {
     setSelectedJob(job);
+    setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setSelectedJob(null);
+    setIsModalOpen(false);
   };
 
   const acceptBid = async (bidID) => {
@@ -121,33 +93,20 @@ function ClientHome() {
       console.log('Removing modal')
     }
   };
-// make this a component  
+
   const JobCard = ({ job }) => (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105">
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-3 sm:px-6 sm:py-4">
-        <h3 className="text-lg sm:text-xl font-bold text-white flex items-center">
-          <User className="mr-2" size={20} />
-          {job.goodsType}
-        </h3>
+        <h3 className="text-lg font-semibold text-white">{job.goodsType}</h3>
       </div>
       <div className="p-4 sm:p-6 space-y-4">
         <div className="flex items-center text-gray-700 dark:text-gray-300">
-          <Truck className="mr-2" size={18} />
-          <span className="font-semibold">{job.truckInfo.truckType}</span>
+          <Calendar className="mr-2" size={18} />
+          <span>{new Date(job.pickupDate).toLocaleDateString()}</span>
         </div>
         <div className="flex items-center text-gray-700 dark:text-gray-300">
-          <MapPin className="mr-2" size={18} />
-          <span>{job.pickupLocation}</span>
-        </div>
-        <div className="flex items-center">
-          <Calendar className="mr-2" size={18} />
-          <span className={`px-2 py-1 rounded-full text-xs sm:text-sm font-semibold ${
-            job.status === 'active' 
-              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-          }`}>
-            {job.status}
-          </span>
+          <User className="mr-2" size={18} />
+          <span>{job.truckInfo.driverName}</span>
         </div>
         <div className="flex items-center text-gray-700 dark:text-gray-300">
           <Phone className="mr-2" size={18} />
@@ -176,17 +135,16 @@ function ClientHome() {
         </div>
         <div className="flex items-center text-gray-700 dark:text-gray-300">
           <DollarSign className="mr-2" size={18} />
-          <span>{job.offerAmount}</span>
+          <span>{job.bidAmount}</span>
         </div>
-        {job.status === 'bid' && (
-          <button 
-            className="w-full mt-4 bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition-colors duration-300 disabled:bg-green-400 disabled:cursor-not-allowed"
-            onClick={() => acceptBid(job._id)}
-            disabled={isLoading}
+        <div className="mt-4">
+          <button
+            onClick={() => openModal(job)}
+            className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
           >
-            {isLoading ? 'Accepting...' : 'Accept Offer'}
+            View Details
           </button>
-        )}
+        </div>
       </div>
     </div>
   );
@@ -194,68 +152,26 @@ function ClientHome() {
   return (
     <ClientLayout>
       <div className="py-8 px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center">Client Dashboard</h1>
-        
-        <div className="mb-6 flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
-            <input
-              type="text"
-              placeholder="Search jobs..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500 
-                bg-white dark:bg-gray-800 
-                text-gray-900 dark:text-gray-100 
-                border-gray-300 dark:border-gray-600
-                placeholder-gray-500 dark:placeholder-gray-400"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <select
-            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
-              focus:outline-none focus:border-blue-500
-              bg-white dark:bg-gray-800 
-              text-gray-900 dark:text-gray-100"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="all">All Statuses</option>
-            <option value="bid">Bid</option>
-            <option value="in transit">In Transit</option>
-            <option value="delivered">Delivered</option>
-          </select>
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Request a Truck</h1>
+          <p className="text-gray-600 dark:text-gray-400">Fill in your cargo details below to place a new truck request</p>
         </div>
-
+        
         <div>
           <JobsSection 
             setError={setError}
-            geocodeAddress={geocodeAddress}
-            setOriginCoords={setOriginCoords} 
-            setDestinationCoords={setDestinationCoords}
             setShowMap={setShowMap}
+            setOriginCoords={setOriginCoords}
+            setDestinationCoords={setDestinationCoords}
           />
         </div>
 
         {error && <div className="mb-4 text-red-600 dark:text-red-400">{error}</div>}
 
-        {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-          {filteredJobs.length > 0 ? (
-            filteredJobs.map((job, index) => (
-              <JobCard key={index} job={job} />
-            ))
-          ) : (
-            <div className="text-center py-8 sm:py-10 col-span-full">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-600 dark:text-gray-400">No jobs found.</h2>
-              <p className="text-gray-500 dark:text-gray-400 mt-2">Try adjusting your search or filters</p>
-            </div>
-          )}
-        </div> */}
-
         {isResponseModalOpen && (
           <Modal
             isOpen={isResponseModalOpen}
             onRequestClose={() => setIsResponseModalOpen(false)}
-            className="modal"
             overlayClassName="modal-overlay"
             style={{
               content: {
@@ -282,17 +198,15 @@ function ClientHome() {
             </div>
           </Modal>
         )}
-      </div>
-      
-      {isModalOpen && (
+
         <JobsModal 
           isOpen={isModalOpen} 
-          onRequestClose={() => setIsModalOpen(false)} 
+          onRequestClose={closeModal} 
           onSubmit={addNewLoad} 
           selectedLoad={selectedJob} 
           isLoading={isLoading}
         />
-      )}
+      </div>
     </ClientLayout>
   );
 }

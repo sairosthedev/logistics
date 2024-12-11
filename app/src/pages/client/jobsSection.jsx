@@ -222,7 +222,43 @@ const JobsSection = ({setError, geocodeAddress, setOriginCoords, setDestinationC
         }
 
         try {
-            const searchQuery = `${searchText}, Zimbabwe`;
+            const searchQuery = `${searchText}, Zimbabwedconst filteredTrucks = useMemo(() => {
+              if (!trucks) return [];
+              
+              return trucks.filter(truck => {
+                // Search filter
+                const matchesSearch = !searchTerm || [
+                  truck.driverName,
+                  truck.truckType,
+                  truck.location
+                ].some(field => 
+                  (field || '').toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            
+                // Status filter
+                const matchesStatus = filterStatus === 'all' || truck.status === filterStatus;
+            
+                return matchesSearch && matchesStatus;
+              });
+            }, [trucks, searchTerm, filterStatus]);const filteredTrucks = useMemo(() => {
+              if (!trucks) return [];
+              
+              return trucks.filter(truck => {
+                // Search filter
+                const matchesSearch = !searchTerm || [
+                  truck.driverName,
+                  truck.truckType,
+                  truck.location
+                ].some(field => 
+                  (field || '').toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            
+                // Status filter
+                const matchesStatus = filterStatus === 'all' || truck.status === filterStatus;
+            
+                return matchesSearch && matchesStatus;
+              });
+            }, [trucks, searchTerm, filterStatus]);`;
             const response = await fetch(
                 `https://nominatim.openstreetmap.org/search?` +
                 `format=json&q=${encodeURIComponent(searchQuery)}` +

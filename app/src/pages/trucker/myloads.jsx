@@ -97,6 +97,7 @@ function MyLoads() {
 
   const updateLoadStatus = async (loadId, newStatus) => {
     try {
+      // First update the load status
       await axios.put(
         `${BACKEND_Local}/api/trucker/truck-requests/status/${loadId}`,
         { 
@@ -109,6 +110,55 @@ function MyLoads() {
           }
         }
       );
+
+      // Get the load details to find the associated truck
+      const loadResponse = await axios.get(
+        `${BACKEND_Local}/api/trucker/truck-requests/${loadId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        }
+      );
+
+      if (loadResponse.data && loadResponse.data.truckID) {
+        let newTruckStatus;
+        
+        // Determine the new truck status based on the load status
+        switch (newStatus) {
+          case 'pending':
+            newTruckStatus = 'assigned';
+            break;
+          case 'inTransit':
+            newTruckStatus = 'intransit';
+            break;
+          case 'delivered':
+            newTruckStatus = 'available';
+            break;
+          default:
+            newTruckStatus = 'available';
+        }
+
+        // Update the truck status
+        await axios.put(
+          `${BACKEND_Local}/api/trucker/trucks/${loadResponse.data.truckID}`,
+          {
+            status: newTruckStatus,
+            assignedLoad: newStatus === 'delivered' ? null : {
+              loadId,
+              status: newStatus,
+              updatedAt: new Date().toISOString()
+            }
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`
+            }
+          }
+        );
+      }
+
+      // Refresh the loads lists
       fetchInTransitLoads();
       const response = await axios.get(`${BACKEND_Local}/api/trucker/truck-requests`, {
         headers: {
