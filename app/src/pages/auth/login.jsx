@@ -15,7 +15,7 @@ function login() {
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false); // State for forgot password modal
     const [loading, setLoading] = useState(false); // State to manage loading
     const navigate = useNavigate();
-    const { loginUser } = useAuthStore(); // Get the loginUser function from the store
+    const { loginUser, setAuth } = useAuthStore(); // Get the loginUser function from the store
 
     const handleAccountTypeChange = (event) => {
         setAccountType(event.target.value);
@@ -66,6 +66,22 @@ function login() {
             setLoading(false); // Stop loading animation
         }
     };
+
+    const handleLogin = async (credentials) => {
+        try {
+            const response = await loginUser(credentials);
+            const { token, user } = response.data;
+            
+            // Store token in localStorage
+            localStorage.setItem('authToken', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            
+            setAuth({ token, user });
+            navigate('/dashboard');
+        } catch (error) {
+            // Handle error...
+        }
+    }
 
     return (
         <section className="min-h-screen flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImage})` }}>

@@ -3,6 +3,8 @@ import { useTruckContext } from "./truckContext";
 import DeleteConfirmModal from "./deleteConfirmModal";
 import TruckerLayout from "../../components/layouts/truckerLayout";
 import { toast } from "react-toastify";
+import { useNavigate } from 'react-router-dom';
+import useAuthStore from '../auth/auth';
 
 function Trucks() {
   const {
@@ -14,6 +16,21 @@ function Trucks() {
     deleteTruck,
     fetchTrucks,
   } = useTruckContext();
+
+  const { accessToken } = useAuthStore();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (accessToken) {
+      fetchTrucks();
+    }
+  }, [accessToken, fetchTrucks]);
+
+  useEffect(() => {
+    if (!accessToken) {
+      navigate('/login');
+    }
+  }, [accessToken, navigate]);
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -215,14 +232,22 @@ function Trucks() {
                     {truck.location}
                   </td>
                   <td className="whitespace-nowrap px-3 py-4 text-sm">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      truck.status === 'available' ? 'bg-green-100 text-green-800' :
-                      truck.status === 'assigned' ? 'bg-yellow-100 text-yellow-800' :
-                      truck.status === 'intransit' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {truck.status || 'Available'}
-                    </span>
+                    {truck.currentLoad ? (
+                        <div>
+                            <span className="inline-flex rounded-full px-2 text-xs font-semibold leading-5 bg-yellow-100 text-yellow-800">
+                                Assigned
+                            </span>
+                            <div className="mt-1 text-xs text-gray-500">
+                                {truck.currentLoad.description}
+                                <br />
+                                {truck.currentLoad.pickup} → {truck.currentLoad.delivery}
+                            </div>
+                        </div>
+                    ) : (
+                        <span className="inline-flex rounded-full px-2 text-xs font-semibold leading-5 bg-green-100 text-green-800">
+                            Available
+                        </span>
+                    )}
                   </td>
                   <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                     <button

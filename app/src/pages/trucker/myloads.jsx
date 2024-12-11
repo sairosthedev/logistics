@@ -7,6 +7,7 @@ import useAuthStore from '../auth/auth';
 import { modalStyles } from './modalStyles';
 import { X } from 'lucide-react';
 import Loader from '../../components/ui/Loader.jsx';
+import { useTruckContext } from './truckContext';
 
 Modal.setAppElement('#root');
 
@@ -28,6 +29,8 @@ function MyLoads() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState('');
+  const { trucks: availableTrucks, assignTruckToLoad } = useTruckContext();
+  const [selectedTruck, setSelectedTruck] = useState(null);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -190,78 +193,32 @@ function MyLoads() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    if (selectedTrucks.length === 0) {
-      setResponseMessage('Please assign at least one truck.');
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (selectedTrucks.length > selectedLoad.numberOfTrucks) {
-      setResponseMessage(`You can only assign up to ${selectedLoad.numberOfTrucks} trucks for this load.`);
+    if (!selectedTruck) {
+      setResponseMessage('Please select a truck.');
       setIsSubmitting(false);
       return;
     }
 
     try {
-      const assignmentPromises = selectedTrucks.map(async (truckId) => {
-        const selectedTruckDetails = trucks.find(truck => truck._id === truckId);
-        
-        const payload = {
-          requestID: selectedLoad._id,
-          clientID: selectedLoad.clientID,
-          numberOfTrucks: selectedLoad.numberOfTrucks,
-          truckerID: clientID,
-          pickupLocation: selectedLoad.pickupLocation,
-          dropoffLocation: selectedLoad.dropoffLocation,
-          pickupCoordinates: {
-            latitude: selectedLoad.pickupCoordinates.lat,
-            longitude: selectedLoad.pickupCoordinates.lng
-          },
-          dropoffCoordinates: {
-            latitude: selectedLoad.dropoffCoordinates.lat,
-            longitude: selectedLoad.dropoffCoordinates.lng
-          },
-          distance: selectedLoad.distance,
-          route: selectedLoad.route,
-          goodsType: selectedLoad.goodsType,
-          payTerms: selectedLoad.payTerms,
-          negotiationPrice: parseFloat(negotiationPrice),
-          weight: selectedLoad.weight,
-          truckID: selectedTruckDetails._id,
-          truckInfo: {
-            truckType: selectedTruckDetails.truckType,
-            horse: selectedTruckDetails.horse,
-            trailer1: selectedTruckDetails.trailer1,
-            trailer2: selectedTruckDetails.trailer2,
-            driverName: selectedTruckDetails.driverName,
-            licence: selectedTruckDetails.licence,
-            passport: selectedTruckDetails.passport,
-            driverPhone: selectedTruckDetails.driverPhone,
-            truckOwnerPhone: selectedTruckDetails.truckOwnerPhone,
-            truckOwnerWhatsapp: selectedTruckDetails.truckOwnerWhatsapp,
-            status: selectedTruckDetails.status
-          },
-          offerAmount: parseFloat(negotiationPrice)
-        };
-
-        return axios.post(`${BACKEND_Local}/api/trucker/truck-requests/bid`, payload, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        });
+      const result = await assignTruckToLoad(selectedTruck, selectedLoad._id, {
+        description: selectedLoad.goodsType,
+        pickup: selectedLoad.pickupLocation,
+        delivery: selectedLoad.dropoffLocation,
+        price: negotiationPrice
       });
 
-      await Promise.all(assignmentPromises);
-      setResponseMessage('Trucks assigned successfully!');
-      setTimeout(() => {
-        closeJobModal();
-      }, 2000);
-    } catch (error) {
-      console.error('Error submitting truck assignments:', error);
-      if (error.response) {
-        console.error('Error details:', error.response.data);
+      if (result.success) {
+        setResponseMessage('Truck assigned successfully!');
+        setTimeout(() => {
+          closeJobModal();
+          fetchLoads(); // Refresh the loads list
+        }, 1500);
+      } else {
+        setResponseMessage(result.error || 'Failed to assign truck');
       }
-      setResponseMessage('Failed to assign trucks. Please try again.');
+    } catch (error) {
+      console.error('Error assigning truck:', error);
+      setResponseMessage('Failed to assign truck');
     } finally {
       setIsSubmitting(false);
     }
@@ -392,6 +349,32 @@ function MyLoads() {
       </div>
     ));
   }
+
+  const renderTruckSelection = () => {
+    const availableTrucksOnly = availableTrucks.filter(truck => 
+      !truck.currentLoad && truck.status === 'available'
+    );
+
+    return (
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-gray-700">
+          Select Available Truck
+        </label>
+        <select
+          value={selectedTruck || ''}
+          onChange={(e) => setSelectedTruck(e.target.value)}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        >
+          <option value="">Select a truck</option>
+          {availableTrucksOnly.map(truck => (
+            <option key={truck._id} value={truck._id}>
+              {truck.truckType} - {truck.driverName} ({truck.location})
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  };
 
   if (isLoading) return <div className="flex h-screen justify-center items-center"><Loader size="large" /></div>;
   if (error) return <div>Error: {error}</div>;
@@ -680,19 +663,32 @@ function MyLoads() {
 
                 {selectedLoad.status === 'pending' && (
                   <form onSubmit={handleSubmit} className="mt-4">
-                    <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">Assign Trucks:</label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 dark:text-white">
-                      {renderTrucks(trucks)}
+                    <div className="space-y-4">
+                      {renderTruckSelection()}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Negotiation Price
+                        </label>
+                        <input
+                          type="number"
+                          value={negotiationPrice}
+                          onChange={(e) => setNegotiationPrice(e.target.value)}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                          required
+                        />
+                      </div>
                     </div>
                     <button
                       type="submit"
-                      className="mt-4 bg-green-500 text-white px-4 py-2 rounded text-base hover:bg-green-600 transition duration-200"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || !selectedTruck}
+                      className="mt-4 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm disabled:bg-gray-400"
                     >
-                      {isSubmitting ? 'Submitting...' : 'Assign Trucks'}
+                      {isSubmitting ? 'Assigning...' : 'Assign Truck'}
                     </button>
                     {responseMessage && (
-                      <div className={`mt-4 text-${responseMessage.includes('successfully') ? 'green' : 'red'}-500`}>
+                      <div className={`mt-2 text-sm ${
+                        responseMessage.includes('successfully') ? 'text-green-600' : 'text-red-600'
+                      }`}>
                         {responseMessage}
                       </div>
                     )}

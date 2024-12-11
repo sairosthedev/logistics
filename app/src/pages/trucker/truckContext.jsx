@@ -112,53 +112,27 @@ export const TruckProvider = ({ children }) => {
         }
     };
 
-    const assignTruckToLoad = async (loadId, truckId, negotiationPrice) => {
+    const assignTruckToLoad = useCallback(async (truckId, loadId, loadDetails) => {
         try {
-            // First update the truck's status and assign the load
-            const updateResponse = await axios.put(
-                `${BACKEND_Local}/api/trucker/trucks/${truckId}`,
-                {
-                    status: VALID_STATUSES.ASSIGNED,
-                    assignedLoad: {
-                        loadId,
-                        price: negotiationPrice,
-                        status: 'pending',
-                        assignedAt: new Date().toISOString()
-                    }
-                },
-                { headers: { Authorization: `Bearer ${accessToken}` } }
-            );
-
-            if (!updateResponse.data) {
-                throw new Error('Failed to update truck status');
-            }
-
-            // Then assign the truck to the load
-            const assignResponse = await axios.post(
-                `${BACKEND_Local}/api/trucker/assign/${loadId}`,
-                { 
-                    truckId, 
-                    negotiationPrice,
-                    status: 'pending'  // Set initial load status
-                },
-                { headers: { Authorization: `Bearer ${accessToken}` } }
-            );
-
-            if (!assignResponse.data) {
-                throw new Error('Failed to assign truck to load');
-            }
-
-            // Refresh trucks to get updated state
-            await fetchTrucks();
-            return { success: true, data: assignResponse.data };
+            const response = await axios.put(`/api/trucker/trucks/${truckId}`, {
+                status: 'assigned',
+                currentLoad: {
+                    loadId,
+                    ...loadDetails,
+                    assignedAt: new Date().toISOString()
+                }
+            });
+            
+            await fetchTrucks(); // Refresh the trucks list
+            return { success: true, data: response.data };
         } catch (err) {
-            console.error('Error assigning truck:', err);
-            return { 
-                success: false, 
-                error: err.response?.data?.message || err.message || 'Failed to assign truck' 
+            console.error('Error assigning truck to load:', err);
+            return {
+                success: false,
+                error: err.response?.data?.message || 'Failed to assign truck to load'
             };
         }
-    };
+    }, [fetchTrucks]);
 
     const updateTruckStatus = async (truckId, newStatus) => {
         try {
