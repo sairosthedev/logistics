@@ -69,3 +69,19 @@ function TrackLoad() {
 }
 
 export default TrackLoad;
+
+    // // First update the bid status - using the bid ID instead of request ID
+      // await axios.put(
+      //   `${BACKEND_Local}/api/trucker/request-bids/${selectedLoad._id}`,
+      //   { 
+      //     status: status,
+      //     truckerID: clientID,
+      //     requestID: requestID  // Include the request ID in the body
+      //   }, 
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${accessToken}`,
+      //       'Content-Type': 'application/json'
+      //     }
+      //   }
+      // );
