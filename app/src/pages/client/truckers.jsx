@@ -561,7 +561,13 @@ function AvailableTrucks() {
           overlayClassName="modal-overlay"
           shouldCloseOnOverlayClick={true}
           shouldCloseOnEsc={true}
-          style={modalStyles}
+          style={{
+            ...modalStyles,
+            content: {
+              ...modalStyles.content,
+              color: 'black',
+            },
+          }}
         >
           <div className="p-4">
             <h2 className="text-lg font-semibold">
@@ -605,7 +611,13 @@ function AvailableTrucks() {
           overlayClassName="modal-overlay"
           shouldCloseOnOverlayClick={true}
           shouldCloseOnEsc={true}
-          style={modalStyles}
+          style={{
+            ...modalStyles,
+            content: {
+              ...modalStyles.content,
+              color: 'black',
+            },
+          }}
         >
           <div className="p-4">
             <h2 className="text-lg font-semibold">
@@ -614,7 +626,7 @@ function AvailableTrucks() {
             </h2>
             <p className="mt-2">{responseMessage}</p>
             <button 
-              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               onClick={() => setIsResponseModalOpen(false)}
             >
               Close

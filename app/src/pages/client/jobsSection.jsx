@@ -610,7 +610,8 @@ const JobsSection = ({
                           required
                           placeholder="🏁 Enter Pickup Location"
                           className="border-2 p-3 rounded-lg w-full text-base focus:ring-2 
-                                    focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                                    focus:ring-blue-500 focus:border-transparent transition-all duration-300
+                                    dark:text-black"
                           value={pickupLocation}
                           onChange={(e) => {
                             setPickupLocation(e.target.value);
@@ -648,7 +649,8 @@ const JobsSection = ({
                           required
                           placeholder="🏁 Enter Dropoff Location"
                           className="border-2 p-3 rounded-lg w-full text-base focus:ring-2 
-                                    focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                                    focus:ring-blue-500 focus:border-transparent transition-all duration-300
+                                    dark:text-black"
                           value={dropoffLocation}
                           onChange={(e) => {
                             setDropoffLocation(e.target.value);

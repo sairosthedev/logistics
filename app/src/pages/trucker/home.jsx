@@ -203,11 +203,9 @@ function Home() {
 
   const updateRequestStatus = async (requestID, status) => {
     try {
-      console.log('Selected Load:', selectedLoad); // Add this to debug
-      
+      console.log('Attempting to update status for request:', requestID, 'to:', status);
 
-      // Then update the request status
-      await axios.put(
+      const response = await axios.put(
         `${BACKEND_Local}/api/trucker/truck-requests/status/${requestID}`, 
         { 
           status: status,
@@ -220,39 +218,55 @@ function Home() {
           }
         }
       );
-      
-      // Update local state immediately
-      setSelectedLoad(prev => ({
-        ...prev,
-        status: status
-      }));
 
-      // Update the acceptedBids state
-      setAcceptedBids(prev => 
-        prev.map(bid => 
-          bid._id === selectedLoad._id 
-            ? { ...bid, status: status }
-            : bid
-        )
-      );
-      
-      // If status is delivered, remove the bid from acceptedBids immediately
-      if (status === 'delivered') {
-        setAcceptedBids(prev => prev.filter(bid => bid._id !== selectedLoad._id));
+      console.log('Response from server:', response);
+
+      if (response.status === 200) {
+        console.log('Status updated successfully:', response.data);
+
+        // Update the selected load's status
+        setSelectedLoad(prev => ({
+          ...prev,
+          status: status
+        }));
+
+        // Update the loads state to reflect the new status
+        setLoads(prevLoads => 
+          prevLoads.map(load => 
+            load._id === requestID 
+              ? { ...load, status: status }
+              : load
+          )
+        );
+
+        // Update the acceptedBids state
+        setAcceptedBids(prev => 
+          prev.map(bid => 
+            bid._id === requestID 
+              ? { ...bid, status: status }
+              : bid
+          )
+        );
+
+        // If status is delivered, remove the bid from acceptedBids immediately
+        if (status === 'delivered') {
+          setAcceptedBids(prev => prev.filter(bid => bid._id !== requestID));
+        }
+
+        setResponseMessage('Status updated successfully!');
+        setTimeout(() => {
+          setResponseMessage('');
+        }, 2000);
+
+        // Optionally re-fetch data to ensure UI is in sync with backend
+        await fetchLoads();
+        await fetchAcceptedBids();
+
       } else {
-        // Refresh the data
-        await Promise.all([
-          fetchLoads(),
-          fetchAcceptedBids()
-        ]);
+        console.error('Failed to update status:', response.data);
+        setResponseMessage('Failed to update status. Please try again.');
       }
-      
-      setResponseMessage('Status updated successfully!');
-      setTimeout(() => {
-        setResponseMessage('');
-      }, 2000);
     } catch (error) {
-      console.error('Selected Load:', selectedLoad); // Add this to debug
       console.error('Error updating status:', error);
       if (error.response) {
         console.error('Error details:', error.response.data);
