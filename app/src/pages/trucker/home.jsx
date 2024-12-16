@@ -30,6 +30,7 @@ function Home() {
   const [currentBidPage, setCurrentBidPage] = useState(1);
   const [bidsPerPage] = useState(10);
 
+
   const fetchLoads = async () => {
     try {
       const response = await axios.get(`${BACKEND_Local}/api/trucker/truck-requests`, {
@@ -820,6 +821,10 @@ function Home() {
                     <tr>
                       <td className="py-2 text-gray-700 dark:text-gray-300">Comments:</td>
                       <td className="py-2">{selectedLoad.comments}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">Rate (USD):</td>
+                      <td className="py-2">{selectedLoad.rate}</td>
                     </tr>
                   </tbody>
                 </table>
