@@ -44,7 +44,9 @@ const AcceptedBidsTable = ({ currentBids, openJobModal }) => {
                 </span>
               </td>
               <td className="px-4 py-4 text-sm text-gray-900">
-                <div className="break-words">${bid.negotiationPrice}</div>
+                <div className="break-words">
+                  ${bid.rate || bid.amount || bid.negotiationPrice || 0}
+                </div>
               </td>
               <td className="px-4 py-4 text-sm">
                 <button
