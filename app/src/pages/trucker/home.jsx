@@ -204,11 +204,9 @@ function Home() {
 
   const updateRequestStatus = async (requestID, status) => {
     try {
-      console.log('Selected Load:', selectedLoad); // Add this to debug
-      
+      console.log('Attempting to update status for request:', requestID, 'to:', status);
 
-      // Then update the request status
-      await axios.put(
+      const response = await axios.put(
         `${BACKEND_Local}/api/trucker/truck-requests/status/${requestID}`, 
         { 
           status: status,
@@ -221,39 +219,55 @@ function Home() {
           }
         }
       );
-      
-      // Update local state immediately
-      setSelectedLoad(prev => ({
-        ...prev,
-        status: status
-      }));
 
-      // Update the acceptedBids state
-      setAcceptedBids(prev => 
-        prev.map(bid => 
-          bid._id === selectedLoad._id 
-            ? { ...bid, status: status }
-            : bid
-        )
-      );
-      
-      // If status is delivered, remove the bid from acceptedBids immediately
-      if (status === 'delivered') {
-        setAcceptedBids(prev => prev.filter(bid => bid._id !== selectedLoad._id));
+      console.log('Response from server:', response);
+
+      if (response.status === 200) {
+        console.log('Status updated successfully:', response.data);
+
+        // Update the selected load's status
+        setSelectedLoad(prev => ({
+          ...prev,
+          status: status
+        }));
+
+        // Update the loads state to reflect the new status
+        setLoads(prevLoads => 
+          prevLoads.map(load => 
+            load._id === requestID 
+              ? { ...load, status: status }
+              : load
+          )
+        );
+
+        // Update the acceptedBids state
+        setAcceptedBids(prev => 
+          prev.map(bid => 
+            bid._id === requestID 
+              ? { ...bid, status: status }
+              : bid
+          )
+        );
+
+        // If status is delivered, remove the bid from acceptedBids immediately
+        if (status === 'delivered') {
+          setAcceptedBids(prev => prev.filter(bid => bid._id !== requestID));
+        }
+
+        setResponseMessage('Status updated successfully!');
+        setTimeout(() => {
+          setResponseMessage('');
+        }, 2000);
+
+        // Optionally re-fetch data to ensure UI is in sync with backend
+        await fetchLoads();
+        await fetchAcceptedBids();
+
       } else {
-        // Refresh the data
-        await Promise.all([
-          fetchLoads(),
-          fetchAcceptedBids()
-        ]);
+        console.error('Failed to update status:', response.data);
+        setResponseMessage('Failed to update status. Please try again.');
       }
-      
-      setResponseMessage('Status updated successfully!');
-      setTimeout(() => {
-        setResponseMessage('');
-      }, 2000);
     } catch (error) {
-      console.error('Selected Load:', selectedLoad); // Add this to debug
       console.error('Error updating status:', error);
       if (error.response) {
         console.error('Error details:', error.response.data);
@@ -589,7 +603,7 @@ function Home() {
               <div className="items-start justify-between md:flex">
                 <div className="max-w-lg mx-auto text-center">
                   <h3 className="text-gray-800 dark:text-white text-2xl font-bold sm:text-3xl">
-                    Bids
+                    Accepted Bids
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300 mt-2">
                     View and manage your accepted bids
@@ -800,15 +814,17 @@ function Home() {
                       <td className="py-2 text-gray-700 dark:text-gray-300">Status:</td>
                       <td className="py-2">{selectedLoad.status}</td>
                     </tr>
-                    
-                   
+                    <tr>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">Estimated Price:</td>
+                      <td className="py-2">${selectedLoad.estimatedPrice}</td>
+                    </tr>
                     <tr>
                       <td className="py-2 text-gray-700 dark:text-gray-300">Comments:</td>
                       <td className="py-2">{selectedLoad.comments}</td>
                     </tr>
                     <tr>
-                      <td className="py-2 text-gray-700 dark:text-gray-300">Price (USD):</td>
-                      <td className="py-2">${selectedLoad.price}</td>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">Rate (USD):</td>
+                      <td className="py-2">{selectedLoad.rate}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -839,55 +855,26 @@ function Home() {
                 />
               )}
 
-{selectedLoad.status === 'pending' && (
-  <form onSubmit={handleSubmit} className="mt-4">
-    <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">
-      Assign Trucks ({selectedTrucks.length}/{selectedLoad.numberOfTrucks} selected):
-    </label>
-    <div className="grid grid-cols-1 gap-4">
-      {Array.from({ length: selectedLoad.numberOfTrucks }).map((_, index) => (
-        <select
-          key={index}
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-          value={selectedTrucks[index] || ''}
-          onChange={(e) => {
-            const newSelectedTrucks = [...selectedTrucks];
-            if (e.target.value === '') {
-              newSelectedTrucks.splice(index, 1);
-            } else {
-              newSelectedTrucks[index] = e.target.value;
-            }
-            setSelectedTrucks(newSelectedTrucks);
-          }}
-        >
-          <option value="">Select a truck</option>
-          {trucks.map(truck => (
-            <option 
-              key={truck._id} 
-              value={truck._id}
-              disabled={selectedTrucks.includes(truck._id) && selectedTrucks.indexOf(truck._id) !== index}
-            >
-              {truck.truckType} - {truck.driverName}
-            </option>
-          ))}
-        </select>
-      ))}
-    </div>
-    <button
-      type="submit"
-      className="mt-4 bg-green-500 text-white px-4 py-2 rounded text-base hover:bg-green-600 transition duration-200"
-      disabled={isSubmitting || selectedTrucks.length === 0 || selectedTrucks.length > selectedLoad.numberOfTrucks}
-    >
-      {isSubmitting ? 'Submitting...' : 'Assign Trucks'}
-    </button>
-    {responseMessage && (
-      <div className={`mt-4 text-${responseMessage.includes('successfully') ? 'green' : 'red'}-500`}>
-        {responseMessage}
-      </div>
-    )}
-  </form>
-)}
-
+              {selectedLoad.status === 'pending' && (
+                <form onSubmit={handleSubmit} className="mt-4">
+                  <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">Assign Trucks ({selectedTrucks.length}/{selectedLoad.numberOfTrucks} selected):</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 dark:text-white">
+                    {renderTrucks(trucks)}
+                  </div>
+                  <button
+                    type="submit"
+                    className="mt-4 bg-green-500 text-white px-4 py-2 rounded text-base hover:bg-green-600 transition duration-200"
+                    disabled={isSubmitting || selectedTrucks.length === 0 || selectedTrucks.length > selectedLoad.numberOfTrucks}
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Assign Trucks'}
+                  </button>
+                  {responseMessage && (
+                    <div className={`mt-4 text-${responseMessage.includes('successfully') ? 'green' : 'red'}-500`}>
+                      {responseMessage}
+                    </div>
+                  )}
+                </form>
+              )}
 
               {responseMessage && (
                 <div className={`mt-4 text-center p-2 rounded ${
