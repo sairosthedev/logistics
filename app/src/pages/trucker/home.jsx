@@ -88,6 +88,7 @@ function Home() {
 
   // Modal handlers
   const openJobModal = (load) => {
+    console.log("load", load)
     setSelectedLoad(load);
     setIsJobModalOpen(true);
     setSelectedTrucks([]);

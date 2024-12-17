@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import { BACKEND_Local } from '../../../url';
 import useAuthStore from '../../pages/auth/auth';
 
 const STATUS_CONFIG = {
+  'bid': { 
+    label: 'Bid', 
+    color: 'bg-purple-100 text-purple-800',
+    nextStatus: null
+  },
   'pending': { 
     label: 'Pending', 
     color: 'bg-yellow-100 text-yellow-800',
@@ -37,43 +42,85 @@ const classNames = (...classes) => {
 
 const StatusActionBar = ({ load, onStatusUpdate }) => {
   const [isUpdating, setIsUpdating] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState(load?.status);
   const { accessToken } = useAuthStore();
 
-  if (!load) return null;
+  // Fetch the most recent status from the backend on mount
+  useEffect(() => {
+    const fetchCurrentStatus = async () => {
+      if (!load || !accessToken) return;
 
-  const handleStatusUpdate = async (newStatus) => {
+      try {
+        const response = await axios.get(
+          `${BACKEND_Local}/api/trucker/truck-requests/${load.requestID}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        // Update the status with the most recent status from the backend
+        if (response.data && response.data.status) {
+          setCurrentStatus(response.data.status);
+        }
+      } catch (error) {
+        console.error('Error fetching current status:', error);
+      }
+    };
+
+    fetchCurrentStatus();
+  }, [load, accessToken]);
+  
+
+  // Early return if load is not present or status is 'bid'
+  if (!load || load.status === 'bid') return null;
+
+  const handleStatusUpdate = useCallback(async (newStatus) => {
+    if (!load || !accessToken) return;
+
     try {
       setIsUpdating(true);
       
-      await axios.put(
-        `${BACKEND_Local}/api/trucker/truck-requests/status/${load._id}`,
+      const response = await axios.put(
+        `${BACKEND_Local}/api/trucker/truck-requests/status/${load.requestID}`,
         { status: newStatus },
         {
           headers: {
-            Authorization: `Bearer ${accessToken}`
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
           }
         }
       );
 
-      if (onStatusUpdate) {
-        onStatusUpdate(newStatus);
+      // Check if the update was successful
+      if (response.status === 200 || response.status === 204) {
+        // Update local state with the new status
+        setCurrentStatus(newStatus);
+
+        // Prefer prop method if provided, otherwise use state update
+        if (onStatusUpdate) {
+          onStatusUpdate(newStatus);
+        }
+
+        // Optional: Instead of full page reload, update local state
+        if (load) {
+          load.status = newStatus;
+        }
+      } else {
+        throw new Error('Status update failed');
       }
-      
-      // Optionally refresh the page or update the UI
-      window.location.reload();
     } catch (error) {
       console.error('Error updating status:', error);
+      
+      // Optional: Add user-friendly error handling
+      alert(`Failed to update status: ${error.response?.data?.message || error.message}`);
     } finally {
       setIsUpdating(false);
     }
-  };
+  }, [load, accessToken, onStatusUpdate]);
 
-  // Only show status updates for accepted loads
-  if (load.status !== 'accepted' && load.status !== 'loaded' && load.status !== 'in transit') {
-    return null;
-  }
-
-  const currentStatus = load.status;
   const nextStatus = STATUS_CONFIG[currentStatus]?.nextStatus;
 
   return (
@@ -83,13 +130,14 @@ const StatusActionBar = ({ load, onStatusUpdate }) => {
           <h3 className="text-lg font-semibold">Current Status:</h3>
           <span className={classNames(
             'px-3 py-1 rounded-full text-sm font-semibold',
-            STATUS_CONFIG[currentStatus].color
+            STATUS_CONFIG[currentStatus]?.color || 'bg-gray-100 text-gray-800'
           )}>
-            {STATUS_CONFIG[currentStatus].label}
+            {STATUS_CONFIG[currentStatus]?.label || 'Unknown Status'}
           </span>
         </div>
         
-        {nextStatus && (
+        {/* Only show update button if status is not 'pending' and nextStatus exists */}
+        {currentStatus !== 'pending' && nextStatus && (
           <button
             onClick={() => handleStatusUpdate(nextStatus)}
             disabled={isUpdating}
@@ -100,9 +148,8 @@ const StatusActionBar = ({ load, onStatusUpdate }) => {
         )}
       </div>
 
-      {/* Status Timeline */}
+      {/* Status Timeline component remains the same as in the original code */}
       <div className="relative">
-        {/* Progress Bar */}
         <div className="absolute left-0 right-0 top-4 h-1 bg-gray-200">
           <div 
             className="absolute left-0 h-full bg-green-500 transition-all duration-500"
@@ -112,7 +159,6 @@ const StatusActionBar = ({ load, onStatusUpdate }) => {
           />
         </div>
 
-        {/* Status Points */}
         <div className="relative flex justify-between">
           {Object.entries(STATUS_CONFIG).map(([status, config], index) => {
             const isCompleted = Object.keys(STATUS_CONFIG).indexOf(currentStatus) >= index;
