@@ -1,6 +1,10 @@
 import React from 'react';
 
 const AcceptedBidsTable = ({ currentBids, openJobModal }) => {
+  const handleViewClick = (bid) => {
+    openJobModal(bid, bid.status !== 'bid');
+  };
+
   return (
     <div className="hidden lg:block overflow-x-auto">
       <table className="min-w-full table-fixed bg-white border border-gray-300 rounded-lg">
@@ -44,7 +48,7 @@ const AcceptedBidsTable = ({ currentBids, openJobModal }) => {
               </td>
               <td className="px-4 py-4 text-sm">
                 <button
-                  onClick={() => openJobModal(bid)}
+                  onClick={() => handleViewClick(bid)}
                   className="text-indigo-600 hover:text-indigo-900 font-medium"
                 >
                   View

@@ -17,7 +17,8 @@ const LoadDetailsModal = ({
   responseMessage,
   showSuccessPopup,
   negotiationPrice,
-  setNegotiationPrice
+  setNegotiationPrice,
+  showStatusBar = true
 }) => {
   if (!selectedLoad) return null;
 
@@ -105,10 +106,13 @@ const LoadDetailsModal = ({
               </span>
             </div>
 
-            {acceptedBids.some(bid => bid._id === selectedLoad._id || bid.requestID === selectedLoad._id) && (
+            {showStatusBar && selectedLoad && (
               <StatusActionBar 
-                bid={acceptedBids.find(bid => bid._id === selectedLoad._id || bid.requestID === selectedLoad._id) || selectedLoad} 
-                onStatusUpdate={updateRequestStatus}
+                load={selectedLoad} 
+                onStatusUpdate={(newStatus) => {
+                  // Optionally handle status updates here
+                  console.log('Status updated to:', newStatus);
+                }} 
               />
             )}
 
