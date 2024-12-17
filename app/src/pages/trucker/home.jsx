@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TruckerLayout from '../../components/layouts/truckerLayout';
 import { Link } from 'react-router-dom';
-import { Search, X } from 'lucide-react';
+import { Search, X, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 import { BACKEND_Local } from '../../../url.js';
 import useAuthStore from '../auth/auth';
@@ -29,7 +29,8 @@ function Home() {
   const [responseMessage, setResponseMessage] = useState('');
   const [currentBidPage, setCurrentBidPage] = useState(1);
   const [bidsPerPage] = useState(10);
-
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [deliveredTrucks, setDeliveredTrucks] = useState([]);
 
   const fetchLoads = async () => {
     try {
@@ -53,7 +54,13 @@ function Home() {
           Authorization: `Bearer ${accessToken}`
         }
       });
-      // Filter out delivered bids before setting state
+      
+      const deliveredTruckIds = response.data
+        .filter(bid => bid.status === 'delivered')
+        .map(bid => bid.truckID);
+      
+      setDeliveredTrucks(deliveredTruckIds);
+      
       const nonDeliveredBids = response.data.filter(bid => bid.status !== 'delivered');
       setAcceptedBids(nonDeliveredBids.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (error) {
@@ -97,13 +104,15 @@ function Home() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    if (selectedTrucks.length === 0) {
+    const validTrucks = selectedTrucks.filter(Boolean);
+
+    if (validTrucks.length === 0) {
       setResponseMessage('Please assign at least one truck.');
       setIsSubmitting(false);
       return;
     }
 
-    if (selectedTrucks.length > selectedLoad.numberOfTrucks) {
+    if (validTrucks.length > selectedLoad.numberOfTrucks) {
       setResponseMessage(`You can only assign up to ${selectedLoad.numberOfTrucks} trucks for this load.`);
       setIsSubmitting(false);
       return;
@@ -123,7 +132,7 @@ function Home() {
       );
 
       // Process each truck assignment
-      for (const truckId of selectedTrucks) {
+      for (const truckId of validTrucks) {
         const selectedTruckDetails = trucks.find(truck => truck._id === truckId);
         
         const payload = {
@@ -145,7 +154,6 @@ function Home() {
           route: selectedLoad.route,
           goodsType: selectedLoad.goodsType,
           payTerms: selectedLoad.payTerms,
-          estimatedPrice: selectedLoad.estimatedPrice,
           negotiationPrice: parseFloat(negotiationPrice),
           weight: selectedLoad.weight,
           truckID: selectedTruckDetails._id,
@@ -175,7 +183,7 @@ function Home() {
         );
       }
 
-      setResponseMessage('Trucks assigned successfully!');
+      setShowSuccessPopup(true);
       
       // Immediately update the local state
       setLoads(prevLoads => prevLoads.filter(load => load._id !== selectedLoad._id));
@@ -189,6 +197,7 @@ function Home() {
       // Close the modal after a short delay
       setTimeout(() => {
         closeJobModal();
+        setShowSuccessPopup(false);
       }, 2000);
 
     } catch (error) {
@@ -298,19 +307,48 @@ function Home() {
     });
   };
 
-  function renderTrucks(trucks) {
-    return trucks.map(truck => (
-      <div key={truck._id} className="flex items-center">
-        <input
-          type="checkbox"
-          checked={selectedTrucks.includes(truck._id)}
-          onChange={() => handleTruckSelection(truck._id)}
-          className="mr-2 dark:bg-gray-700 dark:border-gray-600"
-        />
-        <span className="dark:text-gray-200">{truck.truckType} - {truck.driverName}</span>
+  function renderTruckDropdowns() {
+    const availableSlots = Array.from({ length: selectedLoad.numberOfTrucks }, (_, i) => i);
+    
+    return availableSlots.map((_, index) => (
+      <div key={index} className="mb-4">
+        <label className="block text-gray-700 dark:text-gray-300 text-sm mb-2">
+          Truck {index + 1}:
+        </label>
+        <select
+          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+          value={selectedTrucks[index] || ''}
+          onChange={(e) => handleTruckDropdownChange(index, e.target.value)}
+        >
+          <option value="">Select a truck</option>
+          {trucks
+            .filter(truck => !deliveredTrucks.includes(truck._id))
+            .map(truck => (
+              <option 
+                key={truck._id} 
+                value={truck._id}
+                disabled={selectedTrucks.includes(truck._id) && selectedTrucks[index] !== truck._id}
+              >
+                {truck.truckType} - {truck.driverName}
+                {truck.status === 'in transit' ? ' (In Transit)' : ''}
+              </option>
+          ))}
+        </select>
       </div>
     ));
   }
+
+  const handleTruckDropdownChange = (index, truckId) => {
+    setSelectedTrucks(prev => {
+      const newSelection = [...prev];
+      if (truckId === '') {
+        newSelection.splice(index, 1);
+        return newSelection;
+      }
+      newSelection[index] = truckId;
+      return newSelection;
+    });
+  };
 
   // Get current bids
   const indexOfLastBid = currentBidPage * bidsPerPage;
@@ -603,10 +641,10 @@ function Home() {
               <div className="items-start justify-between md:flex">
                 <div className="max-w-lg mx-auto text-center">
                   <h3 className="text-gray-800 dark:text-white text-2xl font-bold sm:text-3xl">
-                    Accepted Bids
+                  Bids
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300 mt-2">
-                    View and manage your accepted bids
+                    View and manage your bids
                   </p>
                 </div>
               </div>
@@ -815,15 +853,11 @@ function Home() {
                       <td className="py-2">{selectedLoad.status}</td>
                     </tr>
                     <tr>
-                      <td className="py-2 text-gray-700 dark:text-gray-300">Estimated Price:</td>
-                      <td className="py-2">${selectedLoad.estimatedPrice}</td>
-                    </tr>
-                    <tr>
                       <td className="py-2 text-gray-700 dark:text-gray-300">Comments:</td>
                       <td className="py-2">{selectedLoad.comments}</td>
                     </tr>
                     <tr>
-                      <td className="py-2 text-gray-700 dark:text-gray-300">Rate (USD):</td>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">Price (USD):</td>
                       <td className="py-2">{selectedLoad.rate}</td>
                     </tr>
                   </tbody>
@@ -857,14 +891,16 @@ function Home() {
 
               {selectedLoad.status === 'pending' && (
                 <form onSubmit={handleSubmit} className="mt-4">
-                  <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">Assign Trucks ({selectedTrucks.length}/{selectedLoad.numberOfTrucks} selected):</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 dark:text-white">
-                    {renderTrucks(trucks)}
+                  <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">
+                    Assign Trucks ({selectedTrucks.filter(Boolean).length}/{selectedLoad.numberOfTrucks} selected):
+                  </label>
+                  <div className="space-y-2">
+                    {renderTruckDropdowns()}
                   </div>
                   <button
                     type="submit"
                     className="mt-4 bg-green-500 text-white px-4 py-2 rounded text-base hover:bg-green-600 transition duration-200"
-                    disabled={isSubmitting || selectedTrucks.length === 0 || selectedTrucks.length > selectedLoad.numberOfTrucks}
+                    disabled={isSubmitting || selectedTrucks.filter(Boolean).length === 0 || selectedTrucks.filter(Boolean).length > selectedLoad.numberOfTrucks}
                   >
                     {isSubmitting ? 'Submitting...' : 'Assign Trucks'}
                   </button>
@@ -888,6 +924,14 @@ function Home() {
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* Success Popup */}
+      {showSuccessPopup && (
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-8 py-4 rounded-xl shadow-2xl z-[9999] flex items-center space-x-3 animate-popup">
+          <CheckCircle className="w-6 h-6" />
+          <span className="text-lg font-medium">Trucks assigned successfully!</span>
+        </div>
       )}
     </TruckerLayout>
   );
