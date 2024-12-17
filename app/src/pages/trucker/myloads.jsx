@@ -204,7 +204,9 @@ function MyLoads() {
         description: selectedLoad.goodsType,
         pickup: selectedLoad.pickupLocation,
         delivery: selectedLoad.dropoffLocation,
-        price: negotiationPrice
+        price: negotiationPrice,
+        rate:selectedLoad.rate
+
       });
 
       if (result.success) {
@@ -262,6 +264,7 @@ function MyLoads() {
               <th className='border border-slate-600 rounded-md bg-sky-800 text-white text-sm p-2'>Dropoff Location</th>
               <th className='border border-slate-600 rounded-md bg-sky-800 text-white text-sm p-2'>Status</th>
               <th className='border border-slate-600 rounded-md bg-sky-800 text-white text-sm p-2'>Actions</th>
+               <th className='border border-slate-600 rounded-md bg-sky-800 text-white text-sm p-2'>Rate (USD)</th>
             </tr>
           </thead>
           <tbody>
@@ -657,6 +660,10 @@ function MyLoads() {
                     <tr>
                       <td className="py-2 text-gray-700 dark:text-gray-300">Status:</td>
                       <td className="py-2">{selectedLoad.status}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">Rate (USD):</td>
+                      <td className="py-2">${selectedLoad.rate}</td>
                     </tr>
                   </tbody>
                 </table>
