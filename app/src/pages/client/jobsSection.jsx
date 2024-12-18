@@ -67,6 +67,7 @@ const JobsSection = ({
   const [selectingPickup, setSelectingPickup] = useState(false);
   const [selectingDropoff, setSelectingDropoff] = useState(false);
   const [route, setRoute] = useState([]);
+  const [numberOfTrucks, setNumberOfTrucks] = useState(1);
   const [truckType, setTruckType] = useState("");
   const [goodsType, setGoodsType] = useState("");
   const [payTerms, setPayTerms] = useState("");
@@ -108,6 +109,7 @@ const JobsSection = ({
     setTruckType("");
     setGoodsType("");
     setPayTerms("");
+    setNumberOfTrucks(1);
     setWeight("");
     setEstimatedPrice(null);
     setNegotiationPrice("");
@@ -145,7 +147,7 @@ const JobsSection = ({
       route: "I-55 N",
       goodsType,
       payTerms,
-      numberOfTrucks: 1,
+      numberOfTrucks,
       estimatedPrice,
       negotiationPrice: parseFloat(negotiationPrice),
       status: "Pending",
@@ -250,43 +252,7 @@ const JobsSection = ({
     }
 
     try {
-      const searchQuery = `${searchText}, Zimbabwedconst filteredTrucks = useMemo(() => {
-              if (!trucks) return [];
-              
-              return trucks.filter(truck => {
-                // Search filter
-                const matchesSearch = !searchTerm || [
-                  truck.driverName,
-                  truck.truckType,
-                  truck.location
-                ].some(field => 
-                  (field || '').toLowerCase().includes(searchTerm.toLowerCase())
-                );
-            
-                // Status filter
-                const matchesStatus = filterStatus === 'all' || truck.status === filterStatus;
-            
-                return matchesSearch && matchesStatus;
-              });
-            }, [trucks, searchTerm, filterStatus]);const filteredTrucks = useMemo(() => {
-              if (!trucks) return [];
-              
-              return trucks.filter(truck => {
-                // Search filter
-                const matchesSearch = !searchTerm || [
-                  truck.driverName,
-                  truck.truckType,
-                  truck.location
-                ].some(field => 
-                  (field || '').toLowerCase().includes(searchTerm.toLowerCase())
-                );
-            
-                // Status filter
-                const matchesStatus = filterStatus === 'all' || truck.status === filterStatus;
-            
-                return matchesSearch && matchesStatus;
-              });
-            }, [trucks, searchTerm, filterStatus]);`;
+      const searchQuery = `${searchText}, Zimbabwe`;
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?` +
           `format=json&q=${encodeURIComponent(searchQuery)}` +
