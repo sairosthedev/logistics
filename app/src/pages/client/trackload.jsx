@@ -39,7 +39,7 @@ function TrackLoad() {
         }
     }, [accessToken, clientID]);
 
-    // Helper function to get progress percentage based on status
+    // Helper functions remain the same...
     const getProgressPercentage = (status) => {
         switch(status) {
             case 'assigned':
@@ -47,7 +47,7 @@ function TrackLoad() {
                 return 20;
             case 'loaded':
                 return 40;
-            case 'in transit':
+            case 'inTransit':
                 return 80;
             case 'delivered':
                 return 100;
@@ -56,7 +56,6 @@ function TrackLoad() {
         }
     };
 
-    // Helper function to get status color
     const getStatusColor = (status) => {
         switch(status) {
             case 'assigned':
@@ -64,7 +63,7 @@ function TrackLoad() {
                 return 'text-yellow-600';
             case 'loaded':
                 return 'text-orange-600';
-            case 'in transit':
+            case 'inTransit':
                 return 'text-blue-600';
             case 'delivered':
                 return 'text-green-600';
@@ -73,7 +72,6 @@ function TrackLoad() {
         }
     };
 
-    // Helper function to get progress bar color
     const getProgressBarColor = (status) => {
         switch(status) {
             case 'assigned':
@@ -81,7 +79,7 @@ function TrackLoad() {
                 return 'bg-yellow-600';
             case 'loaded':
                 return 'bg-orange-600';
-            case 'in transit':
+            case 'inTransit':
                 return 'bg-blue-600';
             case 'delivered':
                 return 'bg-green-600';
@@ -113,6 +111,7 @@ function TrackLoad() {
                                 <thead className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
                                     <tr>
                                         <th className="border border-gray-300 px-2 sm:px-4 py-2">Status</th>
+                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Driver Name</th>
                                         <th className="border border-gray-300 px-2 sm:px-4 py-2">Pickup Location</th>
                                         <th className="border border-gray-300 px-2 sm:px-4 py-2">Dropoff Location</th>
                                         <th className="border border-gray-300 px-2 sm:px-4 py-2">Distance</th>
@@ -128,6 +127,9 @@ function TrackLoad() {
                                         <tr key={load._id} className="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-200">
                                             <td className={`border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 ${getStatusColor(load.status)}`}>
                                                 {load.status}
+                                            </td>
+                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">
+                                                {load.driverName || 'Not Assigned'}
                                             </td>
                                             <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.pickupLocation}</td>
                                             <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.dropoffLocation}</td>
@@ -177,6 +179,10 @@ function TrackLoad() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-4">
                                             <div>
+                                                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Driver Name</h3>
+                                                <p className="text-gray-600 dark:text-gray-400">{selectedLoad.driverName || 'Not Assigned'}</p>
+                                            </div>
+                                            <div>
                                                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Pickup Location</h3>
                                                 <p className="text-gray-600 dark:text-gray-400">{selectedLoad.pickupLocation}</p>
                                             </div>
@@ -201,6 +207,12 @@ function TrackLoad() {
                                             <div>
                                                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Weight</h3>
                                                 <p className="text-gray-600 dark:text-gray-400">{selectedLoad.weight} tons</p>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Created At</h3>
+                                                <p className="text-gray-600 dark:text-gray-400">
+                                                    {new Date(selectedLoad.createdAt).toLocaleDateString('en-GB')}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
