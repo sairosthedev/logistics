@@ -48,46 +48,44 @@ function TrackLoad() {
                     {error && <p className="text-red-600 dark:text-red-400 text-sm sm:text-base">{error}</p>}
                     
                     {/* Table Section */}
-                    <div className="mt-8 bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 sm:p-6">
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full border-collapse border border-gray-200 dark:border-gray-700">
-                                <thead className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                                    <tr>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Pickup Location</th>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Dropoff Location</th>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Distance</th>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Goods Type</th>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Number of Trucks</th>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Weight</th>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Created At</th>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Actions</th>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full border-collapse border border-gray-200 dark:border-gray-700">
+                            <thead className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                                <tr>
+                                    <th className="border border-gray-300 px-2 sm:px-4 py-2">Pickup Location</th>
+                                    <th className="border border-gray-300 px-2 sm:px-4 py-2">Dropoff Location</th>
+                                    <th className="border border-gray-300 px-2 sm:px-4 py-2">Distance</th>
+                                    <th className="border border-gray-300 px-2 sm:px-4 py-2">Goods Type</th>
+                                    <th className="border border-gray-300 px-2 sm:px-4 py-2">Number of Trucks</th>
+                                    <th className="border border-gray-300 px-2 sm:px-4 py-2">Weight</th>
+                                    <th className="border border-gray-300 px-2 sm:px-4 py-2">Created At</th>
+                                    <th className="border border-gray-300 px-2 sm:px-4 py-2">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white dark:bg-gray-800">
+                                {loads.map((load) => (
+                                    <tr key={load._id} className="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-200">
+                                        <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.pickupLocation}</td>
+                                        <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.dropoffLocation}</td>
+                                        <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.distance} km</td>
+                                        <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.goodsType}</td>
+                                        <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.numberOfTrucks}</td>
+                                        <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.weight} tons</td>
+                                        <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">
+                                            {new Date(load.createdAt).toLocaleDateString('en-GB')}
+                                        </td>
+                                        <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2">
+                                            <button
+                                                onClick={() => handleTrackClick(load)}
+                                                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors"
+                                            >
+                                                Track
+                                            </button>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody className="bg-white dark:bg-gray-800">
-                                    {loads.map((load) => (
-                                        <tr key={load._id} className="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-200">
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.pickupLocation}</td>
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.dropoffLocation}</td>
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.distance} km</td>
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.goodsType}</td>
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.numberOfTrucks}</td>
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.weight} tons</td>
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">
-                                                {new Date(load.createdAt).toLocaleDateString('en-GB')}
-                                            </td>
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2">
-                                                <button
-                                                    onClick={() => handleTrackClick(load)}
-                                                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors"
-                                                >
-                                                    Track
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
 
                     {/* Full Page Modal */}
