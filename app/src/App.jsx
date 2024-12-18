@@ -22,6 +22,7 @@ import NotFound from './pages/notFound'
 // auth pages
 import Login from './pages/auth/login'
 import SignUp from './pages/auth/SignUp'
+import ForgotPassword from './pages/auth/forgotPassword'
 
 // admin pages
 import Home from './pages/admin/home'
@@ -88,6 +89,7 @@ function App() {
               {/* auth pages */}
               <Route path="/auth/*" element={<Login />} />
               <Route path="/signup" element={<SignUp />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
 
               {/* admin routes */}
               <Route path="app" element={<PrivateRoute element={<Home />} />} />
