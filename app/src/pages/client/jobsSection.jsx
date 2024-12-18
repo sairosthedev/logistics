@@ -67,7 +67,6 @@ const JobsSection = ({
   const [selectingPickup, setSelectingPickup] = useState(false);
   const [selectingDropoff, setSelectingDropoff] = useState(false);
   const [route, setRoute] = useState([]);
-  const [numberOfTrucks, setNumberOfTrucks] = useState(1);
   const [truckType, setTruckType] = useState("");
   const [goodsType, setGoodsType] = useState("");
   const [payTerms, setPayTerms] = useState("");
@@ -109,7 +108,6 @@ const JobsSection = ({
     setTruckType("");
     setGoodsType("");
     setPayTerms("");
-    setNumberOfTrucks(1);
     setWeight("");
     setEstimatedPrice(null);
     setNegotiationPrice("");
@@ -147,7 +145,7 @@ const JobsSection = ({
       route: "I-55 N",
       goodsType,
       payTerms,
-      numberOfTrucks,
+      numberOfTrucks: 1,
       estimatedPrice,
       negotiationPrice: parseFloat(negotiationPrice),
       status: "Pending",
@@ -742,28 +740,6 @@ const JobsSection = ({
                   <option value="100% on Delivery">100% on Delivery</option>
                   <option value="Other">Other</option>
                 </select>
-              </div>
-
-              {/* Number of Trucks Field */}
-              <div className="flex flex-col sm:flex-row items-center">
-                <span className="text-2xl mr-2">🚛</span>
-                <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">
-                  # of Trucks:
-                </label>
-                <input
-                  type="number"
-                  required
-                  className="border p-2 rounded flex-grow text-base
-                    bg-white dark:bg-gray-700 
-                    text-gray-900 dark:text-gray-100
-                    border-gray-300 dark:border-gray-600
-                    focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
-                  value={numberOfTrucks}
-                  onChange={(e) => setNumberOfTrucks(e.target.value)}
-                  max="1"
-                  min="1"
-                  placeholder="Number of Trucks"
-                />
               </div>
 
               {/* Weight Field */}
