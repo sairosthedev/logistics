@@ -7,9 +7,7 @@ import { BACKEND_Local } from '../../../url.js';
 function ForgotPassword() {
     const [email, setEmail] = useState('');
     const [otp, setOtp] = useState(['', '', '', '', '', '']); // 6-digit OTP
-    const [stage, setStage] = useState('email'); // 'email' or 'otp'
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
+    const [stage, setStage] = useState('email'); // 'email', 'otp', or 'resetPassword'
     const [errorMessage, setErrorMessage] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
@@ -66,41 +64,30 @@ function ForgotPassword() {
         setErrorMessage('');
         setLoading(true);
 
-        // Validate password match
-        if (password !== confirmPassword) {
-            setErrorMessage('Passwords do not match');
-            setLoading(false);
-            return;
-        }
-
         const otpCode = otp.join('');
 
         try {
-            const response = await fetch(`${BACKEND_Local}/api/reset-password`, {
+            const response = await fetch(`${BACKEND_Local}/api/verify-otp`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ 
                     email, 
-                    otp: otpCode,
-                    newPassword: password 
+                    otp: otpCode 
                 }),
             });
 
             if (response.ok) {
-                // Password reset successful
-                navigate('/', { 
-                    state: { 
-                        message: 'Password reset successfully. Please log in.' 
-                    } 
-                });
+                // OTP verification successful, move to reset password stage
+                setStage('resetPassword');
+                setSuccessMessage('OTP verified successfully. Please set a new password.');
             } else {
                 const errorData = await response.json();
                 setErrorMessage(`Error: ${errorData.message}`);
             }
         } catch (error) {
-            setErrorMessage('Error resetting password: ' + error.message);
+            setErrorMessage('Error verifying OTP: ' + error.message);
         } finally {
             setLoading(false);
         }
@@ -113,12 +100,16 @@ function ForgotPassword() {
                     <div className="text-center mb-8">
                         <img className="w-auto h-24 sm:h-16 md:h-24 mx-auto" src={mainLogo} alt="Main Logo" />
                         <h1 className="text-2xl sm:text-lg md:text-2xl font-extrabold text-gray-900">
-                            {stage === 'email' ? 'Forgot Password' : 'Reset Password'}
+                            {stage === 'email' ? 'Forgot Password' : 
+                             stage === 'otp' ? 'Verify OTP' : 
+                             'Reset Password'}
                         </h1>
                         <p className="text-lg sm:text-base md:text-lg text-gray-600">
                             {stage === 'email' 
                                 ? 'Enter your email to reset your password' 
-                                : 'Enter the OTP and set a new password'}
+                                : stage === 'otp'
+                                ? 'Enter the OTP sent to your email'
+                                : 'Set a new password'}
                         </p>
                     </div>
 
@@ -126,7 +117,7 @@ function ForgotPassword() {
                     {successMessage && <div className="mb-2 text-green-600 text-center">{successMessage}</div>}
                     {loading && <div className="mb-2 text-blue-600 text-center">Loading...</div>}
 
-                    {stage === 'email' ? (
+                    {stage === 'email' && (
                         <form onSubmit={handleSendOtp} className="space-y-4">
                             <div>
                                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -148,10 +139,12 @@ function ForgotPassword() {
                                 className="w-full flex justify-center py-1 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out transform hover:scale-105"
                                 disabled={loading}
                             >
-                                {loading ? 'Sending OTP...' : 'Submit'}
+                                {loading ? 'Sending OTP...' : 'Send OTP'}
                             </button>
                         </form>
-                    ) : (
+                    )}
+
+                    {stage === 'otp' && (
                         <form onSubmit={handleVerifyOtp} className="space-y-4">
                             <div className="flex justify-between mt-4 space-x-2">
                                 {otp.map((digit, index) => (
@@ -169,44 +162,25 @@ function ForgotPassword() {
                                 ))}
                             </div>
 
-                            <div>
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                                    New Password
-                                </label>
-                                <input 
-                                    type="password" 
-                                    id="password"
-                                    placeholder="••••••••"
-                                    className="block w-full px-4 py-1 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                    required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
-                            </div>
-
-                            <div>
-                                <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Confirm New Password
-                                </label>
-                                <input 
-                                    type="password" 
-                                    id="confirm-password"
-                                    placeholder="••••••••"
-                                    className="block w-full px-4 py-1 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                    required
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                />
-                            </div>
-
                             <button
                                 type="submit"
                                 className="w-full flex justify-center py-1 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out transform hover:scale-105"
                                 disabled={loading}
                             >
-                                {loading ? 'Resetting Password...' : 'Reset Password'}
+                                {loading ? 'Verifying OTP...' : 'Verify OTP'}
                             </button>
                         </form>
+                    )}
+
+                    {stage === 'resetPassword' && (
+                        <ResetPasswordForm 
+                            email={email} 
+                            onSuccess={() => navigate('/', { 
+                                state: { 
+                                    message: 'Password reset successfully. Please log in.' 
+                                } 
+                            })}
+                        />
                     )}
 
                     <div className="mt-4 text-center mb-3">
@@ -220,6 +194,96 @@ function ForgotPassword() {
                 </div>
             </div>
         </section>
+    );
+}
+
+// Separate component for Reset Password
+function ResetPasswordForm({ email, onSuccess }) {
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleResetPassword = async (event) => {
+        event.preventDefault();
+        setErrorMessage('');
+        setLoading(true);
+
+        // Validate password match
+        if (password !== confirmPassword) {
+            setErrorMessage('Passwords do not match');
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${BACKEND_Local}/api/reset-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    email, 
+                    newPassword: password 
+                }),
+            });
+
+            if (response.ok) {
+                // Password reset successful
+                onSuccess();
+            } else {
+                const errorData = await response.json();
+                setErrorMessage(`Error: ${errorData.message}`);
+            }
+        } catch (error) {
+            setErrorMessage('Error resetting password: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <form onSubmit={handleResetPassword} className="space-y-4">
+            <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                    New Password
+                </label>
+                <input 
+                    type="password" 
+                    id="password"
+                    placeholder="••••••••"
+                    className="block w-full px-4 py-1 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                />
+            </div>
+
+            <div>
+                <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
+                    Confirm New Password
+                </label>
+                <input 
+                    type="password" 
+                    id="confirm-password"
+                    placeholder="••••••••"
+                    className="block w-full px-4 py-1 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+            </div>
+
+            {errorMessage && <div className="mb-2 text-red-600 text-center">{errorMessage}</div>}
+
+            <button
+                type="submit"
+                className="w-full flex justify-center py-1 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out transform hover:scale-105"
+                disabled={loading}
+            >
+                {loading ? 'Resetting Password...' : 'Reset Password'}
+            </button>
+        </form>
     );
 }
 

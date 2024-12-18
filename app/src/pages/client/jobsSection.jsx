@@ -760,6 +760,7 @@ const JobsSection = ({
                     focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
                   value={numberOfTrucks}
                   onChange={(e) => setNumberOfTrucks(e.target.value)}
+                  max="1"
                   min="1"
                   placeholder="Number of Trucks"
                 />
