@@ -67,11 +67,14 @@ function AvailableTrucks() {
     return matchesSearch && matchesAvailability;
   });
 
+  // Sort the filtered truckers by 'createdAt' in descending order
+  const sortedFilteredTruckers = filteredTruckers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
   // Calculate pagination for available truckers
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentTruckers = filteredTruckers.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredTruckers.length / itemsPerPage);
+  const currentTruckers = sortedFilteredTruckers.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(sortedFilteredTruckers.length / itemsPerPage);
 
   // Calculate pagination for accepted offers
   const acceptedLastItem = acceptedOffersPage * itemsPerPage;
@@ -264,6 +267,7 @@ function AvailableTrucks() {
                   <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Truck Type</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Contact</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Created At</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Action</th>
                 </tr>
               </thead>
@@ -297,6 +301,11 @@ function AvailableTrucks() {
                     <td className="px-4 py-2 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
                         {trucker.truckInfo.driverPhone}
+                      </div>
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {new Date(trucker.createdAt).toLocaleString('en-GB')}
                       </div>
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
