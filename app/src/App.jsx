@@ -22,6 +22,7 @@ import NotFound from './pages/notFound'
 // auth pages
 import Login from './pages/auth/login'
 import SignUp from './pages/auth/SignUp'
+import ForgotPassword from './pages/auth/forgotPassword'
 
 // admin pages
 import Home from './pages/admin/home'
@@ -35,7 +36,7 @@ import Analytics from './pages/admin/Analytics';
 // client pages
 import ClientHome from './pages/client/home'
 import AvailableTrucks from './pages/client/truckers'
-import ClientMyLoads from './pages/client/myloads'
+// import ClientMyLoads from './pages/client/myloads'
 import ClientTrackLoad from './pages/client/trackload'
 import ClientSettings from './pages/client/settings'
 
@@ -88,6 +89,7 @@ function App() {
               {/* auth pages */}
               <Route path="/auth/*" element={<Login />} />
               <Route path="/signup" element={<SignUp />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
 
               {/* admin routes */}
               <Route path="app" element={<PrivateRoute element={<Home />} />} />
@@ -113,7 +115,7 @@ function App() {
               {/* client routes */}
               <Route path="client" element={<PrivateRoute element={<ClientHome />} />} />
               <Route path="client/truckers" element={<PrivateRoute element={<AvailableTrucks />} />} />
-              <Route path="client/myloads" element={<PrivateRoute element={<ClientMyLoads />} />} />
+              {/* <Route path="client/myloads" element={<PrivateRoute element={<ClientMyLoads />} />} /> */}
               <Route path="client/trackload" element={<PrivateRoute element={<ClientTrackLoad />} />} />
               <Route path="client/settings" element={<PrivateRoute element={<ClientSettings />} />} />
 

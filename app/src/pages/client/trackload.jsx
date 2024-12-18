@@ -53,6 +53,7 @@ function TrackLoad() {
                             <table className="min-w-full border-collapse border border-gray-200 dark:border-gray-700">
                                 <thead className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
                                     <tr>
+                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Status</th>
                                         <th className="border border-gray-300 px-2 sm:px-4 py-2">Pickup Location</th>
                                         <th className="border border-gray-300 px-2 sm:px-4 py-2">Dropoff Location</th>
                                         <th className="border border-gray-300 px-2 sm:px-4 py-2">Distance</th>
@@ -66,6 +67,7 @@ function TrackLoad() {
                                 <tbody className="bg-white dark:bg-gray-800">
                                     {loads.map((load) => (
                                         <tr key={load._id} className="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-200">
+                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.status}</td>
                                             <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.pickupLocation}</td>
                                             <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.dropoffLocation}</td>
                                             <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.distance} km</td>
@@ -113,6 +115,7 @@ function TrackLoad() {
                                 <div className="p-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-4">
+                                            
                                             <div>
                                                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Pickup Location</h3>
                                                 <p className="text-gray-600 dark:text-gray-400">{selectedLoad.pickupLocation}</p>

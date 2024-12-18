@@ -154,7 +154,7 @@ function ClientHome() {
       <div className="py-8 px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Request a Truck</h1>
-          <p className="text-gray-600 dark:text-gray-400">Fill in your cargo details below to place a new truck request</p>
+          <p className="text-gray-600 dark:text-gray-400">Fill in your details below to place a new truck request</p>
         </div>
         
         <div>
