@@ -146,7 +146,7 @@ function ForgotPassword() {
 
                     {stage === 'otp' && (
                         <form onSubmit={handleVerifyOtp} className="space-y-4">
-                            <div className="flex justify-between mt-4 space-x-2">
+                            <div className="flex justify-center mt-4 space-x-1">
                                 {otp.map((digit, index) => (
                                     <input
                                         key={index}
@@ -154,7 +154,7 @@ function ForgotPassword() {
                                         type="text"
                                         maxLength="1"
                                         placeholder="0"
-                                        className="w-1/6 px-4 py-2 border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        className="w-10 h-10 px-2 py-1 border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         value={digit}
                                         onChange={(e) => handleOtpChange(index, e.target.value)}
                                         required
@@ -175,11 +175,14 @@ function ForgotPassword() {
                     {stage === 'resetPassword' && (
                         <ResetPasswordForm 
                             email={email} 
-                            onSuccess={() => navigate('/', { 
-                                state: { 
-                                    message: 'Password reset successfully. Please log in.' 
-                                } 
-                            })}
+                            onSuccess={() => {
+                                localStorage.setItem('resetSuccess', 'Password reset successfully. Do you want to log in?');
+                                navigate('/', { 
+                                    state: { 
+                                        message: 'Password reset successfully. Do you want to log in?' 
+                                    } 
+                                });
+                            }}
                         />
                     )}
 
