@@ -47,7 +47,7 @@ function TrackLoad() {
                 return 20;
             case 'loaded':
                 return 40;
-            case 'inTransit':
+            case 'in transit':
                 return 80;
             case 'delivered':
                 return 100;
@@ -63,7 +63,7 @@ function TrackLoad() {
                 return 'text-yellow-600';
             case 'loaded':
                 return 'text-orange-600';
-            case 'inTransit':
+            case 'in transit':
                 return 'text-blue-600';
             case 'delivered':
                 return 'text-green-600';
@@ -79,7 +79,7 @@ function TrackLoad() {
                 return 'bg-yellow-600';
             case 'loaded':
                 return 'bg-orange-600';
-            case 'inTransit':
+            case 'in transit':
                 return 'bg-blue-600';
             case 'delivered':
                 return 'bg-green-600';
