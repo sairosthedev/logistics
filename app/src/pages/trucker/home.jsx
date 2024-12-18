@@ -1,24 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import TruckerLayout from '../../components/layouts/truckerLayout';
-import axios from 'axios';
-import { BACKEND_Local } from '../../../url.js';
-import useAuthStore from '../auth/auth';
-import Modal from 'react-modal';
-import { modalStyles } from './modalStyles';
+import React, { useState, useEffect } from "react";
+import TruckerLayout from "../../components/layouts/truckerLayout";
+import axios from "axios";
+import { BACKEND_Local } from "../../../url.js";
+import useAuthStore from "../auth/auth";
+import Modal from "react-modal";
+import { modalStyles } from "./modalStyles";
 
-// Import separated components
-import DashboardCards from '../../components/trucker/DashboardCards';
-import SearchAndFilter from '../../components/trucker/SearchAndFilter';
-import LoadDetailsModal from '../../components/trucker/LoadDetailsModal';
-import LoadTable from '../../components/trucker/LoadTable';
-import AcceptedBidsTable from '../../components/trucker/AcceptedBidsTable';
+// Import separated component(s)
+import DashboardCards from "../../components/trucker/DashboardCards";
+import SearchAndFilter from "../../components/trucker/SearchAndFilter";
+import LoadDetailsModal from "../../components/trucker/LoadDetailsModal";
+import LoadTable from "../../components/trucker/LoadTable";
+import AcceptedBidsTable from "../../components/trucker/AcceptedBidsTable";
 
-Modal.setAppElement('#root');
+Modal.setAppElement("#root");
 
 function Home() {
   const { accessToken, clientID } = useAuthStore();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [loads, setLoads] = useState([]);
   const [acceptedBids, setAcceptedBids] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,11 +26,11 @@ function Home() {
   const [loadsPerPage] = useState(10);
   const [selectedLoad, setSelectedLoad] = useState(null);
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
-  const [negotiationPrice, setNegotiationPrice] = useState('');
+  const [negotiationPrice, setNegotiationPrice] = useState("");
   const [trucks, setTrucks] = useState([]);
   const [selectedTrucks, setSelectedTrucks] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [responseMessage, setResponseMessage] = useState('');
+  const [responseMessage, setResponseMessage] = useState("");
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [deliveredTrucks, setDeliveredTrucks] = useState([]);
   const [currentBidPage, setCurrentBidPage] = useState(1);
@@ -39,12 +39,19 @@ function Home() {
   // Fetch functions
   const fetchLoads = async () => {
     try {
-      const response = await axios.get(`${BACKEND_Local}/api/trucker/truck-requests`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      setLoads(response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      const response = await axios.get(
+        `${BACKEND_Local}/api/trucker/truck-requests`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      setLoads(
+        response.data.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        )
+      );
     } catch (error) {
-      console.error('Error fetching loads:', error);
+      console.error("Error fetching loads:", error);
     } finally {
       setLoading(false);
     }
@@ -52,31 +59,43 @@ function Home() {
 
   const fetchAcceptedBids = async () => {
     try {
-      const response = await axios.get(`${BACKEND_Local}/api/trucker/request-bids/trucker/${clientID}`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      
+      const response = await axios.get(
+        `${BACKEND_Local}/api/trucker/request-bids/trucker/${clientID}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+
       const deliveredTruckIds = response.data
-        .filter(bid => bid.status === 'delivered')
-        .map(bid => bid.truckID);
-      
+        .filter((bid) => bid.status === "delivered")
+        .map((bid) => bid.truckID);
+
       setDeliveredTrucks(deliveredTruckIds);
-      
-      const nonDeliveredBids = response.data.filter(bid => bid.status !== 'delivered');
-      setAcceptedBids(nonDeliveredBids.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+
+      const nonDeliveredBids = response.data.filter(
+        (bid) => bid.status !== "delivered"
+      );
+      setAcceptedBids(
+        nonDeliveredBids.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        )
+      );
     } catch (error) {
-      console.error('Error fetching accepted bids:', error);
+      console.error("Error fetching accepted bids:", error);
     }
   };
 
   const fetchTrucks = async () => {
     try {
-      const response = await axios.get(`${BACKEND_Local}/api/trucker/trucks/${clientID}`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
+      const response = await axios.get(
+        `${BACKEND_Local}/api/trucker/trucks/${clientID}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
       setTrucks(response.data);
     } catch (error) {
-      console.error('Error fetching trucks:', error);
+      console.error("Error fetching trucks:", error);
     }
   };
 
@@ -88,7 +107,7 @@ function Home() {
 
   // Modal handlers
   const openJobModal = (load) => {
-    console.log("load", load)
+    console.log("load", load);
     setSelectedLoad(load);
     setIsJobModalOpen(true);
     setSelectedTrucks([]);
@@ -96,7 +115,7 @@ function Home() {
 
   const closeJobModal = () => {
     setSelectedLoad(null);
-    setResponseMessage('');
+    setResponseMessage("");
     setSelectedTrucks([]);
     setIsJobModalOpen(false);
   };
@@ -109,13 +128,15 @@ function Home() {
     const validTrucks = selectedTrucks.filter(Boolean);
 
     if (validTrucks.length === 0) {
-      setResponseMessage('Please assign at least one truck.');
+      setResponseMessage("Please assign at least one truck.");
       setIsSubmitting(false);
       return;
     }
 
     if (validTrucks.length > selectedLoad.numberOfTrucks) {
-      setResponseMessage(`You can only assign up to ${selectedLoad.numberOfTrucks} trucks for this load.`);
+      setResponseMessage(
+        `You can only assign up to ${selectedLoad.numberOfTrucks} trucks for this load.`
+      );
       setIsSubmitting(false);
       return;
     }
@@ -124,19 +145,21 @@ function Home() {
       // Update load status
       await axios.put(
         `${BACKEND_Local}/api/trucker/truck-requests/status/${selectedLoad._id}`,
-        { status: 'accepted' },
+        { status: "accepted" },
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json'
-          }
+            "Content-Type": "application/json",
+          },
         }
       );
 
       // Process truck assignments
       for (const truckId of validTrucks) {
-        const selectedTruckDetails = trucks.find(truck => truck._id === truckId);
-        
+        const selectedTruckDetails = trucks.find(
+          (truck) => truck._id === truckId
+        );
+
         const payload = {
           requestID: selectedLoad._id,
           clientID: selectedLoad.clientID,
@@ -155,32 +178,33 @@ function Home() {
           truckID: selectedTruckDetails._id,
           truckInfo: {
             ...selectedTruckDetails,
-            status: 'accepted'
-          }
+            status: "accepted",
+          },
         };
 
         await axios.post(
           `${BACKEND_Local}/api/trucker/truck-requests/bid`,
           payload,
           {
-            headers: { Authorization: `Bearer ${accessToken}` }
+            headers: { Authorization: `Bearer ${accessToken}` },
           }
         );
       }
 
       setShowSuccessPopup(true);
-      setLoads(prevLoads => prevLoads.filter(load => load._id !== selectedLoad._id));
-      
+      setLoads((prevLoads) =>
+        prevLoads.filter((load) => load._id !== selectedLoad._id)
+      );
+
       await Promise.all([fetchLoads(), fetchAcceptedBids()]);
 
       setTimeout(() => {
         closeJobModal();
         setShowSuccessPopup(false);
       }, 2000);
-
     } catch (error) {
-      console.error('Error submitting truck assignments:', error);
-      setResponseMessage('Failed to assign trucks. Please try again.');
+      console.error("Error submitting truck assignments:", error);
+      setResponseMessage("Failed to assign trucks. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -194,55 +218,53 @@ function Home() {
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json'
-          }
+            "Content-Type": "application/json",
+          },
         }
       );
 
       if (response.status === 200) {
-        setSelectedLoad(prev => ({
+        setSelectedLoad((prev) => ({
           ...prev,
-          status: status
+          status: status,
         }));
 
-        setLoads(prevLoads => 
-          prevLoads.map(load => 
-            load._id === requestID 
-              ? { ...load, status: status }
-              : load
+        setLoads((prevLoads) =>
+          prevLoads.map((load) =>
+            load._id === requestID ? { ...load, status: status } : load
           )
         );
 
-        if (status === 'delivered') {
-          setAcceptedBids(prev => prev.filter(bid => bid._id !== requestID));
+        if (status === "delivered") {
+          setAcceptedBids((prev) =>
+            prev.filter((bid) => bid._id !== requestID)
+          );
         } else {
-          setAcceptedBids(prev => 
-            prev.map(bid => 
-              bid._id === requestID 
-                ? { ...bid, status: status }
-                : bid
+          setAcceptedBids((prev) =>
+            prev.map((bid) =>
+              bid._id === requestID ? { ...bid, status: status } : bid
             )
           );
         }
 
-        setResponseMessage('Status updated successfully!');
+        setResponseMessage("Status updated successfully!");
         setTimeout(() => {
-          setResponseMessage('');
+          setResponseMessage("");
         }, 2000);
 
         await fetchLoads();
         await fetchAcceptedBids();
       }
     } catch (error) {
-      console.error('Error updating status:', error);
-      setResponseMessage('Failed to update status. Please try again.');
+      console.error("Error updating status:", error);
+      setResponseMessage("Failed to update status. Please try again.");
     }
   };
 
   // Render truck dropdowns
   const renderTruckDropdowns = () => {
     const availableSlots = Array.from({ length: selectedLoad.numberOfTrucks });
-    
+
     return availableSlots.map((_, index) => (
       <div key={index} className="mb-4">
         <label className="block text-gray-700 dark:text-gray-300 text-sm mb-2">
@@ -250,20 +272,23 @@ function Home() {
         </label>
         <select
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          value={selectedTrucks[index] || ''}
+          value={selectedTrucks[index] || ""}
           onChange={(e) => handleTruckDropdownChange(index, e.target.value)}
         >
           <option value="">Select a truck</option>
           {trucks
-            .filter(truck => !deliveredTrucks.includes(truck._id))
-            .map(truck => (
-              <option 
-                key={truck._id} 
+            .filter((truck) => !deliveredTrucks.includes(truck._id))
+            .map((truck) => (
+              <option
+                key={truck._id}
                 value={truck._id}
-                disabled={selectedTrucks.includes(truck._id) && selectedTrucks[index] !== truck._id}
+                disabled={
+                  selectedTrucks.includes(truck._id) &&
+                  selectedTrucks[index] !== truck._id
+                }
               >
                 {truck.truckType} - {truck.driverName}
-                {truck.status === 'in transit' ? ' (In Transit)' : ''}
+                {truck.status === "in transit" ? " (In Transit)" : ""}
               </option>
             ))}
         </select>
@@ -272,9 +297,9 @@ function Home() {
   };
 
   const handleTruckDropdownChange = (index, truckId) => {
-    setSelectedTrucks(prev => {
+    setSelectedTrucks((prev) => {
       const newSelection = [...prev];
-      if (truckId === '') {
+      if (truckId === "") {
         newSelection.splice(index, 1);
         return newSelection;
       }
@@ -284,10 +309,12 @@ function Home() {
   };
 
   // Filter and paginate loads
-  const filteredLoads = loads.filter(load => {
-    const matchesSearch = load.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         load.goodsType.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || load.status === filterStatus;
+  const filteredLoads = loads.filter((load) => {
+    const matchesSearch =
+      load.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      load.goodsType.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter =
+      filterStatus === "all" || load.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
@@ -308,8 +335,8 @@ function Home() {
         </h1>
 
         <DashboardCards />
-        
-        <SearchAndFilter 
+
+        <SearchAndFilter
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           filterStatus={filterStatus}
@@ -330,7 +357,7 @@ function Home() {
                   </p>
                 </div>
               </div>
-              <LoadTable 
+              <LoadTable
                 currentLoads={currentLoads}
                 openJobModal={openJobModal}
               />
@@ -353,7 +380,7 @@ function Home() {
                   </p>
                 </div>
               </div>
-              <AcceptedBidsTable 
+              <AcceptedBidsTable
                 currentBids={currentBids}
                 openJobModal={openJobModal}
               />
@@ -361,7 +388,7 @@ function Home() {
           </div>
         </div>
 
-        <LoadDetailsModal 
+        <LoadDetailsModal
           isOpen={isJobModalOpen}
           onClose={closeJobModal}
           selectedLoad={selectedLoad}
