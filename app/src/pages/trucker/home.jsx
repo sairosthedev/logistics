@@ -376,7 +376,7 @@ function Home() {
                     Bids
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300 mt-2">
-                    View and manage your accepted bids
+                    View and manage your bids
                   </p>
                 </div>
               </div>
