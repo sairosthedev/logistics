@@ -36,7 +36,7 @@ import Analytics from './pages/admin/Analytics';
 // client pages
 import ClientHome from './pages/client/home'
 import AvailableTrucks from './pages/client/truckers'
-import ClientMyLoads from './pages/client/myloads'
+// import ClientMyLoads from './pages/client/myloads'
 import ClientTrackLoad from './pages/client/trackload'
 import ClientSettings from './pages/client/settings'
 
@@ -115,7 +115,7 @@ function App() {
               {/* client routes */}
               <Route path="client" element={<PrivateRoute element={<ClientHome />} />} />
               <Route path="client/truckers" element={<PrivateRoute element={<AvailableTrucks />} />} />
-              <Route path="client/myloads" element={<PrivateRoute element={<ClientMyLoads />} />} />
+              {/* <Route path="client/myloads" element={<PrivateRoute element={<ClientMyLoads />} />} /> */}
               <Route path="client/trackload" element={<PrivateRoute element={<ClientTrackLoad />} />} />
               <Route path="client/settings" element={<PrivateRoute element={<ClientSettings />} />} />
 
