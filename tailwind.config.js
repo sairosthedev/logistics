@@ -22,6 +22,28 @@ module.exports = {
       fontFamily: {
         sans: ['Roboto', 'ui-sans-serif', 'system-ui'], // Add Roboto font here
       },
+      keyframes: {
+        popup: {
+          '0%': {
+            opacity: '0',
+            transform: 'translate(-50%, -40%)',
+            scale: '0.95'
+          },
+          '40%': {
+            opacity: '1',
+            transform: 'translate(-50%, -50%)',
+            scale: '1.05'
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translate(-50%, -50%)',
+            scale: '1'
+          },
+        }
+      },
+      animation: {
+        'popup': 'popup 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+      }
     },
   },
   plugins: [],

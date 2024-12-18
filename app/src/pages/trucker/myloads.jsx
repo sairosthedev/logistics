@@ -176,8 +176,9 @@ function MyLoads() {
   };
 
   // Modal control functions
-  const openJobModal = (load) => {
+  const openJobModal = (load, showStatusBar = true) => {
     setSelectedLoad(load);
+    setShowStatusBar(showStatusBar);
     setIsJobModalOpen(true);
   };
 
