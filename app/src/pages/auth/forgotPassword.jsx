@@ -11,12 +11,14 @@ function ForgotPassword() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-
+     
     const handleSendOtp = async (event) => {
         event.preventDefault();
         setErrorMessage('');
+        setSuccessMessage('');    
         setLoading(true);
     
         try {
@@ -35,6 +37,7 @@ function ForgotPassword() {
     
             if (response.ok) {
                 setStage('otp');
+                setSuccessMessage('OTP has been sent to your email. Please check your inbox.');
             } else {
                 const errorData = await response.json();
                 setErrorMessage(`Error: ${errorData.message}`);
@@ -47,7 +50,6 @@ function ForgotPassword() {
         }
     };
     
-
     const handleOtpChange = (index, value) => {
         const newOtp = [...otp];
         newOtp[index] = value;
@@ -121,6 +123,7 @@ function ForgotPassword() {
                     </div>
 
                     {errorMessage && <div className="mb-2 text-red-600 text-center">{errorMessage}</div>}
+                    {successMessage && <div className="mb-2 text-green-600 text-center">{successMessage}</div>}
                     {loading && <div className="mb-2 text-blue-600 text-center">Loading...</div>}
 
                     {stage === 'email' ? (
@@ -145,7 +148,7 @@ function ForgotPassword() {
                                 className="w-full flex justify-center py-1 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out transform hover:scale-105"
                                 disabled={loading}
                             >
-                                {loading ? 'Sending OTP...' : 'Send OTP'}
+                                {loading ? 'Sending OTP...' : 'Submit'}
                             </button>
                         </form>
                     ) : (
