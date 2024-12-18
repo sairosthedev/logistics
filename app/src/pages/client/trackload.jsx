@@ -22,7 +22,8 @@ function TrackLoad() {
                     }
                 });
                 if (response.data && Array.isArray(response.data)) {
-                    setLoads(response.data);
+                    const sortedLoads = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    setLoads(sortedLoads);
                 } else {
                     console.error('Unexpected response data:', response.data);
                     setLoads([]);
@@ -138,7 +139,7 @@ function TrackLoad() {
                                             <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.numberOfTrucks}</td>
                                             <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.weight} tons</td>
                                             <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">
-                                                {new Date(load.createdAt).toLocaleDateString('en-GB')}
+                                                {new Date(load.createdAt).toLocaleString('en-GB')}
                                             </td>
                                             <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2">
                                                 <button
@@ -211,7 +212,7 @@ function TrackLoad() {
                                             <div>
                                                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Created At</h3>
                                                 <p className="text-gray-600 dark:text-gray-400">
-                                                    {new Date(selectedLoad.createdAt).toLocaleDateString('en-GB')}
+                                                    {new Date(selectedLoad.createdAt).toLocaleString('en-GB')}
                                                 </p>
                                             </div>
                                         </div>
