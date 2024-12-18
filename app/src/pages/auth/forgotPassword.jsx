@@ -20,7 +20,7 @@ function ForgotPassword() {
         setLoading(true);
     
         try {
-            const response = await fetch(`${BACKEND_Local}/api/forgot-password`, {
+            const response = await fetch(`${BACKEND_Local}/api/send-email/forgot-password`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ function ForgotPassword() {
         const otpCode = otp.join('');
 
         try {
-            const response = await fetch(`${BACKEND_Local}/api/verify-otp`, {
+            const response = await fetch(`${BACKEND_Local}/api/auth/submitOtp`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -217,14 +217,14 @@ function ResetPasswordForm({ email, onSuccess }) {
         }
 
         try {
-            const response = await fetch(`${BACKEND_Local}/api/reset-password`, {
+            const response = await fetch(`${BACKEND_Local}/api/auth/resetPassword`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ 
                     email, 
-                    newPassword: password 
+                    password: password 
                 }),
             });
 
