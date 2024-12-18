@@ -29,12 +29,66 @@ function TrackLoad() {
                 }
             } catch (error) {
                 console.error('Error fetching loads:', error.response ? error.response.data : error.message);
+                setError('Failed to fetch loads. Please try again later.');
                 setLoads([]);
             }
         };
 
-        fetchLoads();
+        if (accessToken && clientID) {
+            fetchLoads();
+        }
     }, [accessToken, clientID]);
+
+    // Helper function to get progress percentage based on status
+    const getProgressPercentage = (status) => {
+        switch(status) {
+            case 'assigned':
+            case 'accepted':
+                return 20;
+            case 'loaded':
+                return 40;
+            case 'in transit':
+                return 80;
+            case 'delivered':
+                return 100;
+            default:
+                return 0;
+        }
+    };
+
+    // Helper function to get status color
+    const getStatusColor = (status) => {
+        switch(status) {
+            case 'assigned':
+            case 'accepted':
+                return 'text-yellow-600';
+            case 'loaded':
+                return 'text-orange-600';
+            case 'in transit':
+                return 'text-blue-600';
+            case 'delivered':
+                return 'text-green-600';
+            default:
+                return 'text-gray-600';
+        }
+    };
+
+    // Helper function to get progress bar color
+    const getProgressBarColor = (status) => {
+        switch(status) {
+            case 'assigned':
+            case 'accepted':
+                return 'bg-yellow-600';
+            case 'loaded':
+                return 'bg-orange-600';
+            case 'in transit':
+                return 'bg-blue-600';
+            case 'delivered':
+                return 'bg-green-600';
+            default:
+                return 'bg-gray-600';
+        }
+    };
 
     const handleTrackClick = (load) => {
         setSelectedLoad(load);
@@ -45,7 +99,12 @@ function TrackLoad() {
             <div className="py-6">
                 <div className="px-4 mx-auto max-w-7xl sm:px-6 md:px-8">
                     <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100">Track Jobs</h1>
-                    {error && <p className="text-red-600 dark:text-red-400 text-sm sm:text-base">{error}</p>}
+                    
+                    {error && (
+                        <div className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                            {error}
+                        </div>
+                    )}
                     
                     {/* Table Section */}
                     <div className="mt-8 bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 sm:p-6">
@@ -67,7 +126,9 @@ function TrackLoad() {
                                 <tbody className="bg-white dark:bg-gray-800">
                                     {loads.map((load) => (
                                         <tr key={load._id} className="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-200">
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.status}</td>
+                                            <td className={`border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 ${getStatusColor(load.status)}`}>
+                                                {load.status}
+                                            </td>
                                             <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.pickupLocation}</td>
                                             <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.dropoffLocation}</td>
                                             <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.distance} km</td>
@@ -115,7 +176,6 @@ function TrackLoad() {
                                 <div className="p-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-4">
-                                            
                                             <div>
                                                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Pickup Location</h3>
                                                 <p className="text-gray-600 dark:text-gray-400">{selectedLoad.pickupLocation}</p>
@@ -149,18 +209,18 @@ function TrackLoad() {
                                     <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
                                         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">ORDER STATUS</h3>
                                         <p className="text-gray-600 dark:text-gray-400 mb-2">
-                                            Status: <span className={`font-semibold ${selectedLoad.status === "pending" ? "text-yellow-600" : selectedLoad.status === "inTransit" ? "text-blue-600" : "text-green-600"}`}>
+                                            Status: <span className={`font-semibold ${getStatusColor(selectedLoad.status)}`}>
                                                 {selectedLoad.status}
                                             </span>
                                         </p>
                                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
                                             <div 
-                                                className={`h-4 rounded-full ${selectedLoad.status === "delivered" ? "bg-green-600" : "bg-blue-600"}`} 
-                                                style={{ width: `${selectedLoad.status === "delivered" ? 100 : selectedLoad.status === "inTransit" ? 60 : 20}%` }}
+                                                className={`h-4 rounded-full ${getProgressBarColor(selectedLoad.status)}`} 
+                                                style={{ width: `${getProgressPercentage(selectedLoad.status)}%` }}
                                             />
                                         </div>
                                         <p className="mt-2 text-right text-sm text-gray-600 dark:text-gray-400">
-                                            {selectedLoad.status === "delivered" ? 100 : selectedLoad.status === "inTransit" ? 60 : 20}%
+                                            {getProgressPercentage(selectedLoad.status)}%
                                         </p>
                                     </div>
                                 </div>
