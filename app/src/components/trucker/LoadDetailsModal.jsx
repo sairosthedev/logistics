@@ -132,6 +132,7 @@ const LoadDetailsModal = ({
                     type="number"
                     value={negotiationPrice}
                     onChange={(e) => setNegotiationPrice(e.target.value)}
+                    min="1"
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     placeholder="Enter price"
                     required
