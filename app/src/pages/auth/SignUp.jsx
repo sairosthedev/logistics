@@ -123,11 +123,11 @@ function Signup() {
 
                             <div>
                                 <label htmlFor="password" className="block text-sm sm:text-xs md:text-sm font-medium text-gray-700 mb-1">Password</label>
-                                <input type="password" name="password" id="password" placeholder="••••••••" className="block w-full px-4 py-1 sm:px-2 sm:py-0.5 md:px-4 md:py-1 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out" required aria-label="Password" onChange={(e) => setPassword(e.target.value)} />
+                                <input type="password" name="password" id="password" placeholder="Enter your password" className="block w-full px-4 py-1 sm:px-2 sm:py-0.5 md:px-4 md:py-1 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out" required aria-label="Password" onChange={(e) => setPassword(e.target.value)} />
                             </div>
                             <div>
                                 <label htmlFor="confirmPassword" className="block text-sm sm:text-xs md:text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                                <input type="password" name="confirmPassword" id="confirmPassword" placeholder="••••••••" className="block w-full px-4 py-1 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out" required aria-label="Confirm Password" onChange={(e) => setConfirmPassword(e.target.value)} />
+                                <input type="password" name="confirmPassword" id="confirmPassword" placeholder="Confirm your password" className="block w-full px-4 py-1 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out" required aria-label="Confirm Password" onChange={(e) => setConfirmPassword(e.target.value)} />
                             </div>
                             <div className="md:col-span-2">
                                 <label htmlFor="account-type" className="block text-sm sm:text-xs md:text-sm font-medium text-gray-700 mb-1">Account Type</label>
