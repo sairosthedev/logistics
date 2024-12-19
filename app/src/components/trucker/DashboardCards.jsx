@@ -18,12 +18,12 @@ const DashboardCards = () => {
         </div>
       </Link>
 
-      <Link to="services" className="flex-1">
+      {/* <Link to="services" className="flex-1">
         <div className="border rounded-lg bg-gradient-to-r from-blue-400 to-blue-600 p-4 hover:shadow-lg text-white transition duration-200 transform hover:scale-105">
           <h2 className="text-xl font-bold">Services</h2>
           <p className="mt-1 text-sm">Track your services</p>
         </div>
-      </Link>
+      </Link> */}
     </div>
   );
 };
