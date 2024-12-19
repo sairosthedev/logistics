@@ -253,6 +253,7 @@ function Trucks() {
     const [horse, setHorse] = useState('');
     const [trailer1, setTrailer1] = useState('');
     const [trailer2, setTrailer2] = useState('');
+    const [trailer3, setTrailer3] = useState('');
     const [driverName, setDriverName] = useState('');
     const [licence, setLicence] = useState('');
     const [passport, setPassport] = useState('');
@@ -279,7 +280,7 @@ function Trucks() {
                     Authorization: `Bearer ${accessToken}`
                 }
             });
-            console.log("Helllllllo", response.data)
+            
             setTrucks(response.data);
         } catch (error) {
             console.error('Error fetching truckers:', error);
@@ -316,6 +317,7 @@ function Trucks() {
         formData.append('horse', horse);
         formData.append('trailer1', trailer1);
         formData.append('trailer2', trailer2);
+        formData.append('trailer3', trailer3);
         formData.append('driverName', driverName);
         formData.append('licence', licence);
         formData.append('passport', passport);
@@ -351,6 +353,7 @@ function Trucks() {
             setHorse('');
             setTrailer1('');
             setTrailer2('');
+            setTrailer3('');
             setDriverName('');
             setLicence('');
             setPassport('');
@@ -382,6 +385,7 @@ function Trucks() {
         setHorse(truck.horse);
         setTrailer1(truck.trailer1);
         setTrailer2(truck.trailer2);
+        setTrailer3(truck.trailer3);
         setDriverName(truck.driverName);
         setLicence(truck.licence);
         setPassport(truck.passport);
@@ -436,7 +440,7 @@ function Trucks() {
                             className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-200"
                             onClick={() => setShowForm(!showForm)}
                         >
-                            {showForm ? 'Hide Form' : 'Add Truck'}
+                            {showForm ? 'Cancel' : 'Add Truck'}
                         </button>
                     </div>
 
@@ -510,6 +514,16 @@ function Trucks() {
                                         name="trailer2"
                                         value={trailer2}
                                         onChange={(e) => setTrailer2(e.target.value)}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Trailer 3 Reg</label>
+                                    <input
+                                        type="text"
+                                        name="trailer3"
+                                        value={trailer3}
+                                        onChange={(e) => setTrailer3(e.target.value)}
                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                     />
                                 </div>
