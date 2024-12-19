@@ -264,6 +264,9 @@ function Trucks() {
     const [driverPhoneCode, setDriverPhoneCode] = useState('+263');
     const [truckOwnerPhoneCode, setTruckOwnerPhoneCode] = useState('+263');
     const [truckOwnerWhatsappCode, setTruckOwnerWhatsappCode] = useState('+263');
+    const [driverLicenseFile, setDriverLicenseFile] = useState(null);
+    const [passportFile, setPassportFile] = useState(null);
+    const [truckRegistrationFile, setTruckRegistrationFile] = useState(null);
 
     useEffect(() => {
         fetchTrucks();
@@ -298,29 +301,50 @@ function Trucks() {
         }
     };
 
+    const handleFileChange = (e, setFile) => {
+        setFile(e.target.files[0]);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setFormLoading(true);
         setFormMessage('');
+
+        const formData = new FormData();
+        formData.append('truckerID', truckerID);
+        formData.append('truckType', truckType);
+        formData.append('horse', horse);
+        formData.append('trailer1', trailer1);
+        formData.append('trailer2', trailer2);
+        formData.append('driverName', driverName);
+        formData.append('licence', licence);
+        formData.append('passport', passport);
+        formData.append('driverPhone', driverPhone);
+        formData.append('truckOwnerPhone', truckOwnerPhone);
+        formData.append('truckOwnerWhatsapp', truckOwnerWhatsapp);
+        formData.append('location', location);
+        formData.append('maximumWeight', maximumWeight);
+        if (driverLicenseFile) formData.append('driverLicenseFile', driverLicenseFile);
+        if (passportFile) formData.append('passportFile', passportFile);
+        if (truckRegistrationFile) formData.append('truckRegistrationFile', truckRegistrationFile);
 
         try {
             const url = isEditing
                 ? `${BACKEND_Local}/api/trucker/update/${currentTruck._id}`
                 : `${BACKEND_Local}/api/trucker/add`;
             const response = isEditing
-                ? await axios.put(url, { truckerID, truckType, horse, trailer1, trailer2, driverName, licence, passport, driverPhone, truckOwnerPhone, truckOwnerWhatsapp, location, maximumWeight },
-                    {
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`
-                        }
-                    }   
-                )
-                : await axios.post(url, { truckerID, truckType, horse, trailer1, trailer2, driverName, licence, passport, driverPhone, truckOwnerPhone, truckOwnerWhatsapp, location, maximumWeight },
-                    {
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`
-                        }
-                    });
+                ? await axios.put(url, formData, {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
+                })
+                : await axios.post(url, formData, {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
 
             setFormMessage(isEditing ? 'Truck updated successfully!' : 'Truck added successfully!');
             setTruckType('');
@@ -514,7 +538,7 @@ function Trucks() {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Driver Passport</label>
                                     <input
-                                        type="text"
+                                       type="text"
                                         name="passport"
                                         value={passport}
                                         onChange={(e) => setPassport(e.target.value)}
@@ -614,6 +638,33 @@ function Trucks() {
                                         onChange={(e) => setLocation(e.target.value)}
                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                         required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Driver License File</label>
+                                    <input
+                                        type="file"
+                                        name="driverLicenseFile"
+                                        onChange={(e) => handleFileChange(e, setDriverLicenseFile)}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Passport File</label>
+                                    <input
+                                        type="file"
+                                        name="passportFile"
+                                        onChange={(e) => handleFileChange(e, setPassportFile)}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Truck Registration File</label>
+                                    <input
+                                        type="file"
+                                        name="truckRegistrationFile"
+                                        onChange={(e) => handleFileChange(e, setTruckRegistrationFile)}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                     />
                                 </div>
                             </div>
