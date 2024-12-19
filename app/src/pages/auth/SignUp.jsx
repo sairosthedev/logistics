@@ -143,7 +143,7 @@ function Signup() {
                         <div className="flex items-center mt-2 sm:mt-0.5 md:mt-2">
                             <input type="checkbox" name="terms" id="terms" className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" required onChange={handleTermsChange} />
                             <label htmlFor="terms" className="ml-2 block text-sm sm:text-xs md:text-sm text-gray-700">
-                                I agree to the <a href="#" className="text-indigo-600 hover:text-indigo-500 font-medium">Terms and Conditions</a>
+                                Tick to accept{' Account Creation'}
                             </label>
                         </div>
 
