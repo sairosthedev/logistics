@@ -254,7 +254,7 @@ function ResetPasswordForm({ email, onSuccess }) {
                 <input 
                     type="password" 
                     id="password"
-                    placeholder="••••••••"
+                    placeholder="Enter Password"
                     className="block w-full px-4 py-1 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     required
                     value={password}
@@ -269,7 +269,7 @@ function ResetPasswordForm({ email, onSuccess }) {
                 <input 
                     type="password" 
                     id="confirm-password"
-                    placeholder="••••••••"
+                    placeholder="Enter Password Again"
                     className="block w-full px-4 py-1 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     required
                     value={confirmPassword}
