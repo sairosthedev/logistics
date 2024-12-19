@@ -60,6 +60,7 @@ const JobsSection = ({
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
   const [dropoffSuggestions, setDropoffSuggestions] = useState([]);
   const [rate, setRate] = useState("");
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   const { accessToken, clientID } = useAuthStore();
   const mapRef = React.useRef(null);
@@ -201,16 +202,13 @@ const JobsSection = ({
     return null;
   };
 
-  // Rest of the component remains the same...
-  // Include all the remaining code from the original component including handleSubmit, resetForm, useEffect, and the return statement with the JSX
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    setIsConfirmModalOpen(true);
+  };
 
-    if (!window.confirm("Are you sure you want to submit this request?")) {
-      return;
-    }
-
+  const confirmSubmit = async () => {
+    setIsConfirmModalOpen(false);
     setIsSubmitting(true);
     setError(null);
 
@@ -306,6 +304,29 @@ const JobsSection = ({
 
   return (
     <div className="w-full m-0 p-0 mb-8">
+      {/* Confirmation Modal */}
+      {isConfirmModalOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-4 rounded shadow-md">
+            <p>Are you sure you want to submit this load?</p>
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setIsConfirmModalOpen(false)}
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded mr-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmSubmit}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Rest of the JSX remains exactly the same... */}
       <div className="m-0 p-0 flex justify-center">
         <div className="w-full m-0 p-0" style={{ maxWidth: "100%" }}>
