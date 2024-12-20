@@ -36,6 +36,7 @@ function TopNavBar({ userType, onLogout }) {
             // { path: '/client/myloads', label: 'Jobs', icon: Briefcase },
             { path: '/client/trackload', label: 'Track', icon: MapPin },
             { path: '/client/settings', label: 'Settings', icon: Settings },
+            { path: '/client/clientProfile', label: 'Profile', icon: User }, // Added client profile link
         ],
         trucker: [
             { path: '/trucker', label: 'Home', icon: Home },
