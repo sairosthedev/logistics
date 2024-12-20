@@ -35,14 +35,12 @@ function TopNavBar({ userType, onLogout }) {
             { path: '/client/truckers', label: 'Bids', icon: HandCoins },
             // { path: '/client/myloads', label: 'Jobs', icon: Briefcase },
             { path: '/client/trackload', label: 'Track', icon: MapPin },
-            { path: '/client/settings', label: 'Settings', icon: Settings },
             { path: '/client/clientProfile', label: 'Profile', icon: User }, // Added client profile link
         ],
         trucker: [
             { path: '/trucker', label: 'Home', icon: Home },
             { path: '/trucker/trucks', label: 'My Trucks', icon: Truck },
             { path: '/trucker/myloads', label: 'Jobs', icon: Briefcase },
-            { path: '/trucker/settings', label: 'Settings', icon: Settings },
             {path:'/trucker/truckerProfile', label: 'Profile', icon: User},
         ],
         service: [
