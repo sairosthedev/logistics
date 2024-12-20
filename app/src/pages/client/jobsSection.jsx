@@ -633,7 +633,7 @@ const JobsSection = ({
               <div className="flex flex-col sm:flex-row items-center">
                 <span className="text-2xl mr-2">💵</span>
                 <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">
-                  Rate (USD):
+                  Price (USD):
                 </label>
                 <input
                   type="number"
