@@ -535,10 +535,12 @@ const JobsSection = ({
 
              {/* Goods Type Field */}
              <div className="flex flex-col sm:flex-row items-center">
-                <span className="text-2xl mr-2">🪑</span>
-                <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">
-                  Goods Type:
-                </label>
+                <div className="w-48 flex items-center">
+                  <span className="text-2xl mr-2">🪑</span>
+                  <label className="block text-gray-700 dark:text-gray-300 text-base">
+                    Goods Type:
+                  </label>
+                </div>
                 <select
                   required
                   className="border p-2 rounded flex-grow text-base
@@ -565,10 +567,12 @@ const JobsSection = ({
 
               {/* Pay Terms Field */}
               <div className="flex flex-col sm:flex-row items-center">
-                <span className="text-2xl mr-2">💰</span>
-                <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">
-                  Pay Terms:
-                </label>
+                <div className="w-48 flex items-center">
+                  <span className="text-2xl mr-2">💰</span>
+                  <label className="block text-gray-700 dark:text-gray-300 text-base">
+                    Pay Terms:
+                  </label>
+                </div>
                 <select
                   required
                   className="border p-2 rounded flex-grow text-base
@@ -589,31 +593,33 @@ const JobsSection = ({
 
               {/* Weight Field */}
               <div className="flex flex-col sm:flex-row items-center">
-                <span className="text-2xl mr-2">⚖️</span>
-                <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">
-                  Weight (tonnes):
-                </label>
+                <div className="w-48 flex items-center">
+                  <span className="text-2xl mr-2">⚖️</span>
+                  <label className="block text-gray-700 dark:text-gray-300 text-base">
+                    Weight (tonnes):
+                  </label>
+                </div>
                 <input
                   type="number"
                   required
-                  className="border p-2 rounded flex-grow text-base
+                  className="border p-2 rounded w-1/4 text-base
                     bg-white dark:bg-gray-700 
                     text-gray-900 dark:text-gray-100
                     border-gray-300 dark:border-gray-600
                     focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
                   value={weight}
                   onChange={(e) => setWeight(e.target.value)}
-                  min="0"
-                  step="0.1"
+                  // min="0"
+                  // step="0.1"
                   placeholder="Weight (tonnes)"
                 />
               </div>
 
               {/* Comments Field */}
               <div className="flex flex-col sm:flex-row items-start">
-                <div className="flex items-center mb-2 sm:mb-0">
+                <div className="w-48 flex items-center">
                   <span className="text-2xl mr-2">💭</span>
-                  <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">
+                  <label className="block text-gray-700 dark:text-gray-300 text-base">
                     Comments:
                   </label>
                 </div>
@@ -631,22 +637,24 @@ const JobsSection = ({
 
               {/* Rate Field */}
               <div className="flex flex-col sm:flex-row items-center">
-                <span className="text-2xl mr-2">💵</span>
-                <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">
-                  Price (USD):
-                </label>
+                <div className="w-48 flex items-center">
+                  <span className="text-2xl mr-2">💵</span>
+                  <label className="block text-gray-700 dark:text-gray-300 text-base">
+                    Price (USD):
+                  </label>
+                </div>
                 <input
                   type="number"
                   required
-                  className="border p-2 rounded flex-grow text-base
+                  className="border p-2 rounded w-1/4 text-base
                     bg-white dark:bg-gray-700 
                     text-gray-900 dark:text-gray-100
                     border-gray-300 dark:border-gray-600
                     focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
                   value={rate}
                   onChange={(e) => setRate(e.target.value)}
-                  min="0"
-                  step="0.01"
+                  // min="0"
+                  // step="0.01"
                   placeholder="Enter rate in USD"
                 />
               </div>
