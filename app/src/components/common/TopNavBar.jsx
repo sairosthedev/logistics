@@ -14,7 +14,8 @@ import {
     LogOut,
     Wrench,
     ClipboardList,
-    HandCoins
+    HandCoins,
+    User
 } from 'lucide-react';
 
 function TopNavBar({ userType, onLogout }) {
@@ -41,6 +42,7 @@ function TopNavBar({ userType, onLogout }) {
             { path: '/trucker/trucks', label: 'My Trucks', icon: Truck },
             { path: '/trucker/myloads', label: 'Jobs', icon: Briefcase },
             { path: '/trucker/settings', label: 'Settings', icon: Settings },
+            {path:'/trucker/truckerProfile', label: 'Profile', icon: User},
         ],
         service: [
             { path: '/service', label: 'Home', icon: Home },
@@ -163,4 +165,4 @@ function TopNavBar({ userType, onLogout }) {
     );
 }
 
-export default TopNavBar; 
+export default TopNavBar;

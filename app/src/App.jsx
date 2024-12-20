@@ -47,6 +47,7 @@ import TruckerMyLoads from './pages/trucker/myloads'
 //
 import TruckersServices from './pages/trucker/services'
 import TruckerSettings from './pages/trucker/settings'
+import TruckerProfile from './pages/trucker/truckerProfile';
 
 // service provider pages
 import ServiceProviderHome from './pages/serviceProvider/home'
@@ -125,7 +126,8 @@ function App() {
               <Route path="trucker/myloads" element={<PrivateRoute element={<TruckerMyLoads />} />} />
             
               <Route path="trucker/services" element={<PrivateRoute element={<TruckersServices />} />} /> 
-              <Route path="trucker/settings" element={<PrivateRoute element={<TruckerSettings />} />} /> 
+              <Route path="trucker/settings" element={<PrivateRoute element={<TruckerSettings />} />} />
+              <Route path="trucker/truckerProfile" element={<PrivateRoute element={<TruckerProfile />} />} />
 
               {/* service provider routes */}
               <Route path="service" element={<PrivateRoute element={<ServiceProviderHome />} />} />
