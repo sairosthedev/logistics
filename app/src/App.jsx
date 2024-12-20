@@ -58,6 +58,7 @@ import ServiceDetails from './pages/serviceProvider/servicedetails'
 import ServiceSettings from './pages/serviceProvider/settings'; 
 import ClientDetails from './pages/serviceProvider/clientdetails';
 import ServiceRequests from './pages/serviceProvider/serviceRequests';
+import ClientProfile from './pages/client/clientProfile';
 
 const theme = createTheme();
 
@@ -119,6 +120,7 @@ function App() {
               {/* <Route path="client/myloads" element={<PrivateRoute element={<ClientMyLoads />} />} /> */}
               <Route path="client/trackload" element={<PrivateRoute element={<ClientTrackLoad />} />} />
               <Route path="client/settings" element={<PrivateRoute element={<ClientSettings />} />} />
+              <Route path="client/clientProfile" element={<PrivateRoute element={<ClientProfile />} />} />
 
               {/* trucker routes */}
               <Route path="trucker" element={<PrivateRoute element={<TruckerHome />} />} />
