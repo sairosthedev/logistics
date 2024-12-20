@@ -268,6 +268,8 @@ function Trucks() {
     const [driverLicenseFile, setDriverLicenseFile] = useState(null);
     const [passportFile, setPassportFile] = useState(null);
     const [truckRegistrationFile, setTruckRegistrationFile] = useState(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [truckToDelete, setTruckToDelete] = useState(null);
 
     useEffect(() => {
         fetchTrucks();
@@ -289,18 +291,34 @@ function Trucks() {
         }
     };
 
-    const handleDelete = async (truck) => {
-        try {
-            await axios.delete(`${BACKEND_Local}/api/trucker/delete/${truck._id}`, {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`
-                }
-            });
-            fetchTrucks(); // Refresh the trucks list
-        } catch (error) {
-            console.error('Error deleting truck:', error);
+    const handleDeleteClick = (truck) => {
+        setTruckToDelete(truck);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (truckToDelete) {
+            try {
+                await axios.delete(`${BACKEND_Local}/api/trucker/delete/${truckToDelete._id}`, {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                });
+                fetchTrucks(); // Refresh the trucks list
+            } catch (error) {
+                console.error('Error deleting truck:', error);
+            } finally {
+                setIsDeleteModalOpen(false);
+                setTruckToDelete(null);
+            }
         }
     };
+
+    const handleDeleteCancel = () => {
+        setIsDeleteModalOpen(false);
+        setTruckToDelete(null);
+    };
+
 
     const handleFileChange = (e, setFile) => {
         setFile(e.target.files[0]);
@@ -769,7 +787,7 @@ function Trucks() {
                                                                 Edit
                                                             </button>
                                                             <button
-                                                                onClick={() => handleDelete(truck)}
+                                                                onClick={() => handleDeleteClick(truck)}
                                                                 className="text-red-600 hover:text-red-900"
                                                             >
                                                                 Delete
@@ -786,6 +804,11 @@ function Trucks() {
                     )}
                 </div>
             </div>
+            <DeleteConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={handleDeleteCancel}
+                onConfirm={handleDeleteConfirm}
+            />
         </TruckerLayout>
     );
 }
