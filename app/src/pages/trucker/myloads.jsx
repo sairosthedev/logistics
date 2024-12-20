@@ -407,193 +407,229 @@ function MyLoads() {
 
         {/* Mobile View */}
         <div className="block lg:hidden">
-          <div className="space-y-4">
-            {currentLoads.map((load) => (
-              <div key={load._id} className="bg-white rounded-lg shadow p-4 space-y-3">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <div className="text-sm font-medium text-gray-900">{load.clientName}</div>
-                    <div className="text-sm text-gray-600">{load.goodsType}</div>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full mb-2
-                      ${load.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                        load.status === 'accepted' ? 'bg-green-100 text-green-800' : 
-                        load.status === 'in transit' ? 'bg-blue-100 text-blue-800' :
-                        load.status === 'delivered' ? 'bg-gray-100 text-gray-800' :
-                        'bg-gray-100 text-gray-800'}`}>
-                      {load.status}
-                    </span>
-                    <button
-                      onClick={() => openJobModal(load)}
-                      className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
-                    >
-                      View Details
-                    </button>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div>
-                    <div className="text-xs font-medium text-gray-500">Pick Up</div>
-                    <div className="text-sm text-gray-900 break-words">{load.pickupLocation || 'N/A'}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-gray-500">Drop Off</div>
-                    <div className="text-sm text-gray-900 break-words">{load.dropoffLocation || 'N/A'}</div>
-                  </div>
-                </div>
-                {load.status === 'accepted' && (
-                  <div className="mt-2">
-                    <select
-                      className="w-full p-2 rounded-lg border border-gray-300 text-sm"
-                      value={selectedStatus}
-                      onChange={(e) => setSelectedStatus(e.target.value)}
-                    >
-                      <option value="">Update Status</option>
-                      <option value="in transit">In Transit</option>
-                      <option value="delivered">Delivered</option>
-                    </select>
-                    {selectedStatus && (
+          {filteredLoads.length > 0 ? (
+            <div className="space-y-4">
+              {currentLoads.map((load) => (
+                <div key={load._id} className="bg-white rounded-lg shadow p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <div className="text-sm font-medium text-gray-900">{load.clientName}</div>
+                      <div className="text-sm text-gray-600">{load.goodsType}</div>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full mb-2
+                        ${load.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                          load.status === 'accepted' ? 'bg-green-100 text-green-800' : 
+                          load.status === 'in transit' ? 'bg-blue-100 text-blue-800' :
+                          load.status === 'delivered' ? 'bg-gray-100 text-gray-800' :
+                          'bg-gray-100 text-gray-800'}`}>
+                        {load.status}
+                      </span>
                       <button
-                        className="w-full mt-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 disabled:bg-gray-400 text-sm"
-                        onClick={() => handleStatusUpdate(load._id)}
-                        disabled={isSubmitting}
+                        onClick={() => openJobModal(load)}
+                        className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
                       >
-                        {isSubmitting ? 'Updating...' : 'Update Status'}
+                        View Details
                       </button>
-                    )}
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
+                  <div className="space-y-2">
+                    <div>
+                      <div className="text-xs font-medium text-gray-500">Pick Up</div>
+                      <div className="text-sm text-gray-900 break-words">{load.pickupLocation || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-gray-500">Drop Off</div>
+                      <div className="text-sm text-gray-900 break-words">{load.dropoffLocation || 'N/A'}</div>
+                    </div>
+                  </div>
+                  {load.status === 'accepted' && (
+                    <div className="mt-2">
+                      <select
+                        className="w-full p-2 rounded-lg border border-gray-300 text-sm"
+                        value={selectedStatus}
+                        onChange={(e) => setSelectedStatus(e.target.value)}
+                      >
+                        <option value="">Update Status</option>
+                        <option value="in transit">In Transit</option>
+                        <option value="delivered">Delivered</option>
+                      </select>
+                      {selectedStatus && (
+                        <button
+                          className="w-full mt-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 disabled:bg-gray-400 text-sm"
+                          onClick={() => handleStatusUpdate(load._id)}
+                          disabled={isSubmitting}
+                        >
+                          {isSubmitting ? 'Updating...' : 'Update Status'}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow p-6 text-center">
+              <p className="text-gray-600 text-base">
+                No {filter === 'inTransit' ? 'in transit' : filter} jobs available at the moment.
+              </p>
+              <p className="text-gray-500 mt-2 text-sm">
+                {filter === 'pending' 
+                  ? "Check back later for new job requests." 
+                  : filter === 'inTransit'
+                  ? "There are currently no jobs in transit. Active jobs will appear here."
+                  : "No completed jobs found. Delivered jobs will be listed here."}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Desktop View */}
         <div className="hidden lg:block overflow-x-auto">
-          <div className="bg-white rounded-lg shadow">
-            <table className="min-w-full table-fixed">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client Name</th>
-                  <th className="w-[15%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Goods Type</th>
-                  <th className="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pick Up</th>
-                  <th className="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Drop Off</th>
-                  <th className="w-[15%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {currentLoads.map((load) => (
-                  <tr key={load._id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 text-sm text-gray-900">
-                      <div className="break-words">{load.clientName}</div>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
-                      <div className="break-words">{load.goodsType}</div>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
-                      <div className="break-words">{load.pickupLocation || 'N/A'}</div>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
-                      <div className="break-words">{load.dropoffLocation || 'N/A'}</div>
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      {load.status === 'accepted' ? (
-                        <select
-                          className="w-full p-2 rounded-lg border border-gray-300 text-sm"
-                          value={selectedStatus}
-                          onChange={(e) => setSelectedStatus(e.target.value)}
-                        >
-                          <option value="">Update Status</option>
-                          <option value="in transit">In Transit</option>
-                          <option value="delivered">Delivered</option>
-                        </select>
-                      ) : (
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full
-                          ${load.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                            load.status === 'accepted' ? 'bg-green-100 text-green-800' : 
-                            load.status === 'in transit' ? 'bg-blue-100 text-blue-800' :
-                            load.status === 'delivered' ? 'bg-gray-100 text-gray-800' :
-                            'bg-gray-100 text-gray-800'}`}>
-                          {load.status}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      <div className="flex gap-2">
-                        <button
-                          className="text-indigo-600 hover:text-indigo-900 font-medium"
-                          onClick={() => openJobModal(load)}
-                        >
-                          View
-                        </button>
-                        {load.status === 'accepted' && selectedStatus && (
-                          <button
-                            className="text-green-600 hover:text-green-900 font-medium disabled:text-gray-400"
-                            onClick={() => handleStatusUpdate(load._id)}
-                            disabled={isSubmitting}
-                          >
-                            {isSubmitting ? '...' : 'Update'}
-                          </button>
-                        )}
-                      </div>
-                    </td>
+          {filteredLoads.length > 0 ? (
+            <div className="bg-white rounded-lg shadow">
+              <table className="min-w-full table-fixed">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client Name</th>
+                    <th className="w-[15%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Goods Type</th>
+                    <th className="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pick Up</th>
+                    <th className="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Drop Off</th>
+                    <th className="w-[15%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {currentLoads.map((load) => (
+                    <tr key={load._id} className="hover:bg-gray-50">
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        <div className="break-words">{load.clientName}</div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        <div className="break-words">{load.goodsType}</div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        <div className="break-words">{load.pickupLocation || 'N/A'}</div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        <div className="break-words">{load.dropoffLocation || 'N/A'}</div>
+                      </td>
+                      <td className="px-4 py-4 text-sm">
+                        {load.status === 'accepted' ? (
+                          <select
+                            className="w-full p-2 rounded-lg border border-gray-300 text-sm"
+                            value={selectedStatus}
+                            onChange={(e) => setSelectedStatus(e.target.value)}
+                          >
+                            <option value="">Update Status</option>
+                            <option value="in transit">In Transit</option>
+                            <option value="delivered">Delivered</option>
+                          </select>
+                        ) : (
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full
+                            ${load.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                              load.status === 'accepted' ? 'bg-green-100 text-green-800' : 
+                              load.status === 'in transit' ? 'bg-blue-100 text-blue-800' :
+                              load.status === 'delivered' ? 'bg-gray-100 text-gray-800' :
+                              'bg-gray-100 text-gray-800'}`}>
+                            {load.status}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-sm">
+                        <div className="flex gap-2">
+                          <button
+                            className="text-indigo-600 hover:text-indigo-900 font-medium"
+                            onClick={() => openJobModal(load)}
+                          >
+                            View
+                          </button>
+                          {load.status === 'accepted' && selectedStatus && (
+                            <button
+                              className="text-green-600 hover:text-green-900 font-medium disabled:text-gray-400"
+                              onClick={() => handleStatusUpdate(load._id)}
+                              disabled={isSubmitting}
+                            >
+                              {isSubmitting ? '...' : 'Update'}
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow p-8 text-center">
+              <p className="text-gray-600 text-lg">
+                No {filter === 'inTransit' ? 'in transit' : filter} jobs available at the moment.
+              </p>
+              <p className="text-gray-500 mt-2">
+                {filter === 'pending' 
+                  ? "Check back later for new job requests." 
+                  : filter === 'inTransit'
+                  ? "There are currently no jobs in transit. Active jobs will appear here."
+                  : "No completed jobs found. Delivered jobs will be listed here."}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Pagination Controls */}
-        <div className="flex justify-center mt-4">
-          <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-            <button
-              onClick={() => paginate(1)}
-              disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
-                currentPage === 1 ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50'
-              }`}
-            >
-              {'<<'}
-            </button>
-            <button
-              onClick={() => paginate(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
-                currentPage === 1 ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50'
-              }`}
-            >
-              Previous
-            </button>
-            <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-              Page {currentPage} of {Math.ceil(filteredLoads.length / loadsPerPage)}
-            </span>
-            <button
-              onClick={() => paginate(currentPage + 1)}
-              disabled={currentPage === Math.ceil(filteredLoads.length / loadsPerPage)}
-              className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
-                currentPage === Math.ceil(filteredLoads.length / loadsPerPage)
-                  ? 'text-gray-300'
-                  : 'text-gray-500 hover:bg-gray-50'
-              }`}
-            >
-              Next
-            </button>
-            <button
-              onClick={() => paginate(Math.ceil(filteredLoads.length / loadsPerPage))}
-              disabled={currentPage === Math.ceil(filteredLoads.length / loadsPerPage)}
-              className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
-                currentPage === Math.ceil(filteredLoads.length / loadsPerPage)
-                  ? 'text-gray-300'
-                  : 'text-gray-500 hover:bg-gray-50'
-              }`}
-            >
-              {'>>'}
-            </button>
-          </nav>
-        </div>
+        {filteredLoads.length > 0 ? (
+          <div className="flex justify-center mt-4">
+            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+              <button
+                onClick={() => paginate(1)}
+                disabled={currentPage === 1}
+                className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                  currentPage === 1 ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50'
+                }`}
+              >
+                {'<<'}
+              </button>
+              <button
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                  currentPage === 1 ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50'
+                }`}
+              >
+                Previous
+              </button>
+              <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                Page {currentPage} of {Math.max(1, Math.ceil(filteredLoads.length / loadsPerPage))}
+              </span>
+              <button
+                onClick={() => paginate(currentPage + 1)}
+                disabled={currentPage === Math.ceil(filteredLoads.length / loadsPerPage)}
+                className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                  currentPage === Math.ceil(filteredLoads.length / loadsPerPage)
+                    ? 'text-gray-300'
+                    : 'text-gray-500 hover:bg-gray-50'
+                }`}
+              >
+                Next
+              </button>
+              <button
+                onClick={() => paginate(Math.ceil(filteredLoads.length / loadsPerPage))}
+                disabled={currentPage === Math.ceil(filteredLoads.length / loadsPerPage)}
+                className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                  currentPage === Math.ceil(filteredLoads.length / loadsPerPage)
+                    ? 'text-gray-300'
+                    : 'text-gray-500 hover:bg-gray-50'
+                }`}
+              >
+                {'>>'}
+              </button>
+            </nav>
+          </div>
+        ) : (
+          <div className="text-center mt-4 text-gray-500">
+            No jobs to display for the selected status.
+          </div>
+        )}
 
         {/* Response Message */}
         {responseMessage && (
@@ -705,3 +741,4 @@ function MyLoads() {
 }
 
 export default MyLoads;
+
