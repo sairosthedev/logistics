@@ -451,7 +451,7 @@ function Trucks() {
                             onChange={(e) => setFilterAvailability(e.target.value)}
                         >
                             <option value="all">All Statuses</option>
-                            <option value="active">Active</option>
+                            <option value="loaded">Loaded</option>
                             <option value="standby">Standby</option>
                         </select>
                         <button
@@ -766,7 +766,7 @@ function Trucks() {
                                                         </td>
                                                         <td className="whitespace-nowrap px-3 py-4 text-sm">
                                                             <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                                                                truck.status === 'active'
+                                                                truck.status === 'loaded'
                                                                     ? 'bg-green-100 text-green-800'
                                                                     : 'bg-yellow-100 text-yellow-800'
                                                             }`}>
@@ -780,18 +780,22 @@ function Trucks() {
                                                             {truck.maximumWeight} tons
                                                         </td>
                                                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                                                            <button
-                                                                onClick={() => handleEdit(truck)}
-                                                                className="text-blue-600 hover:text-blue-900 mr-4"
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteClick(truck)}
-                                                                className="text-red-600 hover:text-red-900"
-                                                            >
-                                                                Delete
-                                                            </button>
+                                                            {truck.status !== 'loaded' && (
+                                                                <>
+                                                                    <button
+                                                                        onClick={() => handleEdit(truck)}
+                                                                        className="text-blue-600 hover:text-blue-900 mr-4"
+                                                                    >
+                                                                        Edit
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleDeleteClick(truck)}
+                                                                        className="text-red-600 hover:text-red-900"
+                                                                    >
+                                                                        Delete
+                                                                    </button>
+                                                                </>
+                                                            )}
                                                         </td>
                                                     </tr>
                                                 ))}

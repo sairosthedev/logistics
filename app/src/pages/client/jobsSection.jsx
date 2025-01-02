@@ -327,7 +327,7 @@ const JobsSection = ({
         </div>
       )}
 
-      {/* Rest of the JSX remains exactly the same... */}
+      
       <div className="m-0 p-0 flex justify-center">
         <div className="w-full m-0 p-0" style={{ maxWidth: "100%" }}>
           <form
@@ -335,50 +335,8 @@ const JobsSection = ({
             onSubmit={handleSubmit}
           >
             <div className="grid grid-cols-1 gap-4">
-              {/* All the existing form fields and components remain exactly the same */}
-              {/* Truck Type Field */}
-              <div className="flex flex-col sm:flex-row items-center">
-                <span className="text-2xl mr-2">🚚</span>
-                <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">
-                  Truck Type:
-                </label>
-                <select
-                  required
-                  className="border p-2 rounded flex-grow text-base
-                    bg-white dark:bg-gray-700 
-                    text-gray-900 dark:text-gray-100
-                    border-gray-300 dark:border-gray-600
-                    focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
-                  value={truckType}
-                  onChange={(e) => setTruckType(e.target.value)}
-                >
-                  <option value="">Select Truck Type</option>
-                  <option value="Any">Any</option>
-                  <option value="Furniture Truck">Furniture Truck</option>
-                  <option value="Small Ton Truck">Small Ton Truck</option>
-                  <option value="10 Ton Truck">10 Ton Truck</option>
-                  <option value="30 Ton Truck">30 Ton Truck</option>
-                  <option value="30 Ton Flatbed">30 Ton Flatbed</option>
-                  <option value="30 Ton Link">30 Ton Link</option>
-                  <option value="34 Ton Link Flatbed">34 Ton Link Flatbed</option>
-                  <option value="34 Ton Side Tipper">34 Ton Side Tipper</option>
-                  <option value="30 Ton Howo Tipper">30 Ton Howo Tipper</option>
-                  <option value="30 Ton Tipper">30 Ton Tipper</option>
-                  <option value="Lowbed">Lowbed</option>
-                  <option value="Semi Truck">Semi Truck</option>
-                  <option value="Fuel Tanker">Fuel Tanker</option>
-                  <option value="Water Bowser">Water Bowser</option>
-                  <option value="Tautliner">Tautliner</option>
-                  <option value="Abnormal">Abnormal</option>
-                  <option value="Logging">Logging</option>
-                  <option value="Livestock">Livestock</option>
-                  <option value="Refrigerated">Refrigerated</option>
-                  <option value="Crane">Crane</option>
-                  <option value="Tow Truck">Tow Truck</option>
-                  <option value="Car Carrier">Car Carrier</option>
-                </select>
-              </div>
-
+              
+              
               {/* Map Container */}
               <div className="w-full aspect-[16/9] relative z-0">
                 <MapContainer
@@ -433,6 +391,8 @@ const JobsSection = ({
                   <MapComponent />
                 </MapContainer>
               </div>
+
+              
 
               {/* Location Input Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -532,6 +492,52 @@ const JobsSection = ({
                   </p>
                 </div>
               )}
+
+              {/* Truck Type Field */}
+              <div className="flex flex-col sm:flex-row items-center">
+                <div className="w-48 flex items-center">
+                <span className="text-2xl mr-2">🚚</span>
+                <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">
+                  Truck Type:
+                </label>
+                </div>
+                <select
+                  required
+                  className="border p-2 rounded flex-grow text-base
+                    bg-white dark:bg-gray-700 
+                    text-gray-900 dark:text-gray-100
+                    border-gray-300 dark:border-gray-600
+                    focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
+                  value={truckType}
+                  onChange={(e) => setTruckType(e.target.value)}
+                >
+                  <option value="">Select Truck Type</option>
+                  <option value="Any">Any</option>
+                  <option value="Furniture Truck">Furniture Truck</option>
+                  <option value="Small Ton Truck">Small Ton Truck</option>
+                  <option value="10 Ton Truck">10 Ton Truck</option>
+                  <option value="30 Ton Truck">30 Ton Truck</option>
+                  <option value="30 Ton Flatbed">30 Ton Flatbed</option>
+                  <option value="30 Ton Link">30 Ton Link</option>
+                  <option value="34 Ton Link Flatbed">34 Ton Link Flatbed</option>
+                  <option value="34 Ton Side Tipper">34 Ton Side Tipper</option>
+                  <option value="30 Ton Howo Tipper">30 Ton Howo Tipper</option>
+                  <option value="30 Ton Tipper">30 Ton Tipper</option>
+                  <option value="Lowbed">Lowbed</option>
+                  <option value="Semi Truck">Semi Truck</option>
+                  <option value="Fuel Tanker">Fuel Tanker</option>
+                  <option value="Water Bowser">Water Bowser</option>
+                  <option value="Tautliner">Tautliner</option>
+                  <option value="Abnormal">Abnormal</option>
+                  <option value="Logging">Logging</option>
+                  <option value="Livestock">Livestock</option>
+                  <option value="Refrigerated">Refrigerated</option>
+                  <option value="Crane">Crane</option>
+                  <option value="Tow Truck">Tow Truck</option>
+                  <option value="Car Carrier">Car Carrier</option>
+                </select>
+              </div>
+
 
              {/* Goods Type Field */}
              <div className="flex flex-col sm:flex-row items-center">
