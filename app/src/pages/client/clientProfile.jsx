@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, Lock, Camera, Edit2, X, Save, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import ClientLayout from '../../components/layouts/clientLayout'; // Ensure this import is correct
+import { BACKEND_Local } from '../../../url.js'; // Ensure this import is correct
 
 const ProfileSection = ({ title, children }) => (
   <div className="mb-8">
@@ -62,6 +63,37 @@ function ClientProfile() {
   });
 
   const [profileImage, setProfileImage] = useState('/api/placeholder/150/150');
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch(`${BACKEND_Local}/api/client/profile`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setProfile({
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            phone: data.phone,
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: ''
+          });
+          setProfileImage(data.profileImage || '/api/placeholder/150/150');
+        } else {
+          console.error('Failed to fetch profile');
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};

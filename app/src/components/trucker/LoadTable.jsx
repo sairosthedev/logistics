@@ -1,8 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const LoadTable = ({ currentLoads, openJobModal }) => {
   // Sort loads in descending order based on createdAt
   const sortedLoads = [...currentLoads].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const loadsPerPage = 10;
+
+  // Get current loads
+  const indexOfLastLoad = currentPage * loadsPerPage;
+  const indexOfFirstLoad = indexOfLastLoad - loadsPerPage;
+  const currentLoadsPage = sortedLoads.slice(indexOfFirstLoad, indexOfLastLoad);
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
     <div className="overflow-x-auto">
@@ -20,7 +32,7 @@ const LoadTable = ({ currentLoads, openJobModal }) => {
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {sortedLoads.map((load) => (
+          {currentLoadsPage.map((load) => (
             <tr key={load._id} className="hover:bg-gray-50">
               <td className="px-4 py-4 text-sm text-gray-900">
                 <div className="break-words">{load.clientName}</div>
@@ -60,7 +72,7 @@ const LoadTable = ({ currentLoads, openJobModal }) => {
 
       {/* Mobile View */}
       <div className="grid grid-cols-1 gap-4 md:hidden">
-        {currentLoads.map((load) => (
+        {currentLoadsPage.map((load) => (
           <div
             key={load._id}
             className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow space-y-3"
@@ -120,8 +132,26 @@ const LoadTable = ({ currentLoads, openJobModal }) => {
           </div>
         ))}
       </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center mt-4">
+        <nav>
+          <ul className="inline-flex items-center -space-x-px">
+            {Array.from({ length: Math.ceil(sortedLoads.length / loadsPerPage) }, (_, index) => (
+              <li key={index}>
+                <button
+                  onClick={() => paginate(index + 1)}
+                  className={`px-3 py-2 leading-tight ${currentPage === index + 1 ? 'bg-blue-600 text-white' : 'bg-white text-gray-500'} border border-gray-300 hover:bg-gray-100 hover:text-gray-700`}
+                >
+                  {index + 1}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
     </div>
   );
 };
 
-export default LoadTable; 
+export default LoadTable;

@@ -1,21 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import mainLogo from './../../assets/images/logos/mainLogo.png';
-import { NotificationBell } from './NotificationBell';
 import { 
-    Menu, 
-    X, 
-    Home,
-    Truck,
-    Briefcase,
-    MapPin,
-    Settings,
-    Users,
-    LogOut,
-    Wrench,
-    ClipboardList,
-    HandCoins,
-    User
+    Menu, X, Home, Truck, Briefcase, MapPin, 
+    Settings, Users, LogOut, Wrench, 
+    ClipboardList, HandCoins, User
 } from 'lucide-react';
 
 function TopNavBar({ userType, onLogout }) {
@@ -33,15 +21,14 @@ function TopNavBar({ userType, onLogout }) {
         client: [
             { path: '/client', label: 'Home', icon: Home },
             { path: '/client/truckers', label: 'Bids', icon: HandCoins },
-            // { path: '/client/myloads', label: 'Jobs', icon: Briefcase },
             { path: '/client/trackload', label: 'Track', icon: MapPin },
-            { path: '/client/clientProfile', label: 'Profile', icon: User }, // Added client profile link
+            { path: '/client/clientProfile', label: 'Profile', icon: User },
         ],
         trucker: [
             { path: '/trucker', label: 'Home', icon: Home },
             { path: '/trucker/trucks', label: 'My Trucks', icon: Truck },
             { path: '/trucker/myloads', label: 'Jobs', icon: Briefcase },
-            {path:'/trucker/truckerProfile', label: 'Profile', icon: User},
+            { path: '/trucker/truckerProfile', label: 'Profile', icon: User },
         ],
         service: [
             { path: '/service', label: 'Home', icon: Home },
@@ -55,38 +42,38 @@ function TopNavBar({ userType, onLogout }) {
 
     return (
         <>
-            <nav className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 fixed w-full z-50 transition-all duration-300 ease-in-out shadow-sm">
+            <nav className="bg-gradient-to-r from-blue-600 to-blue-800 dark:from-gray-800 dark:to-gray-900 fixed w-full z-50 transition-all duration-300 ease-in-out shadow-xl">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-20">
                         {/* Logo Section */}
                         <div className="flex-shrink-0 flex items-center">
-                            <img
-                                className="h-12 w-auto transform transition-transform duration-300 hover:scale-105"
-                                src={mainLogo}
-                                alt="Logo"
+                            <div
                                 onClick={() => navigate(`/${userType}`)}
-                                style={{ cursor: 'pointer' }}
-                            />
+                                className="h-16 w-16 bg-white rounded-lg shadow-lg flex items-center justify-center cursor-pointer transform transition-all duration-300 hover:scale-110 hover:rotate-3"
+                            >
+                                <img src="/src/assets/images/logos/mainLogo.png" alt="Logo" className="h-full w-full object-contain" onError={(e) => { e.target.onerror = null; e.target.src = 'fallbackLogo.png'; }} />
+                            </div>
                         </div>
 
                         {/* Desktop Navigation */}
                         <div className="hidden md:flex items-center space-x-1">
                             {currentLinks.map((link) => {
                                 const Icon = link.icon;
+                                const isActive = location.pathname === link.path;
                                 return (
                                     <Link
                                         key={link.path}
                                         to={link.path}
-                                        className={`relative px-4 py-2 text-sm font-medium transition-all duration-300 rounded-lg mx-1 flex items-center space-x-2 group
-                                            ${location.pathname === link.path
-                                                ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/50 dark:text-blue-400'
-                                                : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                            }`}
+                                        className={`relative px-4 py-2 text-sm font-medium rounded-lg mx-1 flex items-center space-x-2 group overflow-hidden
+                                            ${isActive
+                                                ? 'text-white bg-white/20'
+                                                : 'text-white/80 hover:text-white hover:bg-white/10'
+                                            } transition-all duration-300`}
                                     >
-                                        <Icon className="w-4 h-4" />
-                                        <span>{link.label}</span>
-                                        <span className={`absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 dark:bg-blue-400 transform origin-left transition-transform duration-300 rounded-full
-                                            ${location.pathname === link.path ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} 
+                                        <Icon className={`w-4 h-4 transition-transform duration-300 group-hover:scale-110 ${isActive ? 'rotate-0' : 'group-hover:rotate-12'}`} />
+                                        <span className="relative z-10">{link.label}</span>
+                                        <div className={`absolute inset-0 bg-white/10 transform origin-left transition-transform duration-300 
+                                            ${isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} 
                                         />
                                     </Link>
                                 );
@@ -95,11 +82,18 @@ function TopNavBar({ userType, onLogout }) {
 
                         {/* Right Section */}
                         <div className="hidden md:flex items-center space-x-4">
-                            <NotificationBell userType={userType} />
+                            <button className="relative p-2 text-white hover:text-blue-200 transition-colors duration-300">
+                                <div className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center">
+                                    <span className="text-xs text-white">3</span>
+                                </div>
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                            </button>
                             <button
                                 onClick={onLogout}
-                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg transition-all duration-300 
-                                    hover:bg-blue-700 dark:hover:bg-blue-600 hover:shadow-lg transform hover:-translate-y-0.5 flex items-center space-x-2"
+                                className="px-6 py-2 text-sm font-medium text-blue-600 bg-white rounded-lg transition-all duration-300 
+                                    hover:bg-blue-50 hover:shadow-lg transform hover:-translate-y-0.5 flex items-center space-x-2"
                             >
                                 <LogOut className="w-4 h-4" />
                                 <span>Logout</span>
@@ -108,11 +102,17 @@ function TopNavBar({ userType, onLogout }) {
 
                         {/* Mobile menu button */}
                         <div className="md:hidden flex items-center space-x-4">
-                            <NotificationBell userType={userType} />
+                            <button className="relative p-2 text-white hover:text-blue-200 transition-colors duration-300">
+                                <div className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center">
+                                    <span className="text-xs text-white">3</span>
+                                </div>
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                            </button>
                             <button
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                                className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 
-                                    hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors duration-300"
+                                className="p-2 rounded-lg text-white hover:bg-white/10 focus:outline-none transition-colors duration-300"
                             >
                                 {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                             </button>
@@ -122,17 +122,18 @@ function TopNavBar({ userType, onLogout }) {
 
                 {/* Mobile Navigation */}
                 <div className={`md:hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'max-h-screen' : 'max-h-0 overflow-hidden'}`}>
-                    <div className="px-2 pt-2 pb-3 space-y-1 bg-white dark:bg-gray-800 shadow-lg">
+                    <div className="px-2 pt-2 pb-3 space-y-1 bg-gradient-to-b from-blue-700 to-blue-800 dark:from-gray-800 dark:to-gray-900">
                         {currentLinks.map((link) => {
                             const Icon = link.icon;
+                            const isActive = location.pathname === link.path;
                             return (
                                 <Link
                                     key={link.path}
                                     to={link.path}
                                     className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-300
-                                        ${location.pathname === link.path
-                                            ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/50'
-                                            : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                        ${isActive
+                                            ? 'text-white bg-white/20'
+                                            : 'text-white/80 hover:text-white hover:bg-white/10'
                                         }`}
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
@@ -143,8 +144,8 @@ function TopNavBar({ userType, onLogout }) {
                         })}
                         <button
                             onClick={onLogout}
-                            className="w-full mt-4 px-4 py-3 text-base font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg 
-                                hover:bg-blue-700 dark:hover:bg-blue-600 transition-all duration-300 flex items-center justify-center space-x-2"
+                            className="w-full mt-4 px-4 py-3 text-base font-medium text-blue-600 bg-white rounded-lg 
+                                hover:bg-blue-50 transition-all duration-300 flex items-center justify-center space-x-2"
                         >
                             <LogOut className="w-5 h-5" />
                             <span>Logout</span>
@@ -156,7 +157,7 @@ function TopNavBar({ userType, onLogout }) {
             {/* Overlay for mobile menu */}
             {isMobileMenuOpen && (
                 <div 
-                    className="fixed inset-0 bg-black bg-opacity-25 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300"
+                    className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300"
                     onClick={() => setIsMobileMenuOpen(false)}
                 />
             )}

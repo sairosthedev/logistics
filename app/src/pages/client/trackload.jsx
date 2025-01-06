@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ClientLayout from '../../components/layouts/clientLayout';
+import { Search } from 'lucide-react';
 import axios from 'axios';
 import { BACKEND_Local } from '../../../url.js';
 import useAuthStore from '../auth/auth';
@@ -8,7 +9,10 @@ function TrackLoad() {
     const [loads, setLoads] = useState([]);
     const [error, setError] = useState(null);
     const [selectedLoad, setSelectedLoad] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
     const { accessToken, clientID } = useAuthStore();
+    const [currentPage, setCurrentPage] = useState(1);
+    const loadsPerPage = 10;
 
     useEffect(() => {
         const fetchLoads = async () => {
@@ -40,7 +44,6 @@ function TrackLoad() {
         }
     }, [accessToken, clientID]);
 
-    // Helper functions remain the same...
     const getProgressPercentage = (status) => {
         switch(status) {
             case 'assigned':
@@ -61,15 +64,15 @@ function TrackLoad() {
         switch(status) {
             case 'assigned':
             case 'accepted':
-                return 'text-yellow-600';
+                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
             case 'loaded':
-                return 'text-orange-600';
+                return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
             case 'in transit':
-                return 'text-blue-600';
+                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
             case 'delivered':
-                return 'text-green-600';
+                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
             default:
-                return 'text-gray-600';
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
         }
     };
 
@@ -89,71 +92,109 @@ function TrackLoad() {
         }
     };
 
-    const handleTrackClick = (load) => {
-        setSelectedLoad(load);
-    };
+    const filteredLoads = loads.filter(load => 
+        load.pickupLocation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        load.dropoffLocation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        load.goodsType?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const indexOfLastLoad = currentPage * loadsPerPage;
+    const indexOfFirstLoad = indexOfLastLoad - loadsPerPage;
+    const currentLoadsPage = filteredLoads.slice(indexOfFirstLoad, indexOfLastLoad);
+
+    const handlePageChange = (pageNumber) => setCurrentPage(pageNumber);
 
     return (
         <ClientLayout>
-            <div className="py-6">
-                <div className="px-4 mx-auto max-w-7xl sm:px-6 md:px-8">
-                    <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100">Track Jobs</h1>
+            <div className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
+                <div className="mb-6 sm:mb-8">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Track Jobs</h1>
                     
-                    {error && (
-                        <div className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                            {error}
+                    <div className="mt-4 flex flex-col sm:flex-row gap-4">
+                        <div className="relative w-full sm:w-64">
+                            <input
+                                type="text"
+                                placeholder="Search jobs..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            />
+                            <Search className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
                         </div>
-                    )}
-                    
-                    {/* Table Section */}
-                    <div className="mt-8 bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 sm:p-6">
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full border-collapse border border-gray-200 dark:border-gray-700">
-                                <thead className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                                    <tr>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Status</th>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Driver Name</th>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Pickup Location</th>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Dropoff Location</th>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Distance</th>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Goods Type</th>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Number of Trucks</th>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Weight</th>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Created At</th>
-                                        <th className="border border-gray-300 px-2 sm:px-4 py-2">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white dark:bg-gray-800">
-                                    {loads.map((load) => (
-                                        <tr key={load._id} className="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-200">
-                                            <td className={`border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 ${getStatusColor(load.status)}`}>
+                    </div>
+                </div>
+
+                {error && (
+                    <div className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                        {error}
+                    </div>
+                )}
+
+                <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+                    <div className="p-4 border-b dark:border-gray-700">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">All Jobs</h2>
+                    </div>
+                    <div className="w-full">
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead className="bg-gray-400">
+                                <tr>
+                                    <th className="px-2 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
+                                    <th className="px-2 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Pickup Location</th>
+                                    <th className="px-2 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Dropoff Location</th>
+                                    <th className="px-2 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Distance</th>
+                                    <th className="px-2 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Goods Type</th>
+                                    <th className="px-2 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Weight</th>
+                                    <th className="px-2 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Created At</th>
+                                    <th className="px-2 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                {currentLoadsPage.map((load, index) => (
+                                    <tr 
+                                        key={load._id} 
+                                        className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 ${
+                                            index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'
+                                        }`}
+                                    >
+                                        <td className="px-2 py-2 whitespace-nowrap">
+                                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(load.status)}`}>
                                                 {load.status}
-                                            </td>
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">
-                                                {load.driverName || 'Not Assigned'}
-                                            </td>
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.pickupLocation}</td>
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.dropoffLocation}</td>
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.distance} km</td>
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.goodsType}</td>
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.numberOfTrucks}</td>
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">{load.weight} tons</td>
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2 text-gray-900 dark:text-gray-100">
-                                                {new Date(load.createdAt).toLocaleString('en-GB')}
-                                            </td>
-                                            <td className="border border-gray-300 dark:border-gray-700 px-2 sm:px-4 py-2">
-                                                <button
-                                                    onClick={() => handleTrackClick(load)}
-                                                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors"
-                                                >
-                                                    Track
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                            </span>
+                                        </td>
+                                       
+                                        <td className="px-2 py-2 whitespace-normal text-sm text-gray-900 dark:text-white">{load.pickupLocation}</td>
+                                        <td className="px-2 py-2 whitespace-normal text-sm text-gray-900 dark:text-white">{load.dropoffLocation}</td>
+                                        <td className="px-2 py-2 whitespace-normal text-sm text-gray-900 dark:text-white">{load.distance} km</td>
+                                        <td className="px-2 py-2 whitespace-normal text-sm text-gray-900 dark:text-white">{load.goodsType}</td>
+                                        <td className="px-2 py-2 whitespace-normal text-sm text-gray-900 dark:text-white">{load.weight} tons</td>
+                                        <td className="px-2 py-2 whitespace-normal text-sm text-gray-900 dark:text-white">
+                                            {new Date(load.createdAt).toLocaleString('en-GB')}
+                                        </td>
+                                        <td className="px-2 py-2 whitespace-nowrap">
+                                            <button
+                                                onClick={() => setSelectedLoad(load)}
+                                                className="px-2 py-1 text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                            >
+                                                Track
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Pagination */}
+                    <div className="flex justify-center mt-4">
+                        {Array.from({ length: Math.ceil(filteredLoads.length / loadsPerPage) }, (_, index) => (
+                            <button
+                                key={index}
+                                onClick={() => handlePageChange(index + 1)}
+                                className={`px-3 py-1 mx-1 rounded ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+                            >
+                                {index + 1}
+                            </button>
+                        ))}
                     </div>
 
                     {/* Full Page Modal */}
@@ -180,8 +221,7 @@ function TrackLoad() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-4">
                                             <div>
-                                                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Driver Name</h3>
-                                                <p className="text-gray-600 dark:text-gray-400">{selectedLoad.driverName || 'Not Assigned'}</p>
+                                                
                                             </div>
                                             <div>
                                                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Pickup Location</h3>

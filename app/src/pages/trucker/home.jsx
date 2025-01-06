@@ -35,6 +35,7 @@ function Home() {
   const [deliveredTrucks, setDeliveredTrucks] = useState([]);
   const [currentBidPage, setCurrentBidPage] = useState(1);
   const [bidsPerPage] = useState(10);
+  const [activeTab, setActiveTab] = useState("pending");
 
   // Fetch functions
   const fetchLoads = async () => {
@@ -343,8 +344,22 @@ function Home() {
           setFilterStatus={setFilterStatus}
         />
 
-        <div className="flex flex-col gap-8">
-          {/* Pending Requests Section */}
+        <div className="flex justify-center mb-6">
+          <button
+            className={`px-4 py-2 mx-2 ${activeTab === "pending" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
+            onClick={() => setActiveTab("pending")}
+          >
+            Pending Requests
+          </button>
+          <button
+            className={`px-4 py-2 mx-2 ${activeTab === "bids" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
+            onClick={() => setActiveTab("bids")}
+          >
+            My Bids
+          </button>
+        </div>
+
+        {activeTab === "pending" && (
           <div className="pending-requests">
             <div className="max-w-screen-xl mx-auto">
               <div className="items-center justify-between md:flex mb-6">
@@ -363,11 +378,9 @@ function Home() {
               />
             </div>
           </div>
+        )}
 
-          {/* Horizontal line separator */}
-          <hr className="my-8 border-gray-300 dark:border-gray-700" />
-
-          {/* Accepted Bids Section */}
+        {activeTab === "bids" && (
           <div className="accepted-bids">
             <div className="max-w-screen-xl mx-auto">
               <div className="items-center justify-between md:flex mb-6">
@@ -386,7 +399,7 @@ function Home() {
               />
             </div>
           </div>
-        </div>
+        )}
 
         <LoadDetailsModal
           isOpen={isJobModalOpen}

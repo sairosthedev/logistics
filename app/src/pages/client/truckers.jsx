@@ -92,8 +92,13 @@ function AvailableTrucks() {
   };
 
   const PaginationControls = ({ totalPages, currentPage, onPageChange }) => {
+    const pageNumbers = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pageNumbers.push(i);
+    }
+  
     return (
-      <div className="flex justify-center items-center space-x-4 mt-4 mb-6">
+      <div className="flex justify-center items-center space-x-2 mt-4 mb-6">
         <button
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
@@ -108,9 +113,15 @@ function AvailableTrucks() {
         >
           &lt;
         </button>
-        <span className="text-sm text-gray-700 dark:text-gray-200">
-          Page {currentPage} of {totalPages}
-        </span>
+        {pageNumbers.map(number => (
+          <button
+            key={number}
+            onClick={() => onPageChange(number)}
+            className={`px-3 py-1 rounded-md ${currentPage === number ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200'} hover:bg-gray-200 dark:hover:bg-gray-600`}
+          >
+            {number}
+          </button>
+        ))}
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
