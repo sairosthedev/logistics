@@ -236,6 +236,95 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
     );
 };
 
+const ViewDetailsModal = ({ isOpen, onClose, truck }) => {
+    if (!isOpen || !truck) return null;
+
+    const detailSections = [
+        {
+            title: "Vehicle Information",
+            items: [
+                { label: "Truck Type", value: truck.truckType },
+                { label: "Maximum Weight", value: `${truck.maximumWeight} tons` },
+                { label: "Current Location", value: truck.location },
+            ]
+        },
+        {
+            title: "Registration Details",
+            items: [
+                { label: "Horse Registration", value: truck.horse },
+                { label: "Trailer 1 Registration", value: truck.trailer1 },
+                { label: "Trailer 2 Registration", value: truck.trailer2 || "N/A" },
+                { label: "Trailer 3 Registration", value: truck.trailer3 || "N/A" },
+            ]
+        },
+        {
+            title: "Driver Information",
+            items: [
+                { label: "Driver Name", value: truck.driverName },
+                { label: "Driver License", value: truck.licence },
+                { label: "Passport Number", value: truck.passport },
+                { label: "Driver Phone", value: truck.driverPhone },
+            ]
+        },
+        {
+            title: "Owner Contact",
+            items: [
+                { label: "Owner Phone", value: truck.truckOwnerPhone },
+                { label: "Owner WhatsApp", value: truck.truckOwnerWhatsapp },
+            ]
+        }
+    ];
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="sticky top-0 bg-white px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 className="text-xl font-bold text-gray-900">Truck Details</h3>
+                    <button
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        onClick={onClose}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div className="px-6 py-4 space-y-6">
+                    {detailSections.map((section, idx) => (
+                        <div key={idx} className="bg-gray-50 rounded-lg p-4">
+                            <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                                {section.title}
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {section.items.map((item, itemIdx) => (
+                                    <div key={itemIdx} className="bg-white rounded-md p-3 shadow-sm">
+                                        <p className="text-sm font-medium text-gray-500">
+                                            {item.label}
+                                        </p>
+                                        <p className="text-base text-gray-900 mt-1">
+                                            {item.value}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t border-gray-200">
+                    <button
+                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center space-x-2"
+                        onClick={onClose}
+                    >
+                        <span>Close</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 function Trucks() {
     const { accessToken, clientID } = useAuthStore();
     const [searchTerm, setSearchTerm] = useState('');
@@ -270,6 +359,8 @@ function Trucks() {
     const [truckRegistrationFile, setTruckRegistrationFile] = useState(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [truckToDelete, setTruckToDelete] = useState(null);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [truckToView, setTruckToView] = useState(null);
 
     useEffect(() => {
         fetchTrucks();
@@ -319,6 +410,15 @@ function Trucks() {
         setTruckToDelete(null);
     };
 
+    const handleViewClick = (truck) => {
+        setTruckToView(truck);
+        setIsViewModalOpen(true);
+    };
+
+    const handleViewClose = () => {
+        setIsViewModalOpen(false);
+        setTruckToView(null);
+    };
 
     const handleFileChange = (e, setFile) => {
         setFile(e.target.files[0]);
@@ -780,6 +880,12 @@ function Trucks() {
                                                             {truck.maximumWeight} tons
                                                         </td>
                                                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                                            <button
+                                                                onClick={() => handleViewClick(truck)}
+                                                                className="text-blue-600 hover:text-blue-900 mr-4"
+                                                            >
+                                                                View
+                                                            </button>
                                                             {truck.status !== 'loaded' && (
                                                                 <>
                                                                     <button
@@ -812,6 +918,11 @@ function Trucks() {
                 isOpen={isDeleteModalOpen}
                 onClose={handleDeleteCancel}
                 onConfirm={handleDeleteConfirm}
+            />
+            <ViewDetailsModal
+                isOpen={isViewModalOpen}
+                onClose={handleViewClose}
+                truck={truckToView}
             />
         </TruckerLayout>
     );
