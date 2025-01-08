@@ -246,6 +246,14 @@ const ViewDetailsModal = ({ isOpen, onClose, truck }) => {
                 { label: "Truck Type", value: truck.truckType },
                 { label: "Maximum Weight", value: `${truck.maximumWeight} tons` },
                 { label: "Current Location", value: truck.location },
+                { 
+                    label: "Truck Image", 
+                    value: truck.truckImage ? (
+                        <a href={`${BACKEND_Local}/api/media/public/${truck.truckImage}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                            View Image
+                        </a>
+                    ) : "Not Uploaded"
+                }
             ]
         },
         {
@@ -255,6 +263,46 @@ const ViewDetailsModal = ({ isOpen, onClose, truck }) => {
                 { label: "Trailer 1 Registration", value: truck.trailer1 },
                 { label: "Trailer 2 Registration", value: truck.trailer2 || "N/A" },
                 { label: "Trailer 3 Registration", value: truck.trailer3 || "N/A" },
+                { 
+                    label: "Driver License File", 
+                    value: truck.driverLicenseFile ? (
+                        <a href={`${BACKEND_Local}/api/media/public/${truck.driverLicenseFile}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                            View File
+                        </a>
+                    ) : "Not Uploaded"
+                },
+                {
+                    label: "Passport File", 
+                    value: truck.passportFile ? (
+                        <a href={`${BACKEND_Local}/api/media/public/${truck.passportFile}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                            View File
+                        </a>
+                    ) : "Not Uploaded"
+                },
+                {
+                    label: "Truck Registration File", 
+                    value: truck.truckRegistrationFile ? (
+                        <a href={`${BACKEND_Local}/api/media/public/${truck.truckRegistrationFile}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                            View File
+                        </a>
+                    ) : "Not Uploaded"
+                },
+                {
+                    label: "Insurance File", 
+                    value: truck.truckInsuranceFile ? (
+                        <a href={`${BACKEND_Local}/api/media/public/${truck.truckInsuranceFile}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                            View File
+                        </a>
+                    ) : "Not Uploaded"
+                },
+                {
+                    label: "Road Worthy File", 
+                    value: truck.truckRoadWorthyFile ? (
+                        <a href={`${BACKEND_Local}/api/media/public/${truck.truckRoadWorthyFile}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                            View File
+                        </a>
+                    ) : "Not Uploaded"
+                }
             ]
         },
         {
@@ -357,6 +405,9 @@ function Trucks() {
     const [driverLicenseFile, setDriverLicenseFile] = useState(null);
     const [passportFile, setPassportFile] = useState(null);
     const [truckRegistrationFile, setTruckRegistrationFile] = useState(null);
+    const [truckInsuranceFile, setTruckInsuranceFile] = useState(null);
+    const [truckRoadWorthyFile, setTruckRoadWorthyFile] = useState(null);  // Fix the typo here
+    const [truckImage, setTruckImage] = useState(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [truckToDelete, setTruckToDelete] = useState(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -447,6 +498,9 @@ function Trucks() {
         if (driverLicenseFile) formData.append('driverLicenseFile', driverLicenseFile);
         if (passportFile) formData.append('passportFile', passportFile);
         if (truckRegistrationFile) formData.append('truckRegistrationFile', truckRegistrationFile);
+        if (truckInsuranceFile) formData.append('truckInsuranceFile', truckInsuranceFile);
+        if (truckRoadWorthyFile) formData.append('truckRoadWorthyFile', truckRoadWorthyFile);
+        if (truckImage) formData.append('truckImage', truckImage);
 
         try {
             const url = isEditing
@@ -459,7 +513,9 @@ function Trucks() {
                         'Content-Type': 'multipart/form-data'
                     }
                 })
+                   
                 : await axios.post(url, formData, {
+                        
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
                         'Content-Type': 'multipart/form-data'
@@ -484,6 +540,8 @@ function Trucks() {
             setShowForm(false);
             setIsEditing(false);
             setCurrentTruck(null);
+
+
         } catch (error) {
             console.log(error);
             if (error.response && error.response.status === 409) {
@@ -496,6 +554,8 @@ function Trucks() {
             setFormLoading(false);
         }
     };
+
+    
 
     const handleEdit = (truck) => {
         setCurrentTruck(truck);
@@ -799,6 +859,33 @@ function Trucks() {
                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                     />
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Truck Insurance File</label>
+                                    <input
+                                        type="file"
+                                        name="truckInsuranceFile"
+                                        onChange={(e) => handleFileChange(e, setTruckInsuranceFile)}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Truck Road Worthy File</label>
+                                    <input
+                                        type="file"
+                                        name="truckRoadWorthyFile"
+                                        onChange={(e) => handleFileChange(e, setTruckRoadWorthyFile)}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Truck Image</label>
+                                    <input
+                                        type="file"
+                                        name="truckImage"
+                                        onChange={(e) => handleFileChange(e, setTruckImage)}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                </div>
                             </div>
                             <div className="mt-6">
                                 <button
@@ -924,6 +1011,7 @@ function Trucks() {
                 onClose={handleViewClose}
                 truck={truckToView}
             />
+
         </TruckerLayout>
     );
 }
