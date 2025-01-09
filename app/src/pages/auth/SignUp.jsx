@@ -15,6 +15,7 @@ function Signup() {
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [loading, setLoading] = useState(false); // New loading state
+    const [emailError, setEmailError] = useState(''); // New email error state
     const navigate = useNavigate();
 
     const handleAccountTypeChange = (event) => {
@@ -29,6 +30,7 @@ function Signup() {
         event.preventDefault();
         setErrorMessage(''); // Reset error message
         setLoading(true); // Start loading
+        setEmailError(''); // Clear any previous errors
 
         if (password !== confirmPassword) {
             setErrorMessage('Passwords do not match');
@@ -79,7 +81,11 @@ function Signup() {
                 }
             } else {
                 const errorData = await response.json();
-                setErrorMessage(`Signup failed: ${errorData.message}`);
+                if (errorData.message === 'Email already exists') {
+                    setEmailError('This email is already registered. Please use a different email.');
+                } else {
+                    setErrorMessage(`Signup failed: ${errorData.message}`);
+                }
             }
         } catch (error) {
             setErrorMessage('Error during signup: ' + error.message);
@@ -114,6 +120,11 @@ function Signup() {
                             <div className="md:col-span-2">
                                 <label htmlFor="email" className="block text-sm sm:text-xs md:text-sm font-medium text-gray-700 mb-1">Email Address</label>
                                 <input type="email" name="email" id="email" placeholder="you@example.com" className="block w-full px-4 py-1 sm:px-2 sm:py-0.5 md:px-4 md:py-1 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out" required aria-label="Email Address" onChange={(e) => setEmail(e.target.value)} />
+                                {emailError && (
+                                    <div className="mt-1 text-sm text-red-600">
+                                        {emailError}
+                                    </div>
+                                )}
                             </div>
                             <div className="md:col-span-2">
                                 <label htmlFor="phone" className="block text-sm sm:text-xs md:text-sm font-medium text-gray-700 mb-1">Phone Number</label>

@@ -661,9 +661,9 @@ const JobsSection = ({
                   onChange={(e) => setRate(e.target.value)}
                   // min="0"
                   // step="0.01"
-                  placeholder="Enter rate in USD"
+                  placeholder="Enter price in USD"
                 />
-              </div>
+              </div> 
               
               {/* Submit Button */}
               <div className="flex flex-col sm:flex-row justify-between mt-4">

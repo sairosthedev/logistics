@@ -23,6 +23,7 @@ function AvailableTrucks() {
   const { accessToken, clientID } = useAuthStore();
   const [isViewMoreModalOpen, setIsViewMoreModalOpen] = useState(false);
   const [selectedBidDetails, setSelectedBidDetails] = useState(null);
+  const [estimatedPrice, setEstimatedPrice] = useState(0);
 
   useEffect(() => {
     const fetchTruckers = async () => {
@@ -34,13 +35,57 @@ function AvailableTrucks() {
           }
         });
         
-        // Separate truckers into accepted and non-accepted
         const allTruckers = response.data;
-        const accepted = allTruckers.filter(trucker => trucker.status === 'accepted');
-        const available = allTruckers.filter(trucker => trucker.status !== 'accepted');
+        const excludedStatuses = ['accepted', 'loaded', 'in transit', 'delivered'];
         
-        setAcceptedTruckers(accepted);
-        setTruckers(available);
+        const accepted = allTruckers.filter(trucker => trucker.status === 'accepted');
+        const available = allTruckers.filter(trucker => 
+          !excludedStatuses.includes(trucker.status.toLowerCase())
+        );
+
+        // Fetch estimated prices for both available and accepted bids
+        const availableWithPrices = await Promise.all(available.map(async (trucker) => {
+          try {
+            const requestResponse = await axios.get(`${BACKEND_Local}/api/requests/${trucker.requestID}`, {
+              headers: {
+                Authorization: `Bearer ${accessToken}`
+              }
+            });
+            return {
+              ...trucker,
+              estimatedPrice: requestResponse.data.rate || '0'
+            };
+          } catch (error) {
+            console.error('Error fetching price for bid:', error);
+            return {
+              ...trucker,
+              estimatedPrice: '0'
+            };
+          }
+        }));
+
+        const acceptedWithPrices = await Promise.all(accepted.map(async (trucker) => {
+          try {
+            const requestResponse = await axios.get(`${BACKEND_Local}/api/requests/${trucker.requestID}`, {
+              headers: {
+                Authorization: `Bearer ${accessToken}`
+              }
+            });
+            return {
+              ...trucker,
+              estimatedPrice: requestResponse.data.rate || '0'
+            };
+          } catch (error) {
+            console.error('Error fetching price for accepted bid:', error);
+            return {
+              ...trucker,
+              estimatedPrice: '0'
+            };
+          }
+        }));
+        
+        setAcceptedTruckers(acceptedWithPrices);
+        setTruckers(availableWithPrices);
       } catch (error) {
         console.error('Error fetching truckers:', error);
         setResponseMessage('Error fetching truckers. Please try again.');
@@ -52,6 +97,63 @@ function AvailableTrucks() {
 
     fetchTruckers();
   }, [accessToken, clientID]);
+
+  const fetchRequestDetails = async (trucker) => {
+    try {
+      const requestResponse = await axios.get(`${BACKEND_Local}/api/requests/${trucker.requestID}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+      return {
+        ...trucker,
+        estimatedPrice: requestResponse.data.estimatedPrice || 
+                       requestResponse.data.price || 
+                       requestResponse.data.rate || 
+                       trucker.estimatedPrice ||
+                       '0'
+      };
+    } catch (error) {
+      console.error('Error fetching request details:', error);
+      return {
+        ...trucker,
+        estimatedPrice: trucker.estimatedPrice || '0'
+      };
+    }
+  };
+
+  const fetchTruckers = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(`${BACKEND_Local}/api/client/request-bids/${clientID}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+      
+      // Filter out bids with statuses we don't want to show in available bids
+      const allTruckers = response.data;
+      const excludedStatuses = ['accepted', 'loaded', 'in transit', 'delivered'];
+      
+      const accepted = allTruckers.filter(trucker => trucker.status === 'accepted');
+      const available = allTruckers.filter(trucker => 
+        !excludedStatuses.includes(trucker.status.toLowerCase())
+      );
+
+      // Fetch estimated prices for available bids
+      const availableWithPrices = await Promise.all(available.map(fetchRequestDetails));
+      const acceptedWithPrices = await Promise.all(accepted.map(fetchRequestDetails));
+      
+      setAcceptedTruckers(acceptedWithPrices);
+      setTruckers(availableWithPrices);
+    } catch (error) {
+      console.error('Error fetching truckers:', error);
+      setResponseMessage('Error fetching truckers. Please try again.');
+      setIsResponseModalOpen(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredTruckers = truckers.filter(trucker => {
     const matchesSearch = searchTerm === '' || (
@@ -150,9 +252,56 @@ function AvailableTrucks() {
     setIsConfirmModalOpen(false);
   };
 
-  const openViewMoreModal = (trucker) => {
-    setSelectedBidDetails(trucker);
-    setIsViewMoreModalOpen(true);
+  const openViewMoreModal = async (trucker) => {
+    console.log('Full trucker data:', trucker);
+    
+    try {
+      // Always fetch the request details to get the latest price
+      const requestResponse = await axios.get(`${BACKEND_Local}/api/requests/${trucker.requestID}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+      
+      console.log('Request details:', requestResponse.data);
+      
+      // Get the price - check multiple possible fields where price might be stored
+      const loadPrice = requestResponse.data.estimatedPrice || 
+                       requestResponse.data.price || 
+                       requestResponse.data.rate || 
+                       trucker.estimatedPrice ||
+                       '0';
+      
+      console.log('Fetched load price:', loadPrice);
+      
+      const updatedBidDetails = {
+        ...trucker,
+        estimatedPrice: loadPrice
+      };
+
+      // Update the trucker in the state with the new price
+      if (trucker.status === 'accepted') {
+        setAcceptedTruckers(prev => 
+          prev.map(t => t._id === trucker._id ? updatedBidDetails : t)
+        );
+      } else {
+        setTruckers(prev => 
+          prev.map(t => t._id === trucker._id ? updatedBidDetails : t)
+        );
+      }
+
+      setSelectedBidDetails(updatedBidDetails);
+      setIsViewMoreModalOpen(true);
+      
+    } catch (error) {
+      console.error('Error fetching request details:', error);
+      // If there's an error, still show the modal but with the existing data
+      setSelectedBidDetails({
+        ...trucker,
+        estimatedPrice: trucker.estimatedPrice || '0'
+      });
+      setIsViewMoreModalOpen(true);
+    }
   };
 
   const closeViewMoreModal = () => {
@@ -169,9 +318,24 @@ function AvailableTrucks() {
           Authorization: `Bearer ${accessToken}`
         }
       });
-      setAcceptedTruckers(prevAccepted => [...prevAccepted, { ...selectedTrucker, status: 'accepted' }]);
-      setTruckers(prevTruckers => prevTruckers.filter(trucker => trucker._id !== selectedTrucker._id));
+
+      // Update both truckers and acceptedTruckers states
+      const updatedTrucker = { ...selectedTrucker, status: 'accepted' };
+      setAcceptedTruckers(prevAccepted => [...prevAccepted, updatedTrucker]);
+      
+      // Remove the accepted bid from the available truckers list
+      setTruckers(prevTruckers => 
+        prevTruckers.filter(trucker => trucker._id !== selectedTrucker._id)
+      );
+
       setResponseMessage('Offer accepted successfully!');
+      
+      // Close the confirm modal
+      closeConfirmModal();
+      
+      // Optional: Refresh the data from server
+      fetchTruckers();
+      
     } catch (error) {
       console.error('Error accepting bid:', error);
       setResponseMessage('Failed to accept the offer. Please try again.');
@@ -195,27 +359,32 @@ function AvailableTrucks() {
 
   const modalStyles = {
     content: {
-      position: 'absolute',
-      top: '10%',
+      position: 'fixed', // Change from 'absolute' to 'fixed'
+      top: '50%', // Change from '10%' to '50%'
       left: '50%',
       right: 'auto',
       bottom: 'auto',
       marginRight: '-50%',
-      transform: 'translate(-50%, 0)',
-      zIndex: 1000,
+      transform: 'translate(-50%, -50%)', // Change to center vertically as well
+      zIndex: 9999, // Increase z-index
       backgroundColor: 'white',
       border: '1px solid #ccc',
       padding: '20px',
       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-      maxHeight: '80vh',
+      maxHeight: '90vh', // Increase max height
       overflowY: 'auto',
       width: '90%',
       maxWidth: '800px',
       borderRadius: '8px',
     },
     overlay: {
-      zIndex: 999,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 9998, // Increase overlay z-index
+      backgroundColor: 'rgba(0, 0, 0, 0.75)', // Slightly darker overlay
     },
   };
 
@@ -278,6 +447,7 @@ function AvailableTrucks() {
                   <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Truck Type</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Contact</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Estimated Price</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Created At</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Action</th>
                 </tr>
@@ -312,6 +482,13 @@ function AvailableTrucks() {
                     <td className="px-4 py-2 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
                         {trucker.truckInfo.driverPhone}
+                      </div>
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        ${typeof trucker.estimatedPrice === 'number' ? 
+                          trucker.estimatedPrice.toFixed(2) : 
+                          trucker.estimatedPrice || '0'}
                       </div>
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
@@ -355,38 +532,57 @@ function AvailableTrucks() {
                     <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Truck Type</th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Contact</th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Created At</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Action</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {currentAcceptedTruckers.map((trucker, index) => (
-                    <tr 
-                      key={trucker._id || index}
-                      className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 ${
-                        index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'
-                      }`}
-                    >
-                      <td className="px-4 py-2 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {trucker.truckInfo.driverName}
-                        </div>
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-white">
-                          {trucker.truckInfo.truckType}
-                        </div>
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-white">
-                          {trucker.truckInfo.driverPhone}
-                        </div>
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap">
-                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                          {trucker.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {currentAcceptedTruckers
+                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                    .map((trucker, index) => (
+                      <tr 
+                        key={trucker._id || index}
+                        className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 ${
+                          index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'
+                        }`}
+                      >
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            {trucker.truckInfo.driverName}
+                          </div>
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          <div className="text-sm text-gray-900 dark:text-white">
+                            {trucker.truckInfo.truckType}
+                          </div>
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          <div className="text-sm text-gray-900 dark:text-white">
+                            {trucker.truckInfo.driverPhone}
+                          </div>
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                            {trucker.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          <div className="text-sm text-gray-900 dark:text-white">
+                            {new Date(trucker.createdAt).toLocaleString('en-GB')}
+                          </div>
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          <div className="flex space-x-2">
+                            <button
+                              className="px-2 py-1 text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                              onClick={() => openViewMoreModal(trucker)}
+                            >
+                              View More
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
@@ -466,11 +662,15 @@ function AvailableTrucks() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
                       <span className="font-medium w-24 mb-1 sm:mb-0">Estimated:</span>
-                      <span className="text-lg font-semibold">${selectedBidDetails.estimatedPrice}</span>
+                      <span className="text-lg font-semibold">
+                        ${selectedBidDetails.rate || '0'}
+                      </span>
                     </p>
                     <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
                       <span className="font-medium w-24 mb-1 sm:mb-0">Bid Price:</span>
-                      <span className="text-lg font-semibold text-green-600">${selectedBidDetails.negotiationPrice}</span>
+                      <span className="text-lg font-semibold text-green-600">
+                        ${selectedBidDetails.negotiationPrice || '0'}
+                      </span>
                     </p>
                   </div>
                 </div>
