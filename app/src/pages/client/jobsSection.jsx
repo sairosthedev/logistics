@@ -214,27 +214,23 @@ const JobsSection = ({
 
     const payload = {
       clientID,
-      pickupLocation,
-      dropoffLocation,
       pickupCoordinates: {
-        latitude: pickupCoordinates.lat,
-        longitude: pickupCoordinates.lng,
+          latitude: pickupCoordinates.lat,
+          longitude: pickupCoordinates.lng,
       },
       dropoffCoordinates: {
-        latitude: dropoffCoordinates.lat,
-        longitude: dropoffCoordinates.lng,
+          latitude: dropoffCoordinates.lat,
+          longitude: dropoffCoordinates.lng,
       },
       distance: distance / 1000,
       route: "I-55 N",
       goodsType,
       payTerms,
       numberOfTrucks,
-      estimatedPrice,
-      negotiationPrice: parseFloat(negotiationPrice),
       status: "Pending",
       weight: parseFloat(weight),
       comments,
-      rate: parseFloat(rate),
+      rate: parseFloat(rate)
     };
 
     try {

@@ -486,9 +486,7 @@ function AvailableTrucks() {
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        ${typeof trucker.estimatedPrice === 'number' ? 
-                          trucker.estimatedPrice.toFixed(2) : 
-                          trucker.estimatedPrice || '0'}
+                        ${trucker.rate || trucker.estimatedPrice || '0'}
                       </div>
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
@@ -663,7 +661,7 @@ function AvailableTrucks() {
                     <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
                       <span className="font-medium w-24 mb-1 sm:mb-0">Estimated:</span>
                       <span className="text-lg font-semibold">
-                        ${selectedBidDetails.rate || '0'}
+                        ${selectedBidDetails.rate || selectedBidDetails.estimatedPrice || '0'}
                       </span>
                     </p>
                     <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
