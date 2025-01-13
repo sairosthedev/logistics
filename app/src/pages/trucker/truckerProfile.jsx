@@ -61,8 +61,52 @@ function TruckerProfile() {
     newPassword: '',
     confirmPassword: ''
   });
+  const [profileImage, setProfileImage] = useState("/api/placeholder/150/150");
 
-  const [profileImage, setProfileImage] = useState('/api/placeholder/150/150');
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No token found");
+        return;
+      }
+
+      try {
+        const decodedToken = jwt_decode(token);
+        const response = await fetch(
+          `${BACKEND_Local}/api/trucker/profile/${decodedToken.id}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
+
+        const data = await response.json();
+        setProfile({
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
+          email: data.email || "",
+          phone: data.phone || "",
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+        if (data.profilePicture) setProfileImage(data.profilePicture);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        setErrors({
+          submit: "Failed to load profile. Please try logging in again.",
+        });
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
@@ -119,15 +163,33 @@ function TruckerProfile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+
+    if (!validateForm()) return;
 
     try {
-      // Simulating API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No authentication token found");
+
+      const decodedToken = jwt_decode(token);
+      const formData = new FormData();
+      Object.keys(profile).forEach((key) => {
+        if (profile[key]) formData.append(key, profile[key]);
+      });
+
+      const response = await fetch(
+        `${BACKEND_Local}/api/trucker/profile/${decodedToken.id}`,
+        {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update profile");
+      }
+
       setSuccessMessage("Profile updated successfully!");
       setIsEditing(false);
       
