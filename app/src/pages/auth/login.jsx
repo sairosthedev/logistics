@@ -38,6 +38,14 @@ function Login() {
                 setShowModal(true);
             } else {
                 // Handle successful login
+                const { token, user } = response.data;
+                
+                // Store token in localStorage
+                localStorage.setItem('token', token); // Updated key
+                localStorage.setItem('user', JSON.stringify(user));
+                
+                setAuth({ token, user });
+
                 switch (accountType) {
                     case 'admin':
                         navigate('/app');
@@ -64,22 +72,6 @@ function Login() {
             setLoading(false); // Stop loading animation
         }
     };
-
-    const handleLogin = async (credentials) => {
-        try {
-            const response = await loginUser(credentials);
-            const { token, user } = response.data;
-            
-            // Store token in localStorage
-            localStorage.setItem('authToken', token);
-            localStorage.setItem('user', JSON.stringify(user));
-            
-            setAuth({ token, user });
-            navigate('/dashboard');
-        } catch (error) {
-            // Handle error...
-        }
-    }
 
     return (
         <section className="min-h-screen flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImage})` }}>
