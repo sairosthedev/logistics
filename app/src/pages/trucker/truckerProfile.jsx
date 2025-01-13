@@ -14,6 +14,7 @@ import {
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { BACKEND_Local } from "../../../url.js";
 import jwt_decode from "jwt-decode";
+import { useNavigate } from "react-router-dom";
 
 const ProfileSection = ({ title, children }) => (
   <div className="mb-8">
@@ -60,6 +61,7 @@ const ProfileField = ({
 );
 
 function TruckerProfile() {
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
@@ -79,13 +81,19 @@ function TruckerProfile() {
       const token = localStorage.getItem("token");
       if (!token) {
         console.error("No token found");
+        navigate("/login"); // Redirect to login page if no token is found
         return;
       }
 
       try {
         const decodedToken = jwt_decode(token);
+        console.log("Decoded Token:", decodedToken); // Log the decoded token for debugging
+        const userId = decodedToken.user?.userId; // Extract userId from nested user object
+        if (!userId) {
+          throw new Error("User ID not found in token");
+        }
         const response = await fetch(
-          `${BACKEND_Local}/api/trucker/profile/${decodedToken.id}`,
+          `${BACKEND_Local}/api/trucker/profile/${userId}`,
           {
             method: "GET",
             headers: {
@@ -117,7 +125,7 @@ function TruckerProfile() {
     };
 
     fetchProfile();
-  }, []);
+  }, [navigate]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -173,13 +181,19 @@ function TruckerProfile() {
       if (!token) throw new Error("No authentication token found");
 
       const decodedToken = jwt_decode(token);
+      const userId = decodedToken.user?.userId; // Extract userId from nested user object
+      console.log("User ID for PUT request:", userId); // Log the userId for debugging
+      if (!userId) {
+        throw new Error("User ID not found in token");
+      }
+
       const formData = new FormData();
       Object.keys(profile).forEach((key) => {
         if (profile[key]) formData.append(key, profile[key]);
       });
 
       const response = await fetch(
-        `${BACKEND_Local}/api/trucker/profile/${decodedToken.id}`,
+        `${BACKEND_Local}/api/trucker/profile/${userId}`,
         {
           method: "PUT",
           headers: { Authorization: `Bearer ${token}` },
