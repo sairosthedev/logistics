@@ -14,8 +14,9 @@ function Signup() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
-    const [loading, setLoading] = useState(false); // New loading state
-    const [emailError, setEmailError] = useState(''); // New email error state
+    const [loading, setLoading] = useState(false);
+    const [emailError, setEmailError] = useState('');
+    const [profilePicture, setProfilePicture] = useState(null); // New state for profile picture
     const navigate = useNavigate();
 
     const handleAccountTypeChange = (event) => {
@@ -26,45 +27,47 @@ function Signup() {
         setTermsAccepted(event.target.checked);
     };
 
+    const handleProfilePictureChange = (event) => {
+        setProfilePicture(event.target.files[0]); // Capture the selected file
+    };
+
     const handleSubmit = async (event) => {
         event.preventDefault();
-        setErrorMessage(''); // Reset error message
-        setLoading(true); // Start loading
-        setEmailError(''); // Clear any previous errors
+        setErrorMessage('');
+        setLoading(true);
+        setEmailError('');
 
         if (password !== confirmPassword) {
             setErrorMessage('Passwords do not match');
-            setLoading(false); // Stop loading
+            setLoading(false);
             return;
         }
 
         if (!termsAccepted) {
             setErrorMessage('You must accept the terms and conditions');
-            setLoading(false); // Stop loading
+            setLoading(false);
             return;
         }
 
-        const payload = {
-            firstName,
-            lastName,
-            email,
-            phone,
-            password,
-            accountType
-        };
+        const payload = new FormData(); // Use FormData to handle file upload
+        payload.append('firstName', firstName);
+        payload.append('lastName', lastName);
+        payload.append('email', email);
+        payload.append('phone', phone);
+        payload.append('password', password);
+        payload.append('accountType', accountType);
+        if (profilePicture) {
+            payload.append('profilePicture', profilePicture); // Append the profile picture
+        }
 
         try {
             const response = await fetch(`${BACKEND_Local}/api/${accountType}/register`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
+                body: payload,
             });
 
             if (response.ok) {
                 console.log('Signup successful');
-                // Redirect based on account type
                 switch (accountType) {
                     case 'client':
                         navigate('/client');
@@ -90,14 +93,14 @@ function Signup() {
         } catch (error) {
             setErrorMessage('Error during signup: ' + error.message);
         } finally {
-            setLoading(false); // Stop loading
+            setLoading(false);
         }
     };
 
     return (
         <section className="min-h-screen flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImage})` }}>
             <div className="px-4 md:h-fit h-4/5 relative xl:h-fit 2xl:h-fit w-fit">
-                <div className="bg-white px-8  rounded-2xl shadow-2xl backdrop-filter backdrop-blur-lg border border-gray-200">
+                <div className="bg-white px-8 rounded-2xl shadow-2xl backdrop-filter backdrop-blur-lg border border-gray-200">
                     <div className="text-center mb-8">
                         <img className="w-auto h-24 sm:h-16 md:h-24 mx-auto" src={mainLogo} alt="Main Logo" />
                         <h1 className="text-2xl sm:text-lg md:text-2xl font-extrabold text-gray-900">Join Truck-Stop</h1>
@@ -105,7 +108,7 @@ function Signup() {
                     </div>
 
                     {errorMessage && <div className="mb-2 text-red-600 text-center">{errorMessage}</div>}
-                    {loading && <div className="mb-2 text-blue-600 text-center">Loading...</div>} {/* Loading animation */}
+                    {loading && <div className="mb-2 text-blue-600 text-center">Loading...</div>}
 
                     <form onSubmit={handleSubmit} className="">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 sm:gap-x-2 sm:gap-y-1">
@@ -132,35 +135,39 @@ function Signup() {
                             </div>
 
                             <div>
-    <label htmlFor="password" className="block text-sm sm:text-xs md:text-sm font-medium text-gray-700 mb-1">Password</label>
-    <input 
-        type="password" 
-        name="password" 
-        id="password" 
-        placeholder="Enter your password" 
-        className="block w-full px-4 py-1 sm:px-2 sm:py-0.5 md:px-4 md:py-1 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out" 
-        required 
-        aria-label="Password" 
-        minLength="8" 
-        onChange={(e) => setPassword(e.target.value)} 
-    />
-</div>
-<div>
-    <label htmlFor="confirmPassword" className="block text-sm sm:text-xs md:text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-    <input 
-        type="password" 
-        name="confirmPassword" 
-        id="confirmPassword" 
-        placeholder="Confirm your password" 
-        className="block w-full px-4 py-1 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out" 
-        required 
-        aria-label="Confirm Password" 
-        minLength="8" 
-        onChange={(e) => setConfirmPassword(e.target.value)} 
-    />
-</div>
+                                <label htmlFor="password" className="block text-sm sm:text-xs md:text-sm font-medium text-gray-700 mb-1">Password</label>
+                                <input 
+                                    type="password" 
+                                    name="password" 
+                                    id="password" 
+                                    placeholder="Enter your password" 
+                                    className="block w-full px-4 py-1 sm:px-2 sm:py-0.5 md:px-4 md:py-1 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out" 
+                                    required 
+                                    aria-label="Password" 
+                                    minLength="8" 
+                                    onChange={(e) => setPassword(e.target.value)} 
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="confirmPassword" className="block text-sm sm:text-xs md:text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                                <input 
+                                    type="password" 
+                                    name="confirmPassword" 
+                                    id="confirmPassword" 
+                                    placeholder="Confirm your password" 
+                                    className="block w-full px-4 py-1 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out" 
+                                    required 
+                                    aria-label="Confirm Password" 
+                                    minLength="8" 
+                                    onChange={(e) => setConfirmPassword(e.target.value)} 
+                                />
+                            </div>
 
-                           
+                            <div className="md:col-span-2">
+                                <label htmlFor="profilePicture" className="block text-sm sm:text-xs md:text-sm font-medium text-gray-700 mb-1">Profile Picture (optional)</label>
+                                <input type="file" name="profilePicture" id="profilePicture" accept="image/*" className="block w-full border border-gray-300 rounded-lg shadow-sm" onChange={handleProfilePictureChange} />
+                            </div>
+
                             <div className="md:col-span-2">
                                 <label htmlFor="account-type" className="block text-sm sm:text-xs md:text-sm font-medium text-gray-700 mb-1">Account Type</label>
                                 <select id="account-type" name="account-type" className="block w-full px-4 py-1 sm:px-2 sm:py-0.5 md:px-4 md:py-1 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out" onChange={handleAccountTypeChange} value={accountType} required aria-label="Account Type">
@@ -169,7 +176,7 @@ function Signup() {
                                     <option value="client">Client</option>
                                     <option value="service">Service Provider</option>
                                 </select>
-                                </div>
+                            </div>
                         </div>
 
                         <div className="flex items-center mt-2 sm:mt-0.5 md:mt-2">
@@ -182,9 +189,9 @@ function Signup() {
                         <button
                             type="submit"
                             className="w-full flex justify-center py-1 px-4 mt-2 sm:mt-0.5 md:mt-2 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out transform hover:scale-105"
-                            disabled={loading} // Disable button while loading
+                            disabled={loading}
                         >
-                            {loading ? 'Creating Account...' : 'Create Account'} {/* Change button text based on loading state */}
+                            {loading ? 'Creating Account...' : 'Create Account'}
                         </button>
                     </form>
 
