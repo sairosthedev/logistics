@@ -6,7 +6,6 @@ const LogoutModal = ({ showModal, closeModal }) => {
 
   const handleLogout = () => {
     logoutUser(); // Call the logoutUser function to handle logout
-    localStorage.removeItem('token'); // Clear the token from localStorage
     closeModal(); // Close the modal after logging out
   };
 

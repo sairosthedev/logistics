@@ -4,14 +4,7 @@ import { BACKEND_Local } from '../../../url.js';
 
 // Define a store using Zustand for managing authentication state
 const useAuthStore = create((set) => ({
-    user: (() => {
-        const user = localStorage.getItem('user');
-        try {
-            return user ? JSON.parse(user) : {}; // Parse only if user is not null/undefined
-        } catch (e) {
-            return {}; // Fallback to empty object if parsing fails
-        }
-    })(),
+    user: JSON.parse(localStorage.getItem('user')) || null,
     accessToken: localStorage.getItem('authToken') || null,
     clientID: localStorage.getItem('clientID') || null,
     accountType: localStorage.getItem('accountType') || null,
@@ -19,7 +12,7 @@ const useAuthStore = create((set) => ({
 
     setAuth: ({ token, user, clientID, accountType }) => {
         localStorage.setItem('authToken', token);
-        localStorage.setItem('user', JSON.stringify(user || {})); // Ensure valid JSON
+        localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('clientID', clientID);
         localStorage.setItem('accountType', accountType);
 
