@@ -214,7 +214,33 @@ function TruckerProfile() {
         newPassword: "",
         confirmPassword: "",
       }));
+
+      // Fetch the updated profile data
+      const updatedProfileResponse = await fetch(
+        `${BACKEND_Local}/api/trucker/profile/${userId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!updatedProfileResponse.ok) {
+        throw new Error("Failed to fetch updated profile");
+      }
+
+      const updatedProfileData = await updatedProfileResponse.json();
+      setProfile((prev) => ({
+        ...prev,
+        firstName: updatedProfileData.firstName || "",
+        lastName: updatedProfileData.lastName || "",
+        email: updatedProfileData.email || "",
+        phone: updatedProfileData.phone || "",
+      }));
+
       setTimeout(() => setSuccessMessage(""), 3000);
+
     } catch (error) {
       console.error("Error updating profile:", error);
       setErrors({
