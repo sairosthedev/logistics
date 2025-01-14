@@ -1,7 +1,20 @@
-import React, { useState } from 'react';
-import TruckerLayout from '../../components/layouts/truckerLayout';
-import { User, Mail, Phone, Lock, Camera, Edit2, X, Save, AlertTriangle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import React, { useState, useEffect } from "react";
+import TruckerLayout from "../../components/layouts/truckerLayout";
+import {
+  User,
+  Mail,
+  Phone,
+  Lock,
+  Camera,
+  Edit2,
+  X,
+  Save,
+  AlertTriangle,
+} from "lucide-react";
+import { Alert, AlertDescription } from "../../components/ui/alert";
+import { BACKEND_Local } from "../../../url.js";
+import jwt_decode from "jwt-decode";
+import { useNavigate } from "react-router-dom";
 
 const ProfileSection = ({ title, children }) => (
   <div className="mb-8">
@@ -10,14 +23,14 @@ const ProfileSection = ({ title, children }) => (
   </div>
 );
 
-const ProfileField = ({ 
-  icon: Icon, 
-  label, 
-  value, 
-  onChange, 
-  type = "text", 
+const ProfileField = ({
+  icon: Icon,
+  label,
+  value,
+  onChange,
+  type = "text",
   disabled = false,
-  error = null
+  error = null,
 }) => (
   <div className="space-y-2">
     <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-all duration-200 dark:border-gray-700 dark:hover:shadow-none dark:hover:bg-gray-800">
@@ -26,7 +39,9 @@ const ProfileField = ({
           <Icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
         </div>
         <div className="w-full">
-          <h3 className="font-medium text-gray-900 dark:text-gray-100">{label}</h3>
+          <h3 className="font-medium text-gray-900 dark:text-gray-100">
+            {label}
+          </h3>
           {disabled ? (
             <p className="text-sm text-gray-500 dark:text-gray-400">{value}</p>
           ) : (
@@ -41,9 +56,7 @@ const ProfileField = ({
         </div>
       </div>
     </div>
-    {error && (
-      <p className="text-sm text-red-500 ml-4">{error}</p>
-    )}
+    {error && <p className="text-sm text-red-500 ml-4">{error}</p>}
   </div>
 );
 
@@ -53,13 +66,13 @@ function TruckerProfile() {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [profile, setProfile] = useState({
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
   const [profileImage, setProfileImage] = useState("/api/placeholder/150/150");
 
@@ -68,13 +81,19 @@ function TruckerProfile() {
       const token = localStorage.getItem("token");
       if (!token) {
         console.error("No token found");
+        navigate("/login"); // Redirect to login page if no token is found
         return;
       }
 
       try {
         const decodedToken = jwt_decode(token);
+        console.log("Decoded Token:", decodedToken); // Log the decoded token for debugging
+        const userId = decodedToken.user?.userId; // Extract userId from nested user object
+        if (!userId) {
+          throw new Error("User ID not found in token");
+        }
         const response = await fetch(
-          `${BACKEND_Local}/api/trucker/profile/${decodedToken.id}`,
+          `${BACKEND_Local}/api/trucker/profile/${userId}`,
           {
             method: "GET",
             headers: {
@@ -106,58 +125,49 @@ function TruckerProfile() {
     };
 
     fetchProfile();
-  }, []);
+  }, [navigate]);
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (isEditing) {
-      // Email validation
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)) {
-        newErrors.email = 'Please enter a valid email address';
+        newErrors.email = "Please enter a valid email address";
       }
-      
-      // Phone validation
+
       if (!/^\+?[\d\s-()]{10,}$/.test(profile.phone)) {
-        newErrors.phone = 'Please enter a valid phone number';
+        newErrors.phone = "Please enter a valid phone number";
       }
-      
-      // Password validation
+
       if (profile.newPassword) {
-        if (!profile.currentPassword) {
-          newErrors.currentPassword = 'Current password is required';
-        }
-        if (profile.newPassword.length < 8) {
-          newErrors.newPassword = 'Password must be at least 8 characters';
-        }
-        if (profile.newPassword !== profile.confirmPassword) {
-          newErrors.confirmPassword = 'Passwords do not match';
-        }
+        if (!profile.currentPassword)
+          newErrors.currentPassword = "Current password is required";
+        if (profile.newPassword.length < 8)
+          newErrors.newPassword = "Password must be at least 8 characters";
+        if (profile.newPassword !== profile.confirmPassword)
+          newErrors.confirmPassword = "Passwords do not match";
       }
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleProfileChange = (field, value) => {
-    setProfile(prev => ({ ...prev, [field]: value }));
-    // Clear error when field is edited
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
-    }
+    setProfile((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: null }));
   };
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setErrors(prev => ({ ...prev, image: 'Image must be less than 5MB' }));
+        setErrors({ image: "Image must be less than 5MB" });
         return;
       }
       const imageUrl = URL.createObjectURL(file);
       setProfileImage(imageUrl);
-      setErrors(prev => ({ ...prev, image: null }));
+      setErrors({ image: null });
     }
   };
 
@@ -171,13 +181,19 @@ function TruckerProfile() {
       if (!token) throw new Error("No authentication token found");
 
       const decodedToken = jwt_decode(token);
+      const userId = decodedToken.user?.userId; // Extract userId from nested user object
+      console.log("User ID for PUT request:", userId); // Log the userId for debugging
+      if (!userId) {
+        throw new Error("User ID not found in token");
+      }
+
       const formData = new FormData();
       Object.keys(profile).forEach((key) => {
         if (profile[key]) formData.append(key, profile[key]);
       });
 
       const response = await fetch(
-        `${BACKEND_Local}/api/trucker/profile/${decodedToken.id}`,
+        `${BACKEND_Local}/api/trucker/profile/${userId}`,
         {
           method: "PUT",
           headers: { Authorization: `Bearer ${token}` },
@@ -192,34 +208,29 @@ function TruckerProfile() {
 
       setSuccessMessage("Profile updated successfully!");
       setIsEditing(false);
-      
-      // Reset password fields
-      setProfile(prev => ({
+      setProfile((prev) => ({
         ...prev,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
       }));
-      
-      // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
-      setErrors(prev => ({ 
-        ...prev, 
-        submit: 'Failed to update profile. Please try again.' 
-      }));
+      console.error("Error updating profile:", error);
+      setErrors({
+        submit: error.message || "Failed to update profile. Please try again.",
+      });
     }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
     setErrors({});
-    // Reset password fields
-    setProfile(prev => ({
+    setProfile((prev) => ({
       ...prev,
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
     }));
   };
 
@@ -227,10 +238,12 @@ function TruckerProfile() {
     <TruckerLayout>
       <div className="max-w-4xl mx-auto px-4 py-8 transition-colors duration-200 dark:bg-gray-900">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Profile</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Profile
+          </h1>
           <button
             onClick={isEditing ? handleCancel : () => setIsEditing(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             {isEditing ? (
               <>
@@ -272,28 +285,23 @@ function TruckerProfile() {
               {isEditing && (
                 <label className="absolute bottom-0 right-0 cursor-pointer rounded-full bg-blue-600 p-2 shadow-lg transition-all hover:bg-blue-700">
                   <Camera className="h-4 w-4 text-white" />
-                  <input 
-                    type="file" 
-                    className="hidden" 
-                    accept="image/*" 
-                    onChange={handleImageUpload} 
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleImageUpload}
                   />
                 </label>
               )}
             </div>
           </div>
-          {errors.image && (
-            <Alert className="mb-6 bg-red-50 border-red-200 text-red-800">
-              <AlertDescription>{errors.image}</AlertDescription>
-            </Alert>
-          )}
 
           <ProfileSection title="Personal Information">
             <ProfileField
               icon={User}
               label="First Name"
               value={profile.firstName}
-              onChange={(value) => handleProfileChange('firstName', value)}
+              onChange={(value) => handleProfileChange("firstName", value)}
               disabled={!isEditing}
               error={errors.firstName}
             />
@@ -301,7 +309,7 @@ function TruckerProfile() {
               icon={User}
               label="Last Name"
               value={profile.lastName}
-              onChange={(value) => handleProfileChange('lastName', value)}
+              onChange={(value) => handleProfileChange("lastName", value)}
               disabled={!isEditing}
               error={errors.lastName}
             />
@@ -312,7 +320,7 @@ function TruckerProfile() {
               icon={Mail}
               label="Email"
               value={profile.email}
-              onChange={(value) => handleProfileChange('email', value)}
+              onChange={(value) => handleProfileChange("email", value)}
               type="email"
               disabled={!isEditing}
               error={errors.email}
@@ -321,7 +329,7 @@ function TruckerProfile() {
               icon={Phone}
               label="Phone"
               value={profile.phone}
-              onChange={(value) => handleProfileChange('phone', value)}
+              onChange={(value) => handleProfileChange("phone", value)}
               type="tel"
               disabled={!isEditing}
               error={errors.phone}
@@ -334,7 +342,9 @@ function TruckerProfile() {
                 icon={Lock}
                 label="Current Password"
                 value={profile.currentPassword}
-                onChange={(value) => handleProfileChange('currentPassword', value)}
+                onChange={(value) =>
+                  handleProfileChange("currentPassword", value)
+                }
                 type="password"
                 error={errors.currentPassword}
               />
@@ -342,7 +352,7 @@ function TruckerProfile() {
                 icon={Lock}
                 label="New Password"
                 value={profile.newPassword}
-                onChange={(value) => handleProfileChange('newPassword', value)}
+                onChange={(value) => handleProfileChange("newPassword", value)}
                 type="password"
                 error={errors.newPassword}
               />
@@ -350,7 +360,9 @@ function TruckerProfile() {
                 icon={Lock}
                 label="Confirm New Password"
                 value={profile.confirmPassword}
-                onChange={(value) => handleProfileChange('confirmPassword', value)}
+                onChange={(value) =>
+                  handleProfileChange("confirmPassword", value)
+                }
                 type="password"
                 error={errors.confirmPassword}
               />
@@ -361,7 +373,7 @@ function TruckerProfile() {
             <div className="flex justify-end pt-4">
               <button
                 type="submit"
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 <Save className="h-5 w-5" />
                 <span>Save Changes</span>
