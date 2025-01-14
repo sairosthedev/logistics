@@ -149,15 +149,15 @@ const StatusActionBar = ({ load, onStatusUpdate }) => {
     <div className="bg-white shadow-md rounded-lg p-6 mt-4">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center space-x-4">
-          {/* <h3 className="text-lg font-semibold">Current Status:</h3> */}
-          {/* <span
+          <h3 className="text-lg font-semibold">Current Status:</h3>
+          <span
             className={classNames(
               "px-3 py-1 rounded-full text-sm font-semibold",
               STATUS_CONFIG[currentStatus]?.color || "bg-gray-100 text-gray-800"
             )}
           >
             {STATUS_CONFIG[currentStatus]?.label || "Unknown Status"}
-          </span> */}
+          </span>
         </div>
 
         {/* Only show update button if status is not 'pending' and nextStatus exists */}

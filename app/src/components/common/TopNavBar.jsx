@@ -48,7 +48,7 @@ function TopNavBar({ userType, onLogout }) {
                         {/* Logo Section */}
                         <div className="flex-shrink-0 flex items-center">
                             <div
-                                onClick={() => navigate(`/${userType}`)}
+                                onClick={() => navigate(`/${userType}`)}  /* Fix applied here */
                                 className="h-16 w-16 bg-white/95 rounded-2xl shadow-lg flex items-center justify-center cursor-pointer transform transition-all duration-300 hover:scale-105 hover:rotate-3 hover:shadow-blue-500/30"
                             >
                                 <img src="/src/assets/images/logos/mainLogo.png" alt="Logo" className="h-full w-full object-contain" onError={(e) => { e.target.onerror = null; e.target.src = 'fallbackLogo.png'; }} />

@@ -1,9 +1,23 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 
 const AcceptedBidsTable = ({ currentBids, openJobModal }) => {
   // Sort bids in descending order based on createdAt
   const sortedBids = [...currentBids].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const bidsPerPage = 10;
+
+  const indexOfLastBid = currentPage * bidsPerPage;
+  const indexOfFirstBid = indexOfLastBid - bidsPerPage;
+  const currentBidsPage = sortedBids.slice(indexOfFirstBid, indexOfLastBid);
+
+  const handleViewClick = (bid) => {
+    openJobModal(bid, bid.status !== 'bid');
+  };
+
+  const handlePageChange = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
     <div className="overflow-x-auto">
@@ -22,7 +36,7 @@ const AcceptedBidsTable = ({ currentBids, openJobModal }) => {
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {sortedBids.map((bid) => (
+          {currentBidsPage.map((bid) => (
             <tr key={bid._id} className="hover:bg-gray-50">
               <td className="px-4 py-4 text-sm text-gray-900">
                 <div className="break-words">{bid.clientName}</div>
@@ -53,7 +67,7 @@ const AcceptedBidsTable = ({ currentBids, openJobModal }) => {
               </td>
               <td className="px-4 py-4 text-sm">
                 <button
-                  onClick={() => openJobModal(bid)}
+                  onClick={() => handleViewClick(bid)}
                   className="text-indigo-600 hover:text-indigo-900 font-medium"
                 >
                   View
@@ -64,9 +78,22 @@ const AcceptedBidsTable = ({ currentBids, openJobModal }) => {
         </tbody>
       </table>
 
+      {/* Pagination */}
+      <div className="flex justify-center mt-4">
+        {Array.from({ length: Math.ceil(sortedBids.length / bidsPerPage) }, (_, index) => (
+          <button
+            key={index}
+            onClick={() => handlePageChange(index + 1)}
+            className={`px-3 py-1 mx-1 rounded ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+          >
+            {index + 1}
+          </button>
+        ))}
+      </div>
+
       {/* Mobile View */}
       <div className="grid grid-cols-1 gap-4 md:hidden">
-        {currentBids.map((bid) => (
+        {currentBidsPage.map((bid) => (
           <div
             key={bid._id}
             className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow space-y-3"
