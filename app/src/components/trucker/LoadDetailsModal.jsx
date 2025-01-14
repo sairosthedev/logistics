@@ -82,16 +82,7 @@ const LoadDetailsModal = ({
                   </tr>
                   <tr>
                     <td className="py-2 text-gray-700 dark:text-gray-300">Price (USD):</td>
-                    <td className="py-2">
-                      <div>
-                        <span>Est: ${selectedLoad.rate}</span>
-                        {negotiationPrice && (
-                          <div className="text-green-600">
-                            Bid: ${negotiationPrice}
-                          </div>
-                        )}
-                      </div>
-                    </td>
+                    <td className="py-2">{selectedLoad.rate}</td>
                   </tr>
                 </tbody>
               </table>
@@ -185,4 +176,4 @@ const LoadDetailsModal = ({
   );
 };
 
-export default LoadDetailsModal;
+export default LoadDetailsModal; 
