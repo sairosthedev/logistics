@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Truck, User, MapPin, Phone, Star, Weight, Calendar, DollarSign, ChevronUp, ChevronDown, Search } from 'lucide-react';
 import ClientLayout from '../../components/layouts/clientLayout';
@@ -266,12 +265,14 @@ function AvailableTrucks() {
           </div>
         </div>
 
-        {/* Available Bids Table */}
+        {/* Available Bids Section */}
         <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg mb-6">
           <div className="p-4 border-b dark:border-gray-700">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Available Bids</h2>
           </div>
-          <div className="w-full min-w-full">
+          
+          {/* Desktop Table View */}
+          <div className="hidden md:block w-full min-w-full">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-400">
                 <tr>
@@ -335,6 +336,57 @@ function AvailableTrucks() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden px-4 py-2 space-y-4">
+            {currentTruckers.map((trucker, index) => (
+              <div 
+                key={trucker._id || index}
+                className="bg-gray-50 dark:bg-gray-700 rounded-lg shadow p-4 space-y-3"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {trucker.truckInfo.driverName}
+                    </h4>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {trucker.truckInfo.truckType}
+                    </p>
+                  </div>
+                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    trucker.status === 'active'
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                      : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                  }`}>
+                    {trucker.status}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <p className="text-gray-500 dark:text-gray-400">Contact</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {trucker.truckInfo.driverPhone}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 dark:text-gray-400">Created</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {new Date(trucker.createdAt).toLocaleString('en-GB')}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => openViewMoreModal(trucker)}
+                  className="w-full mt-2 px-4 py-2 text-sm font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  View More
+                </button>
+              </div>
+            ))}
+          </div>
+
           <PaginationControls
             totalPages={totalPages}
             currentPage={currentPage}
@@ -342,13 +394,15 @@ function AvailableTrucks() {
           />
         </div>
 
-        {/* Accepted Bids Table - Collapsible */}
+        {/* Accepted Bids Section */}
         <div className={`transition-all duration-300 ease-in-out ${isAcceptedOffersVisible ? 'opacity-100 max-h-[2000px] mb-6' : 'opacity-0 max-h-0 overflow-hidden mb-0'}`}>
           <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg">
             <div className="p-4 border-b dark:border-gray-700">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Accepted Bids</h2>
             </div>
-            <div className="w-full min-w-full">
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block w-full min-w-full">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-400">
                   <tr>
@@ -391,6 +445,46 @@ function AvailableTrucks() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden px-4 py-2 space-y-4">
+              {currentAcceptedTruckers.map((trucker, index) => (
+                <div 
+                  key={trucker._id || index}
+                  className="bg-gray-50 dark:bg-gray-700 rounded-lg shadow p-4 space-y-3"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {trucker.truckInfo.driverName}
+                      </h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {trucker.truckInfo.truckType}
+                      </p>
+                    </div>
+                    <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                      {trucker.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <p className="text-gray-500 dark:text-gray-400">Contact</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {trucker.truckInfo.driverPhone}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 dark:text-gray-400">Location</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {trucker.truckInfo.location || 'Not specified'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <PaginationControls
               totalPages={totalAcceptedPages}
               currentPage={acceptedOffersPage}
