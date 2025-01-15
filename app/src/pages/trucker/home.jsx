@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import TruckerLayout from "../../components/layouts/truckerLayout";
 import axios from "axios";
@@ -373,10 +372,68 @@ function Home() {
                   </p>
                 </div>
               </div>
-              <LoadTable
-                currentLoads={currentLoads}
-                openJobModal={openJobModal}
-              />
+              
+              {/* Desktop view */}
+              <div className="hidden md:block">
+                <LoadTable
+                  currentLoads={currentLoads}
+                  openJobModal={openJobModal}
+                />
+              </div>
+
+              {/* Mobile view with cards */}
+              <div className="md:hidden space-y-4">
+                {currentLoads.map((load) => (
+                  <div 
+                    key={load._id}
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 space-y-3"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          {load.clientName}
+                        </h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {load.goodsType}
+                        </p>
+                      </div>
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        load.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        load.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {load.status}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">Pickup</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{load.pickupLocation}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">Dropoff</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{load.dropoffLocation}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">Trucks Needed</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{load.numberOfTrucks}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">Distance</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{load.distance} km</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => openJobModal(load)}
+                      className="w-full mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      View Details
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
