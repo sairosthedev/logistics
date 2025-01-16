@@ -154,7 +154,21 @@ const StatusActionBar = ({ load, onStatusUpdate }) => {
 
   return (
     <div className="bg-white shadow-md rounded-lg p-6 mt-4">
-      
+      <div className="flex justify-between items-center mb-8">
+
+        {/* Only show update button if status is not 'pending' and nextStatus exists */}
+        {currentStatus !== "pending" && nextStatus && (
+          <button
+            onClick={() => handleStatusUpdate(nextStatus)}
+            disabled={isUpdating}
+            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200 disabled:bg-gray-400"
+          >
+            {isUpdating
+              ? "Updating..."
+              : `Update to ${STATUS_CONFIG[nextStatus].label}`}
+          </button>
+        )}
+      </div>
 
       
       <div className="relative">
