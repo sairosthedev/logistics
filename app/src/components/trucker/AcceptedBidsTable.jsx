@@ -30,7 +30,6 @@ const AcceptedBidsTable = ({ currentBids, openJobModal }) => {
             <th className="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pick Up</th>
             <th className="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Drop Off</th>
             <th className="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-            <th className="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
             <th className="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
             <th className="w-[5%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
           </tr>
@@ -59,9 +58,7 @@ const AcceptedBidsTable = ({ currentBids, openJobModal }) => {
                   {bid.status}
                 </span>
               </td>
-              <td className="px-4 py-4 text-sm text-gray-900">
-                <div className="break-words">${bid.negotiationPrice}</div>
-              </td>
+
               <td className="px-4 py-4 text-sm text-gray-900">
                 <div className="break-words">{format(new Date(bid.createdAt), 'Pp')}</div>
               </td>

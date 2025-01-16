@@ -108,6 +108,27 @@ const StatusActionBar = ({ load, onStatusUpdate }) => {
           if (load) {
             load.status = newStatus;
           }
+
+          // Update truck status based on load status
+          if (load.truckID) {
+            let truckStatus = "standby";
+            if (newStatus === "loaded" || newStatus === "in transit") {
+              truckStatus = "loaded";
+            } else if (newStatus === "delivered") {
+              truckStatus = "standby";
+            }
+
+            await axios.put(
+              `${BACKEND_Local}/api/trucker/trucks/${load.truckID}`,
+              { status: truckStatus },
+              {
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+          }
         } else {
           throw new Error("Status update failed");
         }
@@ -122,20 +143,13 @@ const StatusActionBar = ({ load, onStatusUpdate }) => {
           }
         );
 
-        if (response1.status ===200) {
+        if (response1.status === 200) {
           console.log("Truck request status updated to ", newStatus);
         } else {
-          throw new Error("Status update failed   on bids  ");
+          throw new Error("Status update failed on bids");
         }
       } catch (error) {
         console.error("Error updating status:", error);
-
-        // Optional: Add user-friendly error handling
-        alert(
-          `Failed to update status: ${
-            error.response?.data?.message || error.message
-          }`
-        );
       } finally {
         setIsUpdating(false);
       }
