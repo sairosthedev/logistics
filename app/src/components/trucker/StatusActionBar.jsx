@@ -126,7 +126,7 @@ const StatusActionBar = ({ load, onStatusUpdate }) => {
             }
 
             await axios.put(
-              `${BACKEND_Local}/api/trucker/trucks/${load.truckID}`,
+              `${BACKEND_Local}/api/trucker/update/${load.truckID}`,
               { status: truckStatus },
               {
                 headers: {
