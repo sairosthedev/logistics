@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import TruckerLayout from '../../components/layouts/truckerLayout';
 import axios from 'axios';
@@ -236,6 +237,143 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
     );
 };
 
+const ViewDetailsModal = ({ isOpen, onClose, truck }) => {
+    if (!isOpen || !truck) return null;
+
+    const detailSections = [
+        {
+            title: "Vehicle Information",
+            items: [
+                { label: "Truck Type", value: truck.truckType },
+                { label: "Maximum Weight", value: `${truck.maximumWeight} tons` },
+                { label: "Current Location", value: truck.location },
+                { 
+                    label: "Truck Image", 
+                    value: truck.truckImage ? (
+                        <a href={`${BACKEND_Local}/api/media/public/${truck.truckImage}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                            View Image
+                        </a>
+                    ) : "Not Uploaded"
+                }
+            ]
+        },
+        {
+            title: "Registration Details",
+            items: [
+                { label: "Horse Registration", value: truck.horse },
+                { label: "Trailer 1 Registration", value: truck.trailer1 },
+                { label: "Trailer 2 Registration", value: truck.trailer2 || "N/A" },
+                { label: "Trailer 3 Registration", value: truck.trailer3 || "N/A" },
+                { 
+                    label: "Driver License File", 
+                    value: truck.driverLicenseFile ? (
+                        <a href={`${BACKEND_Local}/api/media/public/${truck.driverLicenseFile}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                            View File
+                        </a>
+                    ) : "Not Uploaded"
+                },
+                {
+                    label: "Passport File", 
+                    value: truck.passportFile ? (
+                        <a href={`${BACKEND_Local}/api/media/public/${truck.passportFile}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                            View File
+                        </a>
+                    ) : "Not Uploaded"
+                },
+                {
+                    label: "Truck Registration File", 
+                    value: truck.truckRegistrationFile ? (
+                        <a href={`${BACKEND_Local}/api/media/public/${truck.truckRegistrationFile}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                            View File
+                        </a>
+                    ) : "Not Uploaded"
+                },
+                {
+                    label: "Insurance File", 
+                    value: truck.truckInsuranceFile ? (
+                        <a href={`${BACKEND_Local}/api/media/public/${truck.truckInsuranceFile}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                            View File
+                        </a>
+                    ) : "Not Uploaded"
+                },
+                {
+                    label: "Road Worthy File", 
+                    value: truck.truckRoadWorthyFile ? (
+                        <a href={`${BACKEND_Local}/api/media/public/${truck.truckRoadWorthyFile}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                            View File
+                        </a>
+                    ) : "Not Uploaded"
+                }
+            ]
+        },
+        {
+            title: "Driver Information",
+            items: [
+                { label: "Driver Name", value: truck.driverName },
+                { label: "Driver License", value: truck.licence },
+                { label: "Passport Number", value: truck.passport },
+                { label: "Driver Phone", value: truck.driverPhone },
+            ]
+        },
+        {
+            title: "Owner Contact",
+            items: [
+                { label: "Owner Phone", value: truck.truckOwnerPhone },
+                { label: "Owner WhatsApp", value: truck.truckOwnerWhatsapp },
+            ]
+        }
+    ];
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="sticky top-0 bg-white px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 className="text-xl font-bold text-gray-900">Truck Details</h3>
+                    <button
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        onClick={onClose}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div className="px-6 py-4 space-y-6">
+                    {detailSections.map((section, idx) => (
+                        <div key={idx} className="bg-gray-50 rounded-lg p-4">
+                            <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                                {section.title}
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {section.items.map((item, itemIdx) => (
+                                    <div key={itemIdx} className="bg-white rounded-md p-3 shadow-sm">
+                                        <p className="text-sm font-medium text-gray-500">
+                                            {item.label}
+                                        </p>
+                                        <p className="text-base text-gray-900 mt-1">
+                                            {item.value}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t border-gray-200">
+                    <button
+                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center space-x-2"
+                        onClick={onClose}
+                    >
+                        <span>Close</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 function Trucks() {
     const { accessToken, clientID } = useAuthStore();
     const [searchTerm, setSearchTerm] = useState('');
@@ -268,6 +406,13 @@ function Trucks() {
     const [driverLicenseFile, setDriverLicenseFile] = useState(null);
     const [passportFile, setPassportFile] = useState(null);
     const [truckRegistrationFile, setTruckRegistrationFile] = useState(null);
+    const [truckInsuranceFile, setTruckInsuranceFile] = useState(null);
+    const [truckRoadWorthyFile, setTruckRoadWorthyFile] = useState(null);  // Fix the typo here
+    const [truckImage, setTruckImage] = useState(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [truckToDelete, setTruckToDelete] = useState(null);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [truckToView, setTruckToView] = useState(null);
 
     useEffect(() => {
         fetchTrucks();
@@ -289,17 +434,42 @@ function Trucks() {
         }
     };
 
-    const handleDelete = async (truck) => {
-        try {
-            await axios.delete(`${BACKEND_Local}/api/trucker/delete/${truck._id}`, {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`
-                }
-            });
-            fetchTrucks(); // Refresh the trucks list
-        } catch (error) {
-            console.error('Error deleting truck:', error);
+    const handleDeleteClick = (truck) => {
+        setTruckToDelete(truck);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (truckToDelete) {
+            try {
+                await axios.delete(`${BACKEND_Local}/api/trucker/delete/${truckToDelete._id}`, {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                });
+                fetchTrucks(); // Refresh the trucks list
+            } catch (error) {
+                console.error('Error deleting truck:', error);
+            } finally {
+                setIsDeleteModalOpen(false);
+                setTruckToDelete(null);
+            }
         }
+    };
+
+    const handleDeleteCancel = () => {
+        setIsDeleteModalOpen(false);
+        setTruckToDelete(null);
+    };
+
+    const handleViewClick = (truck) => {
+        setTruckToView(truck);
+        setIsViewModalOpen(true);
+    };
+
+    const handleViewClose = () => {
+        setIsViewModalOpen(false);
+        setTruckToView(null);
     };
 
     const handleFileChange = (e, setFile) => {
@@ -329,6 +499,9 @@ function Trucks() {
         if (driverLicenseFile) formData.append('driverLicenseFile', driverLicenseFile);
         if (passportFile) formData.append('passportFile', passportFile);
         if (truckRegistrationFile) formData.append('truckRegistrationFile', truckRegistrationFile);
+        if (truckInsuranceFile) formData.append('truckInsuranceFile', truckInsuranceFile);
+        if (truckRoadWorthyFile) formData.append('truckRoadWorthyFile', truckRoadWorthyFile);
+        if (truckImage) formData.append('truckImage', truckImage);
 
         try {
             const url = isEditing
@@ -341,7 +514,9 @@ function Trucks() {
                         'Content-Type': 'multipart/form-data'
                     }
                 })
+                   
                 : await axios.post(url, formData, {
+                        
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
                         'Content-Type': 'multipart/form-data'
@@ -366,6 +541,8 @@ function Trucks() {
             setShowForm(false);
             setIsEditing(false);
             setCurrentTruck(null);
+
+
         } catch (error) {
             console.log(error);
             if (error.response && error.response.status === 409) {
@@ -378,6 +555,8 @@ function Trucks() {
             setFormLoading(false);
         }
     };
+
+    
 
     const handleEdit = (truck) => {
         setCurrentTruck(truck);
@@ -433,7 +612,7 @@ function Trucks() {
                             onChange={(e) => setFilterAvailability(e.target.value)}
                         >
                             <option value="all">All Statuses</option>
-                            <option value="active">Active</option>
+                            <option value="loaded">Loaded</option>
                             <option value="standby">Standby</option>
                         </select>
                         <button
@@ -681,6 +860,33 @@ function Trucks() {
                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                     />
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Truck Insurance File</label>
+                                    <input
+                                        type="file"
+                                        name="truckInsuranceFile"
+                                        onChange={(e) => handleFileChange(e, setTruckInsuranceFile)}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Truck Road Worthy File</label>
+                                    <input
+                                        type="file"
+                                        name="truckRoadWorthyFile"
+                                        onChange={(e) => handleFileChange(e, setTruckRoadWorthyFile)}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Truck Image</label>
+                                    <input
+                                        type="file"
+                                        name="truckImage"
+                                        onChange={(e) => handleFileChange(e, setTruckImage)}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                </div>
                             </div>
                             <div className="mt-6">
                                 <button
@@ -748,7 +954,7 @@ function Trucks() {
                                                         </td>
                                                         <td className="whitespace-nowrap px-3 py-4 text-sm">
                                                             <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                                                                truck.status === 'active'
+                                                                truck.status === 'loaded'
                                                                     ? 'bg-green-100 text-green-800'
                                                                     : 'bg-yellow-100 text-yellow-800'
                                                             }`}>
@@ -763,17 +969,27 @@ function Trucks() {
                                                         </td>
                                                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                                             <button
-                                                                onClick={() => handleEdit(truck)}
+                                                                onClick={() => handleViewClick(truck)}
                                                                 className="text-blue-600 hover:text-blue-900 mr-4"
                                                             >
-                                                                Edit
+                                                                View
                                                             </button>
-                                                            <button
-                                                                onClick={() => handleDelete(truck)}
-                                                                className="text-red-600 hover:text-red-900"
-                                                            >
-                                                                Delete
-                                                            </button>
+                                                            {truck.status !== 'loaded' && (
+                                                                <>
+                                                                    <button
+                                                                        onClick={() => handleEdit(truck)}
+                                                                        className="text-blue-600 hover:text-blue-900 mr-4"
+                                                                    >
+                                                                        Edit
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleDeleteClick(truck)}
+                                                                        className="text-red-600 hover:text-red-900"
+                                                                    >
+                                                                        Delete
+                                                                    </button>
+                                                                </>
+                                                            )}
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -786,6 +1002,17 @@ function Trucks() {
                     )}
                 </div>
             </div>
+            <DeleteConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={handleDeleteCancel}
+                onConfirm={handleDeleteConfirm}
+            />
+            <ViewDetailsModal
+                isOpen={isViewModalOpen}
+                onClose={handleViewClose}
+                truck={truckToView}
+            />
+
         </TruckerLayout>
     );
 }

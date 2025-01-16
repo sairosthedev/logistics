@@ -47,6 +47,7 @@ import TruckerMyLoads from './pages/trucker/myloads'
 //
 import TruckersServices from './pages/trucker/services'
 import TruckerSettings from './pages/trucker/settings'
+import TruckerProfile from './pages/trucker/truckerProfile';
 
 // service provider pages
 import ServiceProviderHome from './pages/serviceProvider/home'
@@ -57,6 +58,7 @@ import ServiceDetails from './pages/serviceProvider/servicedetails'
 import ServiceSettings from './pages/serviceProvider/settings'; 
 import ClientDetails from './pages/serviceProvider/clientdetails';
 import ServiceRequests from './pages/serviceProvider/serviceRequests';
+import ClientProfile from './pages/client/clientProfile';
 
 const theme = createTheme();
 
@@ -118,6 +120,7 @@ function App() {
               {/* <Route path="client/myloads" element={<PrivateRoute element={<ClientMyLoads />} />} /> */}
               <Route path="client/trackload" element={<PrivateRoute element={<ClientTrackLoad />} />} />
               <Route path="client/settings" element={<PrivateRoute element={<ClientSettings />} />} />
+              <Route path="client/clientProfile" element={<PrivateRoute element={<ClientProfile />} />} />
 
               {/* trucker routes */}
               <Route path="trucker" element={<PrivateRoute element={<TruckerHome />} />} />
@@ -125,7 +128,8 @@ function App() {
               <Route path="trucker/myloads" element={<PrivateRoute element={<TruckerMyLoads />} />} />
             
               <Route path="trucker/services" element={<PrivateRoute element={<TruckersServices />} />} /> 
-              <Route path="trucker/settings" element={<PrivateRoute element={<TruckerSettings />} />} /> 
+              <Route path="trucker/settings" element={<PrivateRoute element={<TruckerSettings />} />} />
+              <Route path="trucker/truckerProfile" element={<PrivateRoute element={<TruckerProfile />} />} />
 
               {/* service provider routes */}
               <Route path="service" element={<PrivateRoute element={<ServiceProviderHome />} />} />

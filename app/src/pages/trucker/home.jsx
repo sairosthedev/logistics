@@ -35,6 +35,7 @@ function Home() {
   const [deliveredTrucks, setDeliveredTrucks] = useState([]);
   const [currentBidPage, setCurrentBidPage] = useState(1);
   const [bidsPerPage] = useState(10);
+  const [activeTab, setActiveTab] = useState("pending");
 
   // Fetch functions
   const fetchLoads = async () => {
@@ -343,8 +344,22 @@ function Home() {
           setFilterStatus={setFilterStatus}
         />
 
-        <div className="flex flex-col gap-8">
-          {/* Pending Requests Section */}
+        <div className="flex justify-center mb-6">
+          <button
+            className={`px-4 py-2 mx-2 ${activeTab === "pending" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
+            onClick={() => setActiveTab("pending")}
+          >
+            Pending Requests
+          </button>
+          <button
+            className={`px-4 py-2 mx-2 ${activeTab === "bids" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
+            onClick={() => setActiveTab("bids")}
+          >
+            My Bids
+          </button>
+        </div>
+
+        {activeTab === "pending" && (
           <div className="pending-requests">
             <div className="max-w-screen-xl mx-auto">
               <div className="items-center justify-between md:flex mb-6">
@@ -357,17 +372,73 @@ function Home() {
                   </p>
                 </div>
               </div>
-              <LoadTable
-                currentLoads={currentLoads}
-                openJobModal={openJobModal}
-              />
+              
+              {/* Desktop view */}
+              <div className="hidden md:block">
+                <LoadTable
+                  currentLoads={currentLoads}
+                  openJobModal={openJobModal}
+                />
+              </div>
+
+              {/* Mobile view with cards */}
+              <div className="md:hidden space-y-4">
+                {currentLoads.map((load) => (
+                  <div 
+                    key={load._id}
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 space-y-3"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          {load.clientName}
+                        </h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {load.goodsType}
+                        </p>
+                      </div>
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        load.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        load.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {load.status}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">Pickup</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{load.pickupLocation}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">Dropoff</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{load.dropoffLocation}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">Trucks Needed</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{load.numberOfTrucks}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">Distance</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{load.distance} km</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => openJobModal(load)}
+                      className="w-full mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      View Details
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
+        )}
 
-          {/* Horizontal line separator */}
-          <hr className="my-8 border-gray-300 dark:border-gray-700" />
-
-          {/* Accepted Bids Section */}
+        {activeTab === "bids" && (
           <div className="accepted-bids">
             <div className="max-w-screen-xl mx-auto">
               <div className="items-center justify-between md:flex mb-6">
@@ -386,7 +457,7 @@ function Home() {
               />
             </div>
           </div>
-        </div>
+        )}
 
         <LoadDetailsModal
           isOpen={isJobModalOpen}
