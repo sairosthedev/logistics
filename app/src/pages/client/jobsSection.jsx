@@ -29,7 +29,6 @@ const JobsSection = ({
   setDestinationCoords,
   setShowMap,
 }) => {
-  // State declarations
   const [isVisible, setIsVisible] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [estimatedPrice, setEstimatedPrice] = useState(null);
@@ -51,7 +50,9 @@ const JobsSection = ({
   const [numberOfTrucks, setNumberOfTrucks] = useState(1);
   const [truckType, setTruckType] = useState("");
   const [goodsType, setGoodsType] = useState("");
+  const [otherGoodsType, setOtherGoodsType] = useState("");
   const [payTerms, setPayTerms] = useState("");
+  const [otherPayTerms, setOtherPayTerms] = useState("");
   const [weight, setWeight] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -65,7 +66,6 @@ const JobsSection = ({
   const { accessToken, clientID } = useAuthStore();
   const mapRef = React.useRef(null);
 
-  // Location suggestions fetch function
   const fetchLocationSuggestions = async (query) => {
     if (!query.trim()) return [];
     
@@ -209,8 +209,8 @@ const JobsSection = ({
       },
       distance: distance / 1000,
       route: "I-55 N",
-      goodsType,
-      payTerms,
+      goodsType: goodsType === "Other" ? otherGoodsType : goodsType,
+      payTerms: payTerms === "Other" ? otherPayTerms : payTerms,
       numberOfTrucks,
       estimatedPrice,
       negotiationPrice: parseFloat(negotiationPrice),
@@ -265,7 +265,9 @@ const JobsSection = ({
     setRoute([]);
     setTruckType("");
     setGoodsType("");
+    setOtherGoodsType("");
     setPayTerms("");
+    setOtherPayTerms("");
     setNumberOfTrucks(1);
     setWeight("");
     setEstimatedPrice(null);
@@ -278,6 +280,66 @@ const JobsSection = ({
     setComments("");
     setRate("");
   };
+  const debouncedGeocode = useCallback(
+    debounce(async (inputText, type) => {
+      if (!inputText.trim()) return;
+  
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?` +
+          `format=json&q=${encodeURIComponent(inputText + ", Zimbabwe")}` +
+          `&countrycodes=zw` +
+          `&limit=1`
+        );
+  
+        const data = await response.json();
+  
+        if (data && data.length > 0) {
+          const coords = {
+            lat: parseFloat(data[0].lat),
+            lng: parseFloat(data[0].lon),
+          };
+  
+          if (type === "pickup") {
+            setPickupCoordinates(coords);
+            setOriginCoords(coords);
+            if (mapRef.current) {
+              mapRef.current.setView([coords.lat, coords.lng], 13);
+            }
+          } else {
+            setDropoffCoordinates(coords);
+            setDestinationCoords(coords);
+            if (mapRef.current) {
+              mapRef.current.setView([coords.lat, coords.lng], 13);
+            }
+          }
+  
+          if (
+            (type === "pickup" && dropoffCoordinates.lat !== -17.8203) ||
+            (type === "dropoff" && pickupCoordinates.lat !== -17.8203)
+          ) {
+            fetchRoute();
+          }
+  
+          setShowMap(true);
+          setError(null);
+        }
+      } catch (error) {
+        console.error("Error geocoding location:", error);
+        setError("Error finding location. Please check your connection and try again.");
+      }
+    }, 500),
+    []
+  );
+  
+  useEffect(() => {
+    return () => {
+      if (debouncedGeocode?.cancel) {
+        debouncedGeocode.cancel();
+      }
+    };
+  }, [debouncedGeocode]);
+  
 
   return (
     <div className="w-full m-0 p-0 mb-8">
@@ -381,7 +443,7 @@ const JobsSection = ({
                       onChange={handlePickupChange}
                       className="border p-2 rounded text-base w-full
                         bg-white dark:bg-gray-700 
-                                              text-gray-900 dark:text-gray-100
+                        text-gray-900 dark:text-gray-100
                         border-gray-300 dark:border-gray-600
                         focus:ring-blue-500 focus:border-blue-500"
                     />
@@ -526,14 +588,13 @@ const JobsSection = ({
                 </div>
               )}
 
-              {/* Rest of the form fields */}
-                                {/* Truck Type Field */}
+              {/* Truck Type Field */}
               <div className="flex flex-col sm:flex-row items-center">
                 <div className="w-48 flex items-center">
-                <span className="text-2xl mr-2">🚚</span>
-                <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">
-                  Truck Type:
-                </label>
+                  <span className="text-2xl mr-2">🚚</span>
+                  <label className="block text-gray-700 dark:text-gray-300 text-base mr-2">
+                    Truck Type:
+                  </label>
                 </div>
                 <select
                   required
@@ -572,7 +633,7 @@ const JobsSection = ({
                 </select>
               </div>
 
-              {/* Goods Type Field */}
+              {/* Goods Type Field with Other Option */}
               <div className="flex flex-col sm:flex-row items-center">
                 <div className="w-48 flex items-center">
                   <span className="text-2xl mr-2">🪑</span>
@@ -580,31 +641,47 @@ const JobsSection = ({
                     Goods Type:
                   </label>
                 </div>
-                <select
-                  required
-                  className="border p-2 rounded flex-grow text-base
-                    bg-white dark:bg-gray-700 
-                    text-gray-900 dark:text-gray-100
-                    border-gray-300 dark:border-gray-600
-                    focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
-                  value={goodsType}
-                  onChange={(e) => setGoodsType(e.target.value)}
-                >
-                  <option value="">Select Goods Type</option>
-                  <option value="Furniture">Furniture</option>
-                  <option value="Minerals">Minerals</option>
-                  <option value="Electronics">Electronics</option>
-                  <option value="Food">Food</option>
-                  <option value="Clothing">Clothing</option>
-                  <option value="Machinery">Machinery</option>
-                  <option value="Chemicals">Chemicals</option>
-                  <option value="Construction Materials">Construction Materials</option>
-                  <option value="Livestock">Livestock</option>
-                  <option value="Other">Other</option>
-                </select>
+                <div className="flex-grow flex gap-2">
+                  <select
+                    required
+                    className="border p-2 rounded w-full text-base
+                      bg-white dark:bg-gray-700 
+                      text-gray-900 dark:text-gray-100
+                      border-gray-300 dark:border-gray-600
+                      focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
+                    value={goodsType}
+                    onChange={(e) => setGoodsType(e.target.value)}
+                  >
+                    <option value="">Select Goods Type</option>
+                    <option value="Furniture">Furniture</option>
+                    <option value="Minerals">Minerals</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Food">Food</option>
+                    <option value="Clothing">Clothing</option>
+                    <option value="Machinery">Machinery</option>
+                    <option value="Chemicals">Chemicals</option>
+                    <option value="Construction Materials">Construction Materials</option>
+                    <option value="Livestock">Livestock</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  {goodsType === "Other" && (
+                    <input
+                      type="text"
+                      required
+                      placeholder="Specify goods type"
+                      className="border p-2 rounded w-full text-base
+                        bg-white dark:bg-gray-700 
+                        text-gray-900 dark:text-gray-100
+                        border-gray-300 dark:border-gray-600
+                        focus:ring-blue-500 focus:border-blue-500"
+                      value={otherGoodsType}
+                      onChange={(e) => setOtherGoodsType(e.target.value)}
+                    />
+                  )}
+                </div>
               </div>
 
-              {/* Pay Terms Field */}
+              {/* Pay Terms Field with Other Option */}
               <div className="flex flex-col sm:flex-row items-center">
                 <div className="w-48 flex items-center">
                   <span className="text-2xl mr-2">💰</span>
@@ -612,22 +689,38 @@ const JobsSection = ({
                     Pay Terms:
                   </label>
                 </div>
-                <select
-                  required
-                  className="border p-2 rounded flex-grow text-base
-                    bg-white dark:bg-gray-700 
-                    text-gray-900 dark:text-gray-100
-                    border-gray-300 dark:border-gray-600
-                    focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
-                  value={payTerms}
-                  onChange={(e) => setPayTerms(e.target.value)}
-                >
-                  <option value="">Select Pay Terms</option>
-                  <option value="100% on Loading">100% on Loading</option>
-                  <option value="50% on Loading, 50% on Delivery">50% on Loading, 50% on Delivery</option>
-                  <option value="100% on Delivery">100% on Delivery</option>
-                  <option value="Other">Other</option>
-                </select>
+                <div className="flex-grow flex gap-2">
+                  <select
+                    required
+                    className="border p-2 rounded w-full text-base
+                      bg-white dark:bg-gray-700 
+                      text-gray-900 dark:text-gray-100
+                      border-gray-300 dark:border-gray-600
+                      focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
+                    value={payTerms}
+                    onChange={(e) => setPayTerms(e.target.value)}
+                  >
+                    <option value="">Select Pay Terms</option>
+                    <option value="100% on Loading">100% on Loading</option>
+                    <option value="50% on Loading, 50% on Delivery">50% on Loading, 50% on Delivery</option>
+                    <option value="100% on Delivery">100% on Delivery</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  {payTerms === "Other" && (
+                    <input
+                      type="text"
+                      required
+                      placeholder="Specify payment terms"
+                      className="border p-2 rounded w-full text-base
+                        bg-white dark:bg-gray-700 
+                        text-gray-900 dark:text-gray-100
+                        border-gray-300 dark:border-gray-600
+                        focus:ring-blue-500 focus:border-blue-500"
+                      value={otherPayTerms}
+                      onChange={(e) => setOtherPayTerms(e.target.value)}
+                    />
+                  )}
+                </div>
               </div>
 
               {/* Weight Field */}
@@ -693,7 +786,6 @@ const JobsSection = ({
                   placeholder="Enter rate in USD"
                 />
               </div>
-
               
               {/* Submit Button */}
               <div className="flex flex-col sm:flex-row justify-between mt-4">
@@ -716,4 +808,5 @@ const JobsSection = ({
 };
 
 export default JobsSection;
+
 
