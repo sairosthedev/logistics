@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import TruckerLayout from '../../components/layouts/truckerLayout';
 import axios from 'axios';
@@ -495,7 +494,9 @@ function Trucks() {
         formData.append('truckOwnerPhone', truckOwnerPhone);
         formData.append('truckOwnerWhatsapp', truckOwnerWhatsapp);
         formData.append('location', location);
-        formData.append('maximumWeight', maximumWeight);
+        formData.append('maximumWeight', Number(maximumWeight));
+
+        // Append files if they exist
         if (driverLicenseFile) formData.append('driverLicenseFile', driverLicenseFile);
         if (passportFile) formData.append('passportFile', passportFile);
         if (truckRegistrationFile) formData.append('truckRegistrationFile', truckRegistrationFile);
@@ -514,9 +515,7 @@ function Trucks() {
                         'Content-Type': 'multipart/form-data'
                     }
                 })
-                   
                 : await axios.post(url, formData, {
-                        
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
                         'Content-Type': 'multipart/form-data'
@@ -524,6 +523,7 @@ function Trucks() {
                 });
 
             setFormMessage(isEditing ? 'Truck updated successfully!' : 'Truck added successfully!');
+            // Reset form fields
             setTruckType('');
             setHorse('');
             setTrailer1('');
@@ -537,6 +537,14 @@ function Trucks() {
             setTruckOwnerWhatsapp('');
             setLocation('');
             setMaximumWeight('');
+            // Reset file fields
+            setDriverLicenseFile(null);
+            setPassportFile(null);
+            setTruckRegistrationFile(null);
+            setTruckInsuranceFile(null);
+            setTruckRoadWorthyFile(null);
+            setTruckImage(null);
+            
             fetchTrucks();
             setShowForm(false);
             setIsEditing(false);
