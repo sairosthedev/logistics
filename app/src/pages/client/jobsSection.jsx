@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import {
   MapContainer,
@@ -16,7 +15,6 @@ import { BACKEND_Local } from "../../../url.js";
 import useAuthStore from "../auth/auth";
 import debounce from 'lodash/debounce';
 
-// Fix for default marker icon issue in Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -31,6 +29,7 @@ const JobsSection = ({
   setDestinationCoords,
   setShowMap,
 }) => {
+  // State declarations
   const [isVisible, setIsVisible] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [estimatedPrice, setEstimatedPrice] = useState(null);
@@ -66,6 +65,29 @@ const JobsSection = ({
   const { accessToken, clientID } = useAuthStore();
   const mapRef = React.useRef(null);
 
+  // Location suggestions fetch function
+  const fetchLocationSuggestions = async (query) => {
+    if (!query.trim()) return [];
+    
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?` +
+        `format=json&q=${encodeURIComponent(query + ", Zimbabwe")}` +
+        `&countrycodes=zw` +
+        `&limit=5`
+      );
+      const data = await response.json();
+      return data.map(item => ({
+        display_name: item.display_name,
+        lat: item.lat,
+        lon: item.lon
+      }));
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+      return [];
+    }
+  };
+
   const getAddressFromCoordinates = async (coordinates) => {
     try {
       const response = await fetch(
@@ -79,68 +101,28 @@ const JobsSection = ({
     }
   };
 
-  const debouncedGeocode = useCallback(
-    debounce(async (inputText, type) => {
-      if (!inputText.trim()) return;
-
-      try {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?` +
-          `format=json&q=${encodeURIComponent(inputText + ", Zimbabwe")}` +
-          `&countrycodes=zw` +
-          `&limit=1`
-        );
-
-        const data = await response.json();
-
-        if (data && data.length > 0) {
-          const coords = {
-            lat: parseFloat(data[0].lat),
-            lng: parseFloat(data[0].lon),
-          };
-
-          if (type === "pickup") {
-            setPickupCoordinates(coords);
-            setOriginCoords(coords);
-            if (mapRef.current) {
-              mapRef.current.setView([coords.lat, coords.lng], 13);
-            }
-          } else {
-            setDropoffCoordinates(coords);
-            setDestinationCoords(coords);
-            if (mapRef.current) {
-              mapRef.current.setView([coords.lat, coords.lng], 13);
-            }
-          }
-
-          if (
-            (type === "pickup" && dropoffCoordinates.lat !== -17.8203) ||
-            (type === "dropoff" && pickupCoordinates.lat !== -17.8203)
-          ) {
-            fetchRoute();
-          }
-
-          setShowMap(true);
-          setError(null);
-        }
-      } catch (error) {
-        console.error("Error geocoding location:", error);
-        setError("Error finding location. Please check your connection and try again.");
-      }
-    }, 500),
-    []
-  );
-
-  const handlePickupChange = (e) => {
+  const handlePickupChange = async (e) => {
     const value = e.target.value;
     setPickupLocation(value);
-    debouncedGeocode(value, "pickup");
+    
+    if (value.length > 2) {
+      const suggestions = await fetchLocationSuggestions(value);
+      setPickupSuggestions(suggestions);
+    } else {
+      setPickupSuggestions([]);
+    }
   };
 
-  const handleDropoffChange = (e) => {
+  const handleDropoffChange = async (e) => {
     const value = e.target.value;
     setDropoffLocation(value);
-    debouncedGeocode(value, "dropoff");
+    
+    if (value.length > 2) {
+      const suggestions = await fetchLocationSuggestions(value);
+      setDropoffSuggestions(suggestions);
+    } else {
+      setDropoffSuggestions([]);
+    }
   };
 
   const fetchRoute = async () => {
@@ -297,15 +279,8 @@ const JobsSection = ({
     setRate("");
   };
 
-  useEffect(() => {
-    return () => {
-      debouncedGeocode.cancel();
-    };
-  }, [debouncedGeocode]);
-
   return (
     <div className="w-full m-0 p-0 mb-8">
-      {/* Confirmation Modal */}
       {isConfirmModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-4 rounded shadow-md">
@@ -328,7 +303,6 @@ const JobsSection = ({
         </div>
       )}
 
-      
       <div className="m-0 p-0 flex justify-center">
         <div className="w-full m-0 p-0" style={{ maxWidth: "100%" }}>
           <form
@@ -336,9 +310,6 @@ const JobsSection = ({
             onSubmit={handleSubmit}
           >
             <div className="grid grid-cols-1 gap-4">
-              
-              
-              {/* Map Container */}
               <div className="w-full aspect-[16/9] relative z-0">
                 <MapContainer
                   center={[-17.8203, 31.0696]}
@@ -351,7 +322,7 @@ const JobsSection = ({
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     className="dark:opacity-80"
                   />
-               {pickupCoordinates && (
+                  {pickupCoordinates && (
                     <Marker
                       position={[pickupCoordinates.lat, pickupCoordinates.lng]}
                       icon={new L.Icon({
@@ -393,8 +364,6 @@ const JobsSection = ({
                 </MapContainer>
               </div>
 
-              
-
               {/* Location Input Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div className="flex flex-col">
@@ -404,18 +373,51 @@ const JobsSection = ({
                       Pickup Location:
                     </label>
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Enter Pickup Location"
-                    value={pickupLocation}
-                    onChange={handlePickupChange}
-                    className="border p-2 rounded text-base
-                      bg-white dark:bg-gray-700 
-                      text-gray-900 dark:text-gray-100
-                      border-gray-300 dark:border-gray-600
-                      focus:ring-blue-500 focus:border-blue-500"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Enter Pickup Location"
+                      value={pickupLocation}
+                      onChange={handlePickupChange}
+                      className="border p-2 rounded text-base w-full
+                        bg-white dark:bg-gray-700 
+                                              text-gray-900 dark:text-gray-100
+                        border-gray-300 dark:border-gray-600
+                        focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    {pickupSuggestions.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg">
+                        {pickupSuggestions.map((suggestion, index) => (
+                          <div
+                            key={index}
+                            className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
+                            onClick={() => {
+                              setPickupLocation(suggestion.display_name);
+                              setPickupCoordinates({
+                                lat: parseFloat(suggestion.lat),
+                                lng: parseFloat(suggestion.lon)
+                              });
+                              setOriginCoords({
+                                lat: parseFloat(suggestion.lat),
+                                lng: parseFloat(suggestion.lon)
+                              });
+                              setPickupSuggestions([]);
+                              if (mapRef.current) {
+                                mapRef.current.setView([parseFloat(suggestion.lat), parseFloat(suggestion.lon)], 13);
+                              }
+                              if (dropoffCoordinates.lat !== -17.8203) {
+                                fetchRoute();
+                              }
+                            }}
+                          >
+                            {suggestion.display_name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
+
                 <div className="flex flex-col">
                   <div className="flex items-center mb-2">
                     <span className="text-2xl mr-2">📍</span>
@@ -423,17 +425,49 @@ const JobsSection = ({
                       Dropoff Location:
                     </label>
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Enter Dropoff Location"
-                    value={dropoffLocation}
-                    onChange={handleDropoffChange}
-                    className="border p-2 rounded text-base
-                      bg-white dark:bg-gray-700 
-                      text-gray-900 dark:text-gray-100
-                      border-gray-300 dark:border-gray-600
-                      focus:ring-blue-500 focus:border-blue-500"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Enter Dropoff Location"
+                      value={dropoffLocation}
+                      onChange={handleDropoffChange}
+                      className="border p-2 rounded text-base w-full
+                        bg-white dark:bg-gray-700 
+                        text-gray-900 dark:text-gray-100
+                        border-gray-300 dark:border-gray-600
+                        focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    {dropoffSuggestions.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg">
+                        {dropoffSuggestions.map((suggestion, index) => (
+                          <div
+                            key={index}
+                            className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
+                            onClick={() => {
+                              setDropoffLocation(suggestion.display_name);
+                              setDropoffCoordinates({
+                                lat: parseFloat(suggestion.lat),
+                                lng: parseFloat(suggestion.lon)
+                              });
+                              setDestinationCoords({
+                                lat: parseFloat(suggestion.lat),
+                                lng: parseFloat(suggestion.lon)
+                              });
+                              setDropoffSuggestions([]);
+                              if (mapRef.current) {
+                                mapRef.current.setView([parseFloat(suggestion.lat), parseFloat(suggestion.lon)], 13);
+                              }
+                              if (pickupCoordinates.lat !== -17.8203) {
+                                fetchRoute();
+                              }
+                            }}
+                          >
+                            {suggestion.display_name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -446,10 +480,9 @@ const JobsSection = ({
                     setSelectingDropoff(false);
                   }}
                   className={`px-4 py-2 rounded text-white transition-colors
-                    ${
-                      selectingPickup
-                        ? "bg-green-600 dark:bg-green-700"
-                        : "bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
+                    ${selectingPickup
+                      ? "bg-green-600 dark:bg-green-700"
+                      : "bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
                     }`}
                 >
                   {selectingPickup ? "Click on map for pickup" : "Select Pickup Location"}
@@ -461,10 +494,9 @@ const JobsSection = ({
                     setSelectingDropoff(true);
                   }}
                   className={`px-4 py-2 rounded text-white transition-colors
-                    ${
-                      selectingDropoff
-                        ? "bg-red-600 dark:bg-red-700"
-                        : "bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
+                    ${selectingDropoff
+                      ? "bg-red-600 dark:bg-red-700"
+                      : "bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
                     }`}
                 >
                   {selectingDropoff ? "Click on map for dropoff" : "Select Dropoff Location"}
@@ -494,7 +526,8 @@ const JobsSection = ({
                 </div>
               )}
 
-              {/* Truck Type Field */}
+              {/* Rest of the form fields */}
+                                {/* Truck Type Field */}
               <div className="flex flex-col sm:flex-row items-center">
                 <div className="w-48 flex items-center">
                 <span className="text-2xl mr-2">🚚</span>
@@ -539,9 +572,8 @@ const JobsSection = ({
                 </select>
               </div>
 
-
-             {/* Goods Type Field */}
-             <div className="flex flex-col sm:flex-row items-center">
+              {/* Goods Type Field */}
+              <div className="flex flex-col sm:flex-row items-center">
                 <div className="w-48 flex items-center">
                   <span className="text-2xl mr-2">🪑</span>
                   <label className="block text-gray-700 dark:text-gray-300 text-base">
@@ -616,8 +648,6 @@ const JobsSection = ({
                     focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
                   value={weight}
                   onChange={(e) => setWeight(e.target.value)}
-                  // min="0"
-                  // step="0.1"
                   placeholder="Weight (tonnes)"
                 />
               </div>
@@ -660,11 +690,10 @@ const JobsSection = ({
                     focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
                   value={rate}
                   onChange={(e) => setRate(e.target.value)}
-                  // min="0"
-                  // step="0.01"
                   placeholder="Enter rate in USD"
                 />
               </div>
+
               
               {/* Submit Button */}
               <div className="flex flex-col sm:flex-row justify-between mt-4">
@@ -687,3 +716,4 @@ const JobsSection = ({
 };
 
 export default JobsSection;
+
