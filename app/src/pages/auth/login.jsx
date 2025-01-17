@@ -21,9 +21,9 @@ function Login() {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        const payload = { email, password, accountType };
+        const payload = { email, password };
 
-        if (!email || !password || !accountType) {
+        if (!email || !password) {
             setErrorMessage('Please fill in all fields.');
             setShowModal(true);
             return;
@@ -32,13 +32,14 @@ function Login() {
         setLoading(true); // Start loading animation
 
         try {
-            const response = await loginUser(payload.email, payload.password, payload.accountType); // Use loginUser from the store with payload
+            const response = await loginUser(payload.email, payload.password); // Use loginUser from the store with payload
             if (response.type === "error") {
                 setErrorMessage(response.message);
                 setShowModal(true);
             } else {
+                console.log(response);
                 // Handle successful login
-                switch (accountType) {
+                switch (response.data.accountType) {
                     case 'admin':
                         navigate('/app');
                         break;
@@ -65,22 +66,7 @@ function Login() {
         }
     };
 
-    const handleLogin = async (credentials) => {
-        try {
-            const response = await loginUser(credentials);
-            const { token, user } = response.data;
-            
-            // Store token in localStorage
-            localStorage.setItem('authToken', token);
-            localStorage.setItem('user', JSON.stringify(user));
-            
-            setAuth({ token, user });
-            navigate('/dashboard');
-        } catch (error) {
-            // Handle error...
-        }
-    }
-
+    
     return (
         <section className="min-h-screen flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImage})` }}>
             <div className="w-fit h-fit">
@@ -123,24 +109,7 @@ function Login() {
                                     />
                                 </div>
 
-                                <div>
-                                    <label htmlFor="account-type" className="block text-sm font-medium text-gray-700">Account Type</label>
-                                    <select 
-                                        id="account-type" 
-                                        name="account-type" 
-                                        className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
-                                        onChange={handleAccountTypeChange} 
-                                        required 
-                                        aria-label="Account Type"
-                                    >
-                                        <option value="" disabled selected hidden>Select Role</option>
-                                        <option value="admin">Admin</option>
-                                        <option value="trucker">Trucker</option>
-                                        <option value="client">Client</option>
-                                        <option value="service">Service Provider</option>
-                                    </select>
-                                </div>
-
+                                
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center">
                                         <input 

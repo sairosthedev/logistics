@@ -25,38 +25,35 @@ const useAuthStore = create((set) => ({
         });
     },
 
-    loginUser: async (email, password, accountType) => {
+    loginUser: async (email, password) => {
         try {
             const response = await axios.post(`${BACKEND_Local}/api/auth/login`, {
                 email,
                 password,
-                accountType,
             });
 
             if (response.status !== 200) {
                 return { type: "error", message: response.data.message || "Login failed. Please try again." };
             }
 
-            const { token, userId: clientID, accountType: userAccountType } = response.data;
+            const { token, userId: clientID , accountType} = response.data;
 
             // Store everything in localStorage
             localStorage.setItem('authToken', token);
             localStorage.setItem('clientID', clientID);
-            localStorage.setItem('accountType', userAccountType);
             localStorage.setItem('user', JSON.stringify({
                 clientID,
-                accountType: userAccountType
+                accountType
             }));
 
             // Update the store
             set({
                 accessToken: token,
                 clientID,
-                accountType: userAccountType,
                 isAuthenticated: true,
                 user: {
                     clientID,
-                    accountType: userAccountType
+                    accountType
                 }
             });
 
@@ -66,7 +63,7 @@ const useAuthStore = create((set) => ({
 
             if (error.response) {
                 const { status, data } = error.response;
-
+            
                 // Handle specific error messages from the backend
                 if (status === 401) {
                     if (data.message === "Email not found") {
