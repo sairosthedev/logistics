@@ -59,31 +59,23 @@ function Signup() {
         };
 
         try {
-            const response = await fetch(`${BACKEND_Local}/api/${accountType}/register`, {
+            const response = await fetch(`${BACKEND_Local}/api/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(payload),
+                body: JSON.stringify({
+                    firstName,
+                    lastName,
+                    email,
+                    phone,
+                    password,
+                    accountType
+                }),
             });
 
             if (response.ok) {
-                console.log('Signup successful');
-                // Redirect based on account type
-                switch (accountType) {
-                    case 'client':
-                        navigate('/client');
-                        break;
-                    case 'trucker':
-                        navigate('/trucker');
-                        break;
-                    case 'service':
-                        navigate('/service');
-                        break;
-                    default:
-                        navigate('/login');
-                        break;
-                }
+                navigate('/');
             } else {
                 const errorData = await response.json();
                 setErrorMessage(`Signup failed: ${errorData.message}`);
