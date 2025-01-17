@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import Modal from 'react-modal';
 import { X, CheckCircle } from 'lucide-react';
 import StatusActionBar from './StatusActionBar';
@@ -19,9 +18,21 @@ const LoadDetailsModal = ({
   showSuccessPopup,
   negotiationPrice,
   setNegotiationPrice,
-  showStatusBar = true
+  showStatusBar = true,
+  onReject,
+  showRejectionForm,
+  setShowRejectionForm
 }) => {
+  const [rejectionReason, setRejectionReason] = useState('');
+
   if (!selectedLoad) return null;
+
+  const handleReject = (e) => {
+    e.preventDefault();
+    onReject(selectedLoad._id, rejectionReason);
+    setShowRejectionForm(false);
+    setRejectionReason('');
+  };
 
   return (
     <>
@@ -118,40 +129,84 @@ const LoadDetailsModal = ({
             )}
 
             {selectedLoad.status === 'pending' && (
-              <form onSubmit={handleSubmit} className="mt-4">
-                <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">
-                  Assign Trucks ({selectedTrucks.filter(Boolean).length}/{selectedLoad.numberOfTrucks} selected):
-                </label>
-                <div className="space-y-2">
-                  {renderTruckDropdowns()}
-                </div>
-                <div className="mt-4">
-                  <label className="block text-gray-700 dark:text-gray-300 text-sm mb-2">
-                    Negotiation Price (USD):
-                  </label>
-                  <input
-                    type="number"
-                    value={negotiationPrice}
-                    onChange={(e) => setNegotiationPrice(e.target.value)}
-                    min="1"
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    placeholder="Enter price"
-                    required
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="mt-4 bg-green-500 text-white px-4 py-2 rounded text-base hover:bg-green-600 transition duration-200"
-                  disabled={isSubmitting || selectedTrucks.filter(Boolean).length === 0 || selectedTrucks.filter(Boolean).length > selectedLoad.numberOfTrucks}
-                >
-                  {isSubmitting ? 'Submitting...' : 'Assign Trucks'}
-                </button>
+              <div className="mt-4">
+                {!showRejectionForm ? (
+                  <div className="flex gap-4">
+                    <form onSubmit={handleSubmit} className="flex-1">
+                      <label className="block text-gray-700 dark:text-gray-300 text-base mb-2">
+                        Assign Trucks ({selectedTrucks.filter(Boolean).length}/{selectedLoad.numberOfTrucks} selected):
+                      </label>
+                      <div className="space-y-2">
+                        {renderTruckDropdowns()}
+                      </div>
+                      <div className="mt-4">
+                        <label className="block text-gray-700 dark:text-gray-300 text-sm mb-2">
+                          Negotiation Price (USD):
+                        </label>
+                        <input
+                          type="number"
+                          value={negotiationPrice}
+                          onChange={(e) => setNegotiationPrice(e.target.value)}
+                          min="1"
+                          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          placeholder="Enter price"
+                          required
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="mt-4 bg-green-500 text-white px-4 py-2 rounded text-base hover:bg-green-600 transition duration-200"
+                        disabled={isSubmitting || selectedTrucks.filter(Boolean).length === 0 || selectedTrucks.filter(Boolean).length > selectedLoad.numberOfTrucks}
+                      >
+                        {isSubmitting ? 'Submitting...' : 'Assign Trucks'}
+                      </button>
+                    </form>
+                    <button
+                      onClick={() => setShowRejectionForm(true)}
+                      className="mt-auto h-10 bg-red-500 text-white px-4 py-2 rounded text-base hover:bg-red-600 transition duration-200"
+                    >
+                      Not Interested
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleReject} className="mt-4">
+                    <h3 className="text-lg font-semibold mb-2 dark:text-white">Reject Load Request</h3>
+                    <label className="block text-gray-700 dark:text-gray-300 text-sm mb-2">
+                      Please provide a reason (optional):
+                    </label>
+                    <textarea
+                      value={rejectionReason}
+                      onChange={(e) => setRejectionReason(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      rows="3"
+                      placeholder="Enter your reason for not being interested..."
+                    />
+                    <div className="flex gap-2 mt-4">
+                      <button
+                        type="submit"
+                        className="bg-red-500 text-white px-4 py-2 rounded text-base hover:bg-red-600 transition duration-200"
+                      >
+                        Confirm Rejection
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowRejectionForm(false);
+                          setRejectionReason('');
+                        }}
+                        className="bg-gray-500 text-white px-4 py-2 rounded text-base hover:bg-gray-600 transition duration-200"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
                 {responseMessage && (
                   <div className={`mt-4 text-${responseMessage.includes('successfully') ? 'green' : 'red'}-500`}>
                     {responseMessage}
                   </div>
                 )}
-              </form>
+              </div>
             )}
 
             {responseMessage && (

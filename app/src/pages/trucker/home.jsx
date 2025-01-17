@@ -36,6 +36,40 @@ function Home() {
   const [currentBidPage, setCurrentBidPage] = useState(1);
   const [bidsPerPage] = useState(10);
   const [activeTab, setActiveTab] = useState("pending");
+  const [showRejectionForm, setShowRejectionForm] = useState(false);
+
+  // Handle load rejection
+  const handleReject = async (loadId, reason) => {
+    try {
+      // Add rejection to the load's rejections array without changing the load's status
+      await axios.put(
+        `${BACKEND_Local}/api/trucker/truck-requests/status/${loadId}`,
+        { 
+          truckerID: clientID,
+          rejectionReason: reason,
+          status: 'rejected'  // The backend will handle this differently now
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Remove the load from the current trucker's view only
+      setLoads((prevLoads) => prevLoads.filter((load) => load._id !== loadId));
+      setResponseMessage("Load rejected successfully");
+      
+      setTimeout(() => {
+        closeJobModal();
+        setResponseMessage("");
+      }, 2000);
+    } catch (error) {
+      console.error("Error rejecting load:", error);
+      setResponseMessage("Failed to reject load. Please try again.");
+    }
+  };
 
   // Fetch functions
   const fetchLoads = async () => {
@@ -46,8 +80,14 @@ function Home() {
           headers: { Authorization: `Bearer ${accessToken}` },
         }
       );
+
+      // Filter out loads that this trucker has already rejected
+      const filteredLoads = response.data.filter(load => 
+        !load.rejections?.some(rejection => rejection.truckerID === clientID)
+      );
+
       setLoads(
-        response.data.sort(
+        filteredLoads.sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         )
       );
@@ -474,6 +514,9 @@ function Home() {
           showSuccessPopup={showSuccessPopup}
           negotiationPrice={negotiationPrice}
           setNegotiationPrice={setNegotiationPrice}
+          onReject={handleReject}
+          showRejectionForm={showRejectionForm}
+          setShowRejectionForm={setShowRejectionForm}
         />
       </div>
     </TruckerLayout>
