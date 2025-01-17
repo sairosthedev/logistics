@@ -138,7 +138,7 @@ function MyLoads() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+              <div className="grid  grid-cols-1 lg:grid-cols-1 gap-4 sm:gap-6 md:gap-8">
                 <div className="space-y-4 sm:space-y-6">
                   <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-700">
                     <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-900 dark:text-white flex items-center">
@@ -190,32 +190,7 @@ function MyLoads() {
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-700">
-                  <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-900 dark:text-white flex items-center">
-                    <span className="bg-purple-100 dark:bg-purple-900 p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3 text-sm sm:text-base">
-                      📅
-                    </span>
-                    Schedule Details
-                  </h3>
-                  <div className="space-y-3 sm:space-y-4 text-sm sm:text-base">
-                    {selectedLoad.pickupDate && (
-                      <div>
-                        <p className="text-gray-600 dark:text-gray-400 mb-1">Pickup Date</p>
-                        <p className="font-medium text-gray-900 dark:text-white">
-                          {new Date(selectedLoad.pickupDate).toLocaleDateString()}
-                        </p>
-                      </div>
-                    )}
-                    {selectedLoad.deliveryDate && (
-                      <div>
-                        <p className="text-gray-600 dark:text-gray-400 mb-1">Delivery Date</p>
-                        <p className="font-medium text-gray-900 dark:text-white">
-                          {new Date(selectedLoad.deliveryDate).toLocaleDateString()}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
+               
               </div>
             </div>
           </Modal>
