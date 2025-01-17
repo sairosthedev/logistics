@@ -14,6 +14,7 @@ function MyLoads() {
   const [filter, setFilter] = useState('pending');
   const [pendingLoads, setPendingLoads] = useState([]);
   const [inTransitLoads, setInTransitLoads] = useState([]);
+  const [deliveredLoads, setDeliveredLoads] = useState([]);
   const { accessToken } = useAuthStore();
   const [selectedLoad, setSelectedLoad] = useState(null);
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
@@ -23,6 +24,8 @@ function MyLoads() {
       fetchPendingLoads();
     } else if (filter === 'in transit') {
       fetchInTransitLoads();
+    }else if (filter === 'delivered') {
+      fetchDeliveredLoads();
     }
   }, [filter, accessToken]);
 
@@ -40,12 +43,24 @@ function MyLoads() {
     }
   };
 
+  const fetchDeliveredLoads = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_Local}/api/trucker/truck-requests`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      
+      // Filter only delivered loads
+      const delivered = response.data.filter(load => load.status === 'delivered');
+      setDeliveredLoads(delivered);
+    } catch (error) {
+      console.error('Error fetching delivered loads:', error);
+    }
+  }
+
   const fetchInTransitLoads = async () => {
     try {
       const response = await axios.get(`${BACKEND_Local}/api/trucker/truck-requests`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
+        headers: {Authorization: `Bearer ${accessToken}`}
       });
 
       if (response.data && Array.isArray(response.data)) {
@@ -81,7 +96,7 @@ function MyLoads() {
       case 'in transit':
         return <LoadTable currentLoads={inTransitLoads} openJobModal={openJobModal} />;
       case 'delivered':
-        return <div>Delivered content</div>;
+        return <LoadTable currentLoads={deliveredLoads} openJobModal={openJobModal} />;
       default:
         return null;
     }
@@ -102,13 +117,13 @@ function MyLoads() {
             className={`px-4 py-2 mr-2 mb-2 rounded-lg ${filter === 'in transit' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200'}`} 
             onClick={() => setFilter('in transit')}
           >
-            In Transit ({inTransitLoads.length})
+            In Transit Requests ({inTransitLoads.length})
           </button>
           <button 
             className={`px-4 py-2 mb-2 rounded-lg ${filter === 'delivered' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200'}`} 
             onClick={() => setFilter('delivered')}
           >
-            Delivered
+            Delivered Requests ({deliveredLoads.length})
           </button>
         </div>
 
@@ -138,7 +153,7 @@ function MyLoads() {
                 </p>
               </div>
 
-              <div className="grid  grid-cols-1 lg:grid-cols-1 gap-4 sm:gap-6 md:gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-1 gap-4 sm:gap-6 md:gap-8">
                 <div className="space-y-4 sm:space-y-6">
                   <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-700">
                     <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-900 dark:text-white flex items-center">
@@ -190,7 +205,7 @@ function MyLoads() {
                   </div>
                 </div>
 
-               
+                
               </div>
             </div>
           </Modal>
