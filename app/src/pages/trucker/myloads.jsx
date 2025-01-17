@@ -1,4 +1,4 @@
-
+import daisyui from "daisyui"
 import React, { useState, useEffect } from 'react';
 import TruckerLayout from '../../components/layouts/truckerLayout';
 import LoadTable from '../../components/trucker/LoadTable';
@@ -7,6 +7,8 @@ import axios from 'axios';
 import { BACKEND_Local } from '../../../url.js';
 import useAuthStore from '../auth/auth';
 import { X } from 'lucide-react';
+
+import Ratings from "./Ratings.jsx";
 
 Modal.setAppElement('#root');
 
@@ -188,6 +190,20 @@ function MyLoads() {
                       </div>
                     </div>
                   </div>
+
+                  {/* ---ratings code start--- */}
+                  <div className="">
+                  <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-900 dark:text-white flex items-center">
+                      <span className="bg-green-100 dark:bg-green-900 p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3 text-sm sm:text-base">
+                        ⭐
+                      </span>
+                      Ratings
+                    </h3>
+                      <div className="">
+                        <Ratings/>
+                      </div>
+                  </div>
+                  {/* ---ratings code end--- */}
                 </div>
 
                
