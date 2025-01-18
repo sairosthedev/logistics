@@ -6,6 +6,8 @@ import { BACKEND_Local } from '../../../url.js';
 import useAuthStore from '../auth/auth';
 import Modal from 'react-modal';
 
+Modal.setAppElement('#root');
+
 function AvailableTrucks() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterAvailability, setFilterAvailability] = useState('all');
@@ -24,32 +26,32 @@ function AvailableTrucks() {
   const [isViewMoreModalOpen, setIsViewMoreModalOpen] = useState(false);
   const [selectedBidDetails, setSelectedBidDetails] = useState(null);
 
-  useEffect(() => {
-    const fetchTruckers = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(`${BACKEND_Local}/api/client/request-bids/${clientID}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        });
-        
-        // Separate truckers into accepted and non-accepted
-        const allTruckers = response.data;
-        const accepted = allTruckers.filter(trucker => trucker.status === 'accepted');
-        const available = allTruckers.filter(trucker => trucker.status !== 'accepted');
-        
-        setAcceptedTruckers(accepted);
-        setTruckers(available);
-      } catch (error) {
-        console.error('Error fetching truckers:', error);
-        setResponseMessage('Error fetching truckers. Please try again.');
-        setIsResponseModalOpen(true);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchTruckers = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(`${BACKEND_Local}/api/client/request-bids/${clientID}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+      
+      // Separate truckers: only 'bid' status in available, others in accepted
+      const allTruckers = response.data;
+      const available = allTruckers.filter(trucker => trucker.status === 'bid');
+      const accepted = allTruckers.filter(trucker => trucker.status !== 'bid');
+      
+      setAcceptedTruckers(accepted);
+      setTruckers(available);
+    } catch (error) {
+      console.error('Error fetching truckers:', error);
+      setResponseMessage('Error fetching truckers. Please try again.');
+      setIsResponseModalOpen(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchTruckers();
   }, [accessToken, clientID]);
 
@@ -60,11 +62,8 @@ function AvailableTrucks() {
       (trucker.truckInfo.driverPhone?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     );
     
-    const matchesAvailability = 
-      filterAvailability === 'all' || 
-      (trucker.status?.toLowerCase() || '') === filterAvailability.toLowerCase();
-
-    return matchesSearch && matchesAvailability;
+    // Remove the availability filter since we're now only showing 'bid' status in available
+    return matchesSearch;
   });
 
   // Sort the filtered truckers by 'createdAt' in descending order
@@ -140,8 +139,8 @@ function AvailableTrucks() {
     );
   };
 
-  const openConfirmModal = (trucker) => {
-    setSelectedTrucker(trucker);
+  const openConfirmModal = (trucker, action) => {
+    setSelectedTrucker({ ...trucker, action });
     setIsConfirmModalOpen(true);
   };
 
@@ -151,11 +150,13 @@ function AvailableTrucks() {
   };
 
   const openViewMoreModal = (trucker) => {
+    console.log('Opening modal with trucker:', trucker);
     setSelectedBidDetails(trucker);
     setIsViewMoreModalOpen(true);
   };
 
   const closeViewMoreModal = () => {
+    console.log('Closing modal');
     setSelectedBidDetails(null);
     setIsViewMoreModalOpen(false);
   };
@@ -164,14 +165,14 @@ function AvailableTrucks() {
     setIsLoading(true);
     setResponseMessage('');
     try {
-      const response = await axios.put(`${BACKEND_Local}/api/client/request-bids/accept/${selectedTrucker._id}`, {}, {
+      await axios.put(`${BACKEND_Local}/api/client/request-bids/accept/${selectedTrucker._id}`, {}, {
         headers: {
           Authorization: `Bearer ${accessToken}`
         }
       });
-      setAcceptedTruckers(prevAccepted => [...prevAccepted, { ...selectedTrucker, status: 'accepted' }]);
-      setTruckers(prevTruckers => prevTruckers.filter(trucker => trucker._id !== selectedTrucker._id));
       setResponseMessage('Offer accepted successfully!');
+      // Refresh the data after accepting
+      await fetchTruckers();
     } catch (error) {
       console.error('Error accepting bid:', error);
       setResponseMessage('Failed to accept the offer. Please try again.');
@@ -182,40 +183,53 @@ function AvailableTrucks() {
     }
   };
 
-  const rejectBid = () => {
-    // Remove the bid locally from the truckers list
-    const updatedTruckers = truckers.filter(trucker => trucker._id !== selectedTrucker._id);
-    setTruckers(updatedTruckers);
-    
-    // Show success message with driver's name for better context
-    setResponseMessage(`You have declined the bid from ${selectedTrucker.truckInfo.driverName}. This bid will no longer appear in your list.`);
-    setIsResponseModalOpen(true);
-    closeConfirmModal();
+  const rejectBid = async () => {
+    setIsLoading(true);
+    try {
+      // Remove the bid locally
+      const updatedTruckers = truckers.filter(trucker => trucker._id !== selectedTrucker._id);
+      setTruckers(updatedTruckers);
+      
+      // Show success message
+      setResponseMessage(`You have declined the bid from ${selectedTrucker.truckInfo.driverName}. This bid will no longer appear in your list.`);
+      
+      // Refresh the data after rejecting
+      await fetchTruckers();
+    } catch (error) {
+      console.error('Error rejecting bid:', error);
+      setResponseMessage('Failed to reject the bid. Please try again.');
+    } finally {
+      setIsLoading(false);
+      setIsConfirmModalOpen(false);
+      setIsResponseModalOpen(true);
+    }
   };
 
   const modalStyles = {
+    overlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.75)',
+      zIndex: 1000,
+    },
     content: {
       position: 'absolute',
-      top: '10%',
+      top: '50%',
       left: '50%',
       right: 'auto',
       bottom: 'auto',
       marginRight: '-50%',
-      transform: 'translate(-50%, 0)',
-      zIndex: 1000,
+      transform: 'translate(-50%, -50%)',
       backgroundColor: 'white',
-      border: '1px solid #ccc',
       padding: '20px',
-      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-      maxHeight: '80vh',
-      overflowY: 'auto',
-      width: '90%',
-      maxWidth: '800px',
       borderRadius: '8px',
-    },
-    overlay: {
-      zIndex: 999,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      maxWidth: '90%',
+      maxHeight: '90vh',
+      overflow: 'auto',
+      zIndex: 1001,
     },
   };
 
@@ -325,7 +339,12 @@ function AvailableTrucks() {
                       <div className="flex space-x-2">
                         <button
                           className="px-2 py-1 text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          onClick={() => openViewMoreModal(trucker)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('View More clicked', trucker);
+                            openViewMoreModal(trucker);
+                          }}
                         >
                           View More
                         </button>
@@ -378,7 +397,11 @@ function AvailableTrucks() {
                 </div>
 
                 <button
-                  onClick={() => openViewMoreModal(trucker)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openViewMoreModal(trucker);
+                  }}
                   className="w-full mt-2 px-4 py-2 text-sm font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   View More
@@ -497,11 +520,10 @@ function AvailableTrucks() {
         <Modal
           isOpen={isViewMoreModalOpen}
           onRequestClose={closeViewMoreModal}
-          className="modal"
-          overlayClassName="modal-overlay"
+          style={modalStyles}
+          contentLabel="View More Details"
           shouldCloseOnOverlayClick={true}
           shouldCloseOnEsc={true}
-          style={modalStyles}
         >
           <div className="p-4 sm:p-6 w-full max-w-[95vw] sm:max-w-2xl mx-auto">
             <div className="flex justify-between items-center mb-6">
@@ -647,19 +669,21 @@ function AvailableTrucks() {
                       className="px-4 py-2 text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
                       onClick={() => {
                         closeViewMoreModal();
-                        openConfirmModal({ ...selectedBidDetails, action: 'reject' });
+                        openConfirmModal(selectedBidDetails, 'reject');
                       }}
+                      disabled={isLoading}
                     >
-                      Reject Bid
+                      {isLoading ? 'Processing...' : 'Reject Bid'}
                     </button>
                     <button
                       className="px-4 py-2 text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
                       onClick={() => {
                         closeViewMoreModal();
-                        openConfirmModal({ ...selectedBidDetails, action: 'accept' });
+                        openConfirmModal(selectedBidDetails, 'accept');
                       }}
+                      disabled={isLoading}
                     >
-                      Accept Bid
+                      {isLoading ? 'Processing...' : 'Accept Bid'}
                     </button>
                   </div>
                 )}
@@ -672,48 +696,42 @@ function AvailableTrucks() {
         <Modal
           isOpen={isConfirmModalOpen}
           onRequestClose={closeConfirmModal}
-          className="modal"
-          overlayClassName="modal-overlay"
+          style={modalStyles}
+          contentLabel="Confirm Action"
           shouldCloseOnOverlayClick={true}
           shouldCloseOnEsc={true}
-          style={{
-            ...modalStyles,
-            content: {
-              ...modalStyles.content,
-              color: 'black',
-            },
-          }}
         >
           <div className="p-4">
-            <h2 className="text-lg font-semibold">
+            <h2 className="text-lg font-semibold mb-4">
               {selectedTrucker?.action === 'reject' 
                 ? 'Are you sure you want to reject this bid?' 
                 : 'Are you sure you want to accept this bid?'}
             </h2>
-            <div className="mt-4">
-              <p><strong>Driver Name:</strong> {selectedTrucker?.truckInfo.driverName}</p>
-              <p><strong>Truck Type:</strong> {selectedTrucker?.truckInfo.truckType}</p>
-              <p><strong>Location:</strong> {selectedTrucker?.truckInfo.location}</p>
-              <p><strong>Max Carrying Weight:</strong> {selectedTrucker?.maxCarryingWeight}</p>
-              <p><strong>Offer Amount:</strong> {selectedTrucker?.offerAmount}</p>
-            </div>
-            <div className="mt-4 flex justify-end space-x-4">
+            {selectedTrucker && (
+              <div className="mt-4">
+                <p><strong>Driver Name:</strong> {selectedTrucker.truckInfo.driverName}</p>
+                <p><strong>Truck Type:</strong> {selectedTrucker.truckInfo.truckType}</p>
+                <p><strong>Location:</strong> {selectedTrucker.truckInfo.location}</p>
+                <p><strong>Bid Price:</strong> ${selectedTrucker.negotiationPrice}</p>
+              </div>
+            )}
+            <div className="mt-6 flex justify-end space-x-4">
               <button 
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                className="px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                 onClick={closeConfirmModal}
               >
                 Cancel
               </button>
               <button 
-                className={`text-white px-4 py-2 rounded ${
+                className={`px-4 py-2 text-sm font-medium rounded-md text-white ${
                   selectedTrucker?.action === 'reject' 
-                    ? 'bg-red-500 hover:bg-red-600' 
-                    : 'bg-green-500 hover:bg-green-600'
-                }`}
+                    ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500' 
+                    : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
+                } focus:outline-none focus:ring-2 focus:ring-offset-2`}
                 onClick={selectedTrucker?.action === 'reject' ? rejectBid : acceptBid}
                 disabled={isLoading}
               >
-                {isLoading ? 'Processing...' : selectedTrucker?.action === 'reject' ? 'Reject' : 'Accept'}
+                {isLoading ? 'Processing...' : (selectedTrucker?.action === 'reject' ? 'Reject' : 'Accept')}
               </button>
             </div>
           </div>
