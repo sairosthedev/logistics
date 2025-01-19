@@ -4,6 +4,8 @@ import { Search } from 'lucide-react';
 import axios from 'axios';
 import { BACKEND_Local } from '../../../url.js';
 import useAuthStore from '../auth/auth';
+import Rating from '@mui/material/Rating';
+import Typography from '@mui/material/Typography';
 
 function TrackLoad() {
     const [loads, setLoads] = useState([]);
@@ -13,6 +15,9 @@ function TrackLoad() {
     const { accessToken, clientID } = useAuthStore();
     const [currentPage, setCurrentPage] = useState(1);
     const loadsPerPage = 10;
+    const [rating, setRating] = useState(0);
+    const [review, setReview] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const fetchLoads = async () => {
@@ -103,6 +108,36 @@ function TrackLoad() {
     const currentLoadsPage = filteredLoads.slice(indexOfFirstLoad, indexOfLastLoad);
 
     const handlePageChange = (pageNumber) => setCurrentPage(pageNumber);
+
+    const handleSubmitRating = async (loadId) => {
+        setIsSubmitting(true);
+        try {
+            await axios.post(`${BACKEND_Local}/api/client/ratings`, {
+                loadId,
+                rating,
+                review,
+                clientId: clientID
+            }, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+            
+            // Refresh the loads after rating
+            setSelectedLoad(null);
+            const updatedLoads = loads.map(load => {
+                if (load._id === loadId) {
+                    return { ...load, hasRated: true };
+                }
+                return load;
+            });
+            setLoads(updatedLoads);
+        } catch (error) {
+            console.error('Error submitting rating:', error);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <ClientLayout>
@@ -323,7 +358,76 @@ function TrackLoad() {
                                     </div>
                                 </div>
 
-                                {/* Progress Bar Section at Bottom */}
+                                {/* Ratings Section - Only show for delivered loads */}
+                                {selectedLoad && selectedLoad.status === 'delivered' && !selectedLoad.hasRated && (
+                                    <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
+                                        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                                            Rate this Delivery
+                                        </h3>
+                                        <div className="space-y-4">
+                                            <div className="flex flex-col items-center">
+                                                <Typography component="legend" className="mb-2">
+                                                    How was your experience?
+                                                </Typography>
+                                                <Rating
+                                                    name="delivery-rating"
+                                                    value={rating}
+                                                    onChange={(event, newValue) => {
+                                                        setRating(newValue);
+                                                    }}
+                                                    size="large"
+                                                />
+                                            </div>
+                                            
+                                            <div className="flex flex-col space-y-2">
+                                                <label className="text-gray-700 dark:text-gray-300">
+                                                    Leave a review (optional)
+                                                </label>
+                                                <textarea
+                                                    value={review}
+                                                    onChange={(e) => setReview(e.target.value)}
+                                                    placeholder="Share your experience..."
+                                                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md 
+                                                             focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                                                             dark:bg-gray-700 dark:text-white"
+                                                    rows="4"
+                                                />
+                                            </div>
+
+                                            <div className="flex justify-end">
+                                                <button
+                                                    onClick={() => handleSubmitRating(selectedLoad._id)}
+                                                    disabled={!rating || isSubmitting}
+                                                    className={`px-4 py-2 rounded-md text-white 
+                                                        ${(!rating || isSubmitting) 
+                                                            ? 'bg-gray-400 cursor-not-allowed' 
+                                                            : 'bg-blue-600 hover:bg-blue-700'}`}
+                                                >
+                                                    {isSubmitting ? 'Submitting...' : 'Submit Rating'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Show submitted rating if it exists */}
+                                {selectedLoad && selectedLoad.status === 'delivered' && selectedLoad.hasRated && (
+                                    <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
+                                        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                                            Your Rating
+                                        </h3>
+                                        <div className="flex items-center space-x-2">
+                                            <Rating value={selectedLoad.rating} readOnly />
+                                            {selectedLoad.review && (
+                                                <p className="text-gray-600 dark:text-gray-400 mt-2">
+                                                    {selectedLoad.review}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Progress Bar Section */}
                                 <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
                                     <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">ORDER STATUS</h3>
                                     <p className="text-gray-600 dark:text-gray-400 mb-2">

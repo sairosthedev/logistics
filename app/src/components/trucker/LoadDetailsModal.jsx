@@ -92,6 +92,30 @@ const LoadDetailsModal = ({
                     <td className="py-2 text-gray-700 dark:text-gray-300">Price (USD):</td>
                     <td className="py-2">{selectedLoad.rate}</td>
                   </tr>
+                  {selectedLoad.acceptedAt && (
+                    <tr>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">Accepted:</td>
+                      <td className="py-2">{new Date(selectedLoad.acceptedAt).toLocaleString()}</td>
+                    </tr>
+                  )}
+                  {selectedLoad.loadedAt && (
+                    <tr>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">Loaded:</td>
+                      <td className="py-2">{new Date(selectedLoad.loadedAt).toLocaleString()}</td>
+                    </tr>
+                  )}
+                  {selectedLoad.inTransitAt && (
+                    <tr>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">In Transit:</td>
+                      <td className="py-2">{new Date(selectedLoad.inTransitAt).toLocaleString()}</td>
+                    </tr>
+                  )}
+                  {selectedLoad.deliveredAt && (
+                    <tr>
+                      <td className="py-2 text-gray-700 dark:text-gray-300">Delivered:</td>
+                      <td className="py-2">{new Date(selectedLoad.deliveredAt).toLocaleString()}</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
