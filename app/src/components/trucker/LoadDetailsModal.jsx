@@ -227,7 +227,7 @@ const LoadDetailsModal = ({
       {showSuccessPopup && (
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-8 py-4 rounded-xl shadow-2xl z-[9999] flex items-center space-x-3 animate-popup">
           <CheckCircle className="w-6 h-6" />
-          <span className="text-lg font-medium">Trucks assigned successfully!</span>
+          <span className="text-lg font-medium">Truck assigned successfully!</span>
         </div>
       )}
     </>
