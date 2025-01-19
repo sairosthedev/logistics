@@ -85,10 +85,6 @@ const LoadDetailsModal = ({
                     <td className="py-2">{selectedLoad.dropoffLocation || 'N/A'}</td>
                   </tr>
                   <tr>
-                    <td className="py-2 text-gray-700 dark:text-gray-300">Status:</td>
-                    <td className="py-2">{selectedLoad.status}</td>
-                  </tr>
-                  <tr>
                     <td className="py-2 text-gray-700 dark:text-gray-300">Comments:</td>
                     <td className="py-2">{selectedLoad.comments}</td>
                   </tr>
@@ -98,24 +94,6 @@ const LoadDetailsModal = ({
                   </tr>
                 </tbody>
               </table>
-            </div>
-
-            <div className="mt-4 flex justify-center">
-              <span className={`
-                px-4 py-2 rounded-full text-sm font-semibold
-                ${selectedLoad.status === 'loaded' 
-                  ? 'bg-blue-500 text-white' 
-                  : selectedLoad.status === 'in transit' 
-                    ? 'bg-orange-500 text-white'
-                    : selectedLoad.status === 'delivered' 
-                      ? 'bg-green-500 text-white'
-                      : selectedLoad.status === 'accepted' 
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-gray-500 text-white'
-                }
-              `}>
-                {selectedLoad.status.charAt(0).toUpperCase() + selectedLoad.status.slice(1)}
-              </span>
             </div>
 
             {showStatusBar && selectedLoad && (
