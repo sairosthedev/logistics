@@ -318,7 +318,7 @@ function Home() {
         >
           <option value="">Select a truck</option>
           {trucks
-            .filter((truck) => !deliveredTrucks.includes(truck._id))
+            .filter((truck) => truck.status.includes("standby"))
             .map((truck) => (
               <option
                 key={truck._id}
@@ -389,15 +389,24 @@ function Home() {
             className={`px-4 py-2 mx-2 ${activeTab === "pending" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
             onClick={() => setActiveTab("pending")}
           >
-            Pending Requests
+            Market 
+          </button>
+          <button
+            className={`px-4 py-2 mx-2 ${activeTab === "ongoing" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
+            onClick={() => setActiveTab("ongoing")}
+          >
+            Ongoing Jobs
           </button>
           <button
             className={`px-4 py-2 mx-2 ${activeTab === "bids" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
             onClick={() => setActiveTab("bids")}
           >
-            My Bids
+            All Bids
           </button>
         </div>
+
+        
+        
 
         {activeTab === "pending" && (
           <div className="pending-requests">
@@ -478,22 +487,52 @@ function Home() {
           </div>
         )}
 
+        {activeTab === "ongoing" && (
+          <div className="ongoing-jobs">
+            <div className="max-w-screen-xl mx-auto">
+              <div className="items-center justify-between md:flex mb-6">
+                <div className="max-w-lg">
+                  <h3 className="text-gray-800 dark:text-white text-2xl font-bold">
+                    Ongoing Jobs
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 mt-2">
+                    View and manage your ongoing jobs
+                  </p>
+                </div>
+              </div>
+              <AcceptedBidsTable
+                currentBids={currentBids.filter(bid => 
+                  ["accepted", "loaded", "in transit", "delivered"].includes(bid.status)
+                )}
+                openJobModal={openJobModal}
+                showStatusUpdate={true}
+              />
+            </div>
+          </div>
+        )}
+
         {activeTab === "bids" && (
           <div className="accepted-bids">
             <div className="max-w-screen-xl mx-auto">
               <div className="items-center justify-between md:flex mb-6">
                 <div className="max-w-lg">
                   <h3 className="text-gray-800 dark:text-white text-2xl font-bold">
-                    Bids
+                    Bids History
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300 mt-2">
-                    View and manage your bids
+                    View your bid history
                   </p>
                 </div>
               </div>
               <AcceptedBidsTable
-                currentBids={currentBids}
+                currentBids={currentBids.map(bid => ({
+                  ...bid,
+                  status: ["loaded", "in transit", "delivered"].includes(bid.status) 
+                    ? "accepted" 
+                    : bid.status
+                }))}
                 openJobModal={openJobModal}
+                showStatusUpdate={false}
               />
             </div>
           </div>

@@ -34,7 +34,7 @@ const AssignTruckModal = ({ isOpen, onRequestClose, onAssign, availableTrucks })
         <Modal 
             isOpen={isOpen} 
             onRequestClose={onRequestClose}
-            className="max-w-lg mx-auto mt-20 p-6 bg-white rounded-lg shadow-xl"
+            className="max-w-lg mx-auto mt-20 p-6 bg-blue-500 rounded-lg shadow-xl"
             ariaHideApp={false}
         >
             <div className="space-y-4">

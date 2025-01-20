@@ -62,16 +62,10 @@ export const NotificationBell = ({ userType }) => {
             let endpoint;
             
             // Admin can see all notifications
-            if (accountType === 'admin') {
-                endpoint = selectedStatus === 'all' 
-                    ? `${BACKEND_Local}/api/notifications/admin/all`
-                    : `${BACKEND_Local}/api/notifications/admin/status/${selectedStatus}`;
-            } 
-            // Regular users see their own notifications
-            else {
-                endpoint = selectedStatus === 'all'
-                    ? `${BACKEND_Local}/api/notifications/user/${clientID}`
-                    : `${BACKEND_Local}/api/notifications/user/${clientID}/status/${selectedStatus}`;
+            if (userType === 'admin') {
+                endpoint = `${BACKEND_Local}/api/notifications/all`;
+            } else {
+                endpoint = `${BACKEND_Local}/api/notifications/user/${clientID}`;
             }
 
             const response = await axios.get(endpoint, {
