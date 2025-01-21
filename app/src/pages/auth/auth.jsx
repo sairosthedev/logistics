@@ -31,30 +31,27 @@ const useAuthStore = create((set) => ({
                 email,
                 password,
             });
+            console.log(response.message);
 
             if (response.status !== 200) {
                 return { type: "error", message: response.data.message || "Login failed. Please try again." };
             }
 
-            const { token, userId: clientID , accountType} = response.data;
-
+            const { token, userId: clientID,user , accountType} = response.data;
+            console.log(response.data);
             // Store everything in localStorage
             localStorage.setItem('authToken', token);
             localStorage.setItem('clientID', clientID);
-            localStorage.setItem('user', JSON.stringify({
-                clientID,
-                accountType
-            }));
+            localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('accountType', accountType);
 
-            // Update the store
+            // Update the store with all user details
             set({
                 accessToken: token,
                 clientID,
+                accountType,
                 isAuthenticated: true,
-                user: {
-                    clientID,
-                    accountType
-                }
+                user: user  // This will now contain all user details including firstName, lastName, email, etc.
             });
 
             return { type: "success", message: "Login successful.", data: response.data };

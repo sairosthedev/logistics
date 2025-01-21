@@ -1,7 +1,20 @@
-import React, { useState } from 'react';
-import { User, Mail, Phone, Lock, Camera, Edit2, X, Save, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Mail, Phone, Lock, Edit2, X, Save, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import ClientLayout from '../../components/layouts/clientLayout'; // Ensure this import is correct
+import axios from 'axios';
+import { BACKEND_Local } from '../../../url.js';
+
+// Import auth store
+import { useAuthStore } from '../../pages/auth/auth';
+
+// Configure axios defaults
+const api = axios.create({
+  baseURL: BACKEND_Local,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
 
 const ProfileSection = ({ title, children }) => (
   <div className="mb-8">
@@ -49,19 +62,23 @@ const ProfileField = ({
 
 function ClientProfile() {
   const [isEditing, setIsEditing] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [successMessage, setSuccessMessage] = useState("");
   const [profile, setProfile] = useState({
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
 
-  const [profileImage, setProfileImage] = useState('/api/placeholder/150/150');
+  const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Get auth data
+  const { user, accessToken, clientID } = useAuthStore();
+  console.log(user);
 
   const validateForm = () => {
     const newErrors = {};
@@ -99,18 +116,36 @@ function ClientProfile() {
     }
   };
 
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors(prev => ({ ...prev, image: 'Image must be less than 5MB' }));
-        return;
+  useEffect(() => {
+    const setupProfile = () => {
+      try {
+        if (!user || !clientID) {
+          console.log('No user data in auth store');
+          throw new Error('No user data available');
+        }
+
+        // Use all available user data from auth store
+        setProfile(prev => ({
+          ...prev,
+          firstName: user.firstName || '',
+          lastName: user.lastName || '',
+          email: user.email || '',
+          phone: user.phone || '',
+        }));
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error in profile setup:', error);
+        setErrors(prev => ({
+          ...prev,
+          submit: 'Failed to load profile data. Please log in again.'
+        }));
+        setIsLoading(false);
       }
-      const imageUrl = URL.createObjectURL(file);
-      setProfileImage(imageUrl);
-      setErrors(prev => ({ ...prev, image: null }));
-    }
-  };
+    };
+
+    setupProfile();
+  }, [user, clientID]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -120,24 +155,72 @@ function ClientProfile() {
     }
 
     try {
-      // Simulating API call - replace with your actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const updateData = {
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        email: profile.email,
+        phone: profile.phone
+      };
+
+      if (profile.newPassword) {
+        updateData.currentPassword = profile.currentPassword;
+        updateData.newPassword = profile.newPassword;
+      }
+
+      console.log('Sending update request with data:', updateData);
+
+      const response = await api.put(
+        `/api/auth/user/${clientID}`,
+        updateData,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        }
+      );
+      
+      console.log('Update response:', response.data);
       
       setSuccessMessage("Profile updated successfully!");
       setIsEditing(false);
       
-      setProfile(prev => ({
-        ...prev,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      }));
+      // Update local storage and state
+      if (response.data) {
+        const newData = {
+          ...response.data,
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        };
+        setProfile(newData);
+        localStorage.setItem('loginData', JSON.stringify(response.data));
+
+        // Update auth store user data
+        const [firstName, lastName] = response.data.name.split(' ');
+        useAuthStore.getState().setAuth({
+          token: accessToken,
+          user: {
+            ...user,
+            name: `${firstName} ${lastName}`,
+            email: response.data.email
+          },
+          clientID,
+          accountType: user.accountType
+        });
+      }
       
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
+      console.error('Error updating profile:', error);
+      let errorMessage = 'Failed to update profile. Please try again.';
+      if (error.response?.status === 401) {
+        errorMessage = 'Unauthorized. Please log in again.';
+      } else if (error.code === 'ERR_NETWORK') {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      }
       setErrors(prev => ({ 
         ...prev, 
-        submit: 'Failed to update profile. Please try again.' 
+        submit: errorMessage
       }));
     }
   };
@@ -189,34 +272,6 @@ function ClientProfile() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="flex items-center justify-center mb-8">
-          <div className="relative group">
-            <div className="h-32 w-32 overflow-hidden rounded-full ring-4 ring-blue-100 dark:ring-blue-900">
-              <img
-                src={profileImage}
-                alt="Profile"
-                className="h-full w-full object-cover transition-transform group-hover:scale-105"
-              />
-            </div>
-            {isEditing && (
-              <label className="absolute bottom-0 right-0 cursor-pointer rounded-full bg-blue-600 p-2 shadow-lg transition-all hover:bg-blue-700">
-                <Camera className="h-4 w-4 text-white" />
-                <input 
-                  type="file" 
-                  className="hidden" 
-                  accept="image/*" 
-                  onChange={handleImageUpload} 
-                />
-              </label>
-            )}
-          </div>
-        </div>
-        {errors.image && (
-          <Alert className="mb-6 bg-red-50 border-red-200 text-red-800">
-            <AlertDescription>{errors.image}</AlertDescription>
-          </Alert>
-        )}
-
         <ProfileSection title="Personal Information">
           <ProfileField
             icon={User}
