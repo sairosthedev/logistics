@@ -148,10 +148,8 @@ function Home() {
 
   // Modal handlers
   const openJobModal = (load) => {
-    console.log("load", load);
     setSelectedLoad(load);
     setIsJobModalOpen(true);
-    setSelectedTrucks([]);
   };
 
   const closeJobModal = () => {
@@ -427,6 +425,7 @@ function Home() {
                 <LoadTable
                   currentLoads={currentLoads}
                   openJobModal={openJobModal}
+                  
                 />
               </div>
 
@@ -504,14 +503,14 @@ function Home() {
                 currentBids={currentBids.filter(bid => 
                   ["accepted", "loaded", "in transit", "delivered"].includes(bid.status)
                 )}
-                openJobModal={openJobModal}
-                showStatusUpdate={true}
+                openJobModal={(load) => openJobModal(load)}
+                isOngoingSection={true}
               />
             </div>
           </div>
         )}
 
-        {activeTab === "bids" && (
+{activeTab === "bids" && (
           <div className="accepted-bids">
             <div className="max-w-screen-xl mx-auto">
               <div className="items-center justify-between md:flex mb-6">
@@ -531,17 +530,19 @@ function Home() {
                     ? "accepted" 
                     : bid.status
                 }))}
-                openJobModal={openJobModal}
-                showStatusUpdate={false}
+                openJobModal={(load) => openJobModal(load)}
+                isOngoingSection={false}
               />
             </div>
           </div>
         )}
 
+
         <LoadDetailsModal
           isOpen={isJobModalOpen}
-          onClose={closeJobModal}
+          onClose={() => setIsJobModalOpen(false)}
           selectedLoad={selectedLoad}
+          isOngoingSection={activeTab === "ongoing"}
           modalStyles={modalStyles}
           acceptedBids={acceptedBids}
           updateRequestStatus={updateRequestStatus}

@@ -18,12 +18,16 @@ const LoadDetailsModal = ({
   showSuccessPopup,
   negotiationPrice,
   setNegotiationPrice,
-  showStatusBar = true,
   onReject,
   showRejectionForm,
-  setShowRejectionForm
+  setShowRejectionForm,
+  isOngoingSection = false
 }) => {
   const [rejectionReason, setRejectionReason] = useState('');
+  console.log("selectedLoad", selectedLoad);
+
+  // Show status bar if we're in Ongoing Jobs section AND the load exists
+  const shouldShowStatusBar = selectedLoad && isOngoingSection;
 
   if (!selectedLoad) return null;
 
@@ -120,11 +124,11 @@ const LoadDetailsModal = ({
               </table>
             </div>
 
-            {showStatusBar && selectedLoad && (
+            {/* Show StatusActionBar only in Ongoing Jobs section */}
+            {shouldShowStatusBar && (
               <StatusActionBar 
                 load={selectedLoad} 
                 onStatusUpdate={(newStatus) => {
-                  // Optionally handle status updates here
                   console.log('Status updated to:', newStatus);
                 }} 
               />

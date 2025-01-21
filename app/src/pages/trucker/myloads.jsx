@@ -113,19 +113,19 @@ function MyLoads() {
             className={`px-4 py-2 mr-2 mb-2 rounded-lg ${filter === 'pending' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200'}`} 
             onClick={() => setFilter('pending')}
           >
-            Pending Requests ({pendingLoads.length})
+            Pending  ({pendingLoads.length})
           </button>
           <button 
             className={`px-4 py-2 mr-2 mb-2 rounded-lg ${filter === 'in transit' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200'}`} 
             onClick={() => setFilter('in transit')}
           >
-            In Transit Requests ({inTransitLoads.length})
+            In Transit ({inTransitLoads.length})
           </button>
           <button 
             className={`px-4 py-2 mb-2 rounded-lg ${filter === 'delivered' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200'}`} 
             onClick={() => setFilter('delivered')}
           >
-            Delivered Requests ({deliveredLoads.length})
+            Delivered ({deliveredLoads.length})
           </button>
         </div>
 

@@ -1,7 +1,20 @@
-import React, { useState } from 'react';
-import TruckerLayout from '../../components/layouts/truckerLayout';
+import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, Lock, Camera, Edit2, X, Save, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import TruckerLayout from '../../components/layouts/truckerLayout'; // Ensure this import is correct
+import axios from 'axios';
+import { BACKEND_Local } from '../../../url.js';
+
+// Import auth store
+import { useAuthStore } from '../../pages/auth/auth';
+
+// Configure axios defaults
+const api = axios.create({
+  baseURL: BACKEND_Local,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
 
 const ProfileSection = ({ title, children }) => (
   <div className="mb-8">
@@ -51,33 +64,33 @@ function TruckerProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Get auth data
+  const { user, accessToken, clientID } = useAuthStore();
+  console.log(user);
   const [profile, setProfile] = useState({
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
 
-  const [profileImage, setProfileImage] = useState('/api/placeholder/150/150');
-
   const validateForm = () => {
     const newErrors = {};
     
     if (isEditing) {
-      // Email validation
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)) {
         newErrors.email = 'Please enter a valid email address';
       }
       
-      // Phone validation
       if (!/^\+?[\d\s-()]{10,}$/.test(profile.phone)) {
         newErrors.phone = 'Please enter a valid phone number';
       }
       
-      // Password validation
       if (profile.newPassword) {
         if (!profile.currentPassword) {
           newErrors.currentPassword = 'Current password is required';
@@ -97,7 +110,6 @@ function TruckerProfile() {
 
   const handleProfileChange = (field, value) => {
     setProfile(prev => ({ ...prev, [field]: value }));
-    // Clear error when field is edited
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }));
     }
@@ -116,6 +128,37 @@ function TruckerProfile() {
     }
   };
 
+  useEffect(() => {
+    const setupProfile = () => {
+      try {
+        if (!user || !clientID) {
+          console.log('No user data in auth store');
+          throw new Error('No user data available');
+        }
+
+        // Use all available user data from auth store
+        setProfile(prev => ({
+          ...prev,
+          firstName: user.firstName || '',
+          lastName: user.lastName || '',
+          email: user.email || '',
+          phone: user.phone || '',
+        }));
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error in profile setup:', error);
+        setErrors(prev => ({
+          ...prev,
+          submit: 'Failed to load profile data. Please log in again.'
+        }));
+        setIsLoading(false);
+      }
+    };
+
+    setupProfile();
+  }, [user, clientID]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -124,26 +167,72 @@ function TruckerProfile() {
     }
 
     try {
-      // Simulating API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const updateData = {
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        email: profile.email,
+        phone: profile.phone
+      };
+
+      if (profile.newPassword) {
+        updateData.currentPassword = profile.currentPassword;
+        updateData.newPassword = profile.newPassword;
+      }
+
+      console.log('Sending update request with data:', updateData);
+
+      const response = await api.put(
+        `/api/auth/user/${clientID}`,
+        updateData,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        }
+      );
+      
+      console.log('Update response:', response.data);
       
       setSuccessMessage("Profile updated successfully!");
       setIsEditing(false);
       
-      // Reset password fields
-      setProfile(prev => ({
-        ...prev,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      }));
+      // Update local storage and state
+      if (response.data) {
+        const newData = {
+          ...response.data,
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        };
+        setProfile(newData);
+        localStorage.setItem('loginData', JSON.stringify(response.data));
+
+        // Update auth store user data
+        const [firstName, lastName] = response.data.name.split(' ');
+        useAuthStore.getState().setAuth({
+          token: accessToken,
+          user: {
+            ...user,
+            name: `${firstName} ${lastName}`,
+            email: response.data.email
+          },
+          clientID,
+          accountType: user.accountType
+        });
+      }
       
-      // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
+      console.error('Error updating profile:', error);
+      let errorMessage = 'Failed to update profile. Please try again.';
+      if (error.response?.status === 401) {
+        errorMessage = 'Unauthorized. Please log in again.';
+      } else if (error.code === 'ERR_NETWORK') {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      }
       setErrors(prev => ({ 
         ...prev, 
-        submit: 'Failed to update profile. Please try again.' 
+        submit: errorMessage
       }));
     }
   };
@@ -151,7 +240,6 @@ function TruckerProfile() {
   const handleCancel = () => {
     setIsEditing(false);
     setErrors({});
-    // Reset password fields
     setProfile(prev => ({
       ...prev,
       currentPassword: '',
@@ -162,151 +250,121 @@ function TruckerProfile() {
 
   return (
     <TruckerLayout>
-      <div className="max-w-4xl mx-auto px-4 py-8 transition-colors duration-200 dark:bg-gray-900">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Profile</h1>
-          <button
-            onClick={isEditing ? handleCancel : () => setIsEditing(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            {isEditing ? (
-              <>
-                <X className="w-4 h-4" />
-                <span>Cancel</span>
-              </>
-            ) : (
-              <>
-                <Edit2 className="w-4 h-4" />
-                <span>Edit Profile</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        {successMessage && (
-          <Alert className="mb-6 bg-green-50 border-green-200 text-green-800">
-            <AlertDescription>{successMessage}</AlertDescription>
-          </Alert>
-        )}
-
-        {errors.submit && (
-          <Alert className="mb-6 bg-red-50 border-red-200 text-red-800">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>{errors.submit}</AlertDescription>
-          </Alert>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="flex items-center justify-center mb-8">
-            <div className="relative group">
-              <div className="h-32 w-32 overflow-hidden rounded-full ring-4 ring-blue-100 dark:ring-blue-900">
-                <img
-                  src={profileImage}
-                  alt="Profile"
-                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                />
-              </div>
-              {isEditing && (
-                <label className="absolute bottom-0 right-0 cursor-pointer rounded-full bg-blue-600 p-2 shadow-lg transition-all hover:bg-blue-700">
-                  <Camera className="h-4 w-4 text-white" />
-                  <input 
-                    type="file" 
-                    className="hidden" 
-                    accept="image/*" 
-                    onChange={handleImageUpload} 
-                  />
-                </label>
-              )}
-            </div>
-          </div>
-          {errors.image && (
-            <Alert className="mb-6 bg-red-50 border-red-200 text-red-800">
-              <AlertDescription>{errors.image}</AlertDescription>
-            </Alert>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Profile</h1>
+        <button
+          onClick={isEditing ? handleCancel : () => setIsEditing(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          {isEditing ? (
+            <>
+              <X className="w-4 h-4" />
+              <span>Cancel</span>
+            </>
+          ) : (
+            <>
+              <Edit2 className="w-4 h-4" />
+              <span>Edit Profile</span>
+            </>
           )}
-
-          <ProfileSection title="Personal Information">
-            <ProfileField
-              icon={User}
-              label="First Name"
-              value={profile.firstName}
-              onChange={(value) => handleProfileChange('firstName', value)}
-              disabled={!isEditing}
-              error={errors.firstName}
-            />
-            <ProfileField
-              icon={User}
-              label="Last Name"
-              value={profile.lastName}
-              onChange={(value) => handleProfileChange('lastName', value)}
-              disabled={!isEditing}
-              error={errors.lastName}
-            />
-          </ProfileSection>
-
-          <ProfileSection title="Contact Information">
-            <ProfileField
-              icon={Mail}
-              label="Email"
-              value={profile.email}
-              onChange={(value) => handleProfileChange('email', value)}
-              type="email"
-              disabled={!isEditing}
-              error={errors.email}
-            />
-            <ProfileField
-              icon={Phone}
-              label="Phone"
-              value={profile.phone}
-              onChange={(value) => handleProfileChange('phone', value)}
-              type="tel"
-              disabled={!isEditing}
-              error={errors.phone}
-            />
-          </ProfileSection>
-
-          {isEditing && (
-            <ProfileSection title="Security">
-              <ProfileField
-                icon={Lock}
-                label="Current Password"
-                value={profile.currentPassword}
-                onChange={(value) => handleProfileChange('currentPassword', value)}
-                type="password"
-                error={errors.currentPassword}
-              />
-              <ProfileField
-                icon={Lock}
-                label="New Password"
-                value={profile.newPassword}
-                onChange={(value) => handleProfileChange('newPassword', value)}
-                type="password"
-                error={errors.newPassword}
-              />
-              <ProfileField
-                icon={Lock}
-                label="Confirm New Password"
-                value={profile.confirmPassword}
-                onChange={(value) => handleProfileChange('confirmPassword', value)}
-                type="password"
-                error={errors.confirmPassword}
-              />
-            </ProfileSection>
-          )}
-
-          {isEditing && (
-            <div className="flex justify-end pt-4">
-              <button
-                type="submit"
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                <Save className="h-5 w-5" />
-                <span>Save Changes</span>
-              </button>
-            </div>
-          )}
-        </form>
+        </button>
       </div>
+
+      {successMessage && (
+        <Alert className="mb-6 bg-green-50 border-green-200 text-green-800">
+          <AlertDescription>{successMessage}</AlertDescription>
+        </Alert>
+      )}
+
+      {errors.submit && (
+        <Alert className="mb-6 bg-red-50 border-red-200 text-red-800">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{errors.submit}</AlertDescription>
+        </Alert>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <ProfileSection title="Personal Information">
+          <ProfileField
+            icon={User}
+            label="First Name"
+            value={profile.firstName}
+            onChange={(value) => handleProfileChange('firstName', value)}
+            disabled={!isEditing}
+            error={errors.firstName}
+          />
+          <ProfileField
+            icon={User}
+            label="Last Name"
+            value={profile.lastName}
+            onChange={(value) => handleProfileChange('lastName', value)}
+            disabled={!isEditing}
+            error={errors.lastName}
+          />
+        </ProfileSection>
+
+        <ProfileSection title="Contact Information">
+          <ProfileField
+            icon={Mail}
+            label="Email"
+            value={profile.email}
+            onChange={(value) => handleProfileChange('email', value)}
+            type="email"
+            disabled={!isEditing}
+            error={errors.email}
+          />
+          <ProfileField
+            icon={Phone}
+            label="Phone"
+            value={profile.phone}
+            onChange={(value) => handleProfileChange('phone', value)}
+            type="tel"
+            disabled={!isEditing}
+            error={errors.phone}
+          />
+        </ProfileSection>
+
+        {isEditing && (
+          <ProfileSection title="Security">
+            <ProfileField
+              icon={Lock}
+              label="Current Password"
+              value={profile.currentPassword}
+              onChange={(value) => handleProfileChange('currentPassword', value)}
+              type="password"
+              error={errors.currentPassword}
+            />
+            <ProfileField
+              icon={Lock}
+              label="New Password"
+              value={profile.newPassword}
+              onChange={(value) => handleProfileChange('newPassword', value)}
+              type="password"
+              error={errors.newPassword}
+            />
+            <ProfileField
+              icon={Lock}
+              label="Confirm New Password"
+              value={profile.confirmPassword}
+              onChange={(value) => handleProfileChange('confirmPassword', value)}
+              type="password"
+              error={errors.confirmPassword}
+            />
+          </ProfileSection>
+        )}
+
+        {isEditing && (
+          <div className="flex justify-end pt-4">
+            <button
+              type="submit"
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              <Save className="h-5 w-5" />
+              <span>Save Changes</span>
+            </button>
+          </div>
+        )}
+      </form>
     </TruckerLayout>
   );
 }
