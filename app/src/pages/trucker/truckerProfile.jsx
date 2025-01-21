@@ -87,7 +87,8 @@ function TruckerProfile() {
         newErrors.email = 'Please enter a valid email address';
       }
       
-      if (!/^\+?[\d\s-()]{10,}$/.test(profile.phone)) {
+      // Only validate phone if it's not empty
+      if (profile.phone && !/^\+?[\d\s-()]{10,}$/.test(profile.phone)) {
         newErrors.phone = 'Please enter a valid phone number';
       }
       
@@ -109,24 +110,16 @@ function TruckerProfile() {
   };
 
   const handleProfileChange = (field, value) => {
-    setProfile(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
+    // Only allow password-related fields to be changed
+    if (field.includes('Password')) {
+      setProfile(prev => ({ ...prev, [field]: value }));
+      if (errors[field]) {
+        setErrors(prev => ({ ...prev, [field]: null }));
+      }
     }
   };
 
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors(prev => ({ ...prev, image: 'Image must be less than 5MB' }));
-        return;
-      }
-      const imageUrl = URL.createObjectURL(file);
-      setProfileImage(imageUrl);
-      setErrors(prev => ({ ...prev, image: null }));
-    }
-  };
+  
 
   useEffect(() => {
     const setupProfile = () => {
@@ -167,13 +160,8 @@ function TruckerProfile() {
     }
 
     try {
-      const updateData = {
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        email: profile.email,
-        phone: profile.phone
-      };
-
+      // Only send password update data
+      const updateData = {};
       if (profile.newPassword) {
         updateData.currentPassword = profile.currentPassword;
         updateData.newPassword = profile.newPassword;
@@ -290,7 +278,7 @@ function TruckerProfile() {
             label="First Name"
             value={profile.firstName}
             onChange={(value) => handleProfileChange('firstName', value)}
-            disabled={!isEditing}
+            disabled={true}
             error={errors.firstName}
           />
           <ProfileField
@@ -298,7 +286,7 @@ function TruckerProfile() {
             label="Last Name"
             value={profile.lastName}
             onChange={(value) => handleProfileChange('lastName', value)}
-            disabled={!isEditing}
+            disabled={true}
             error={errors.lastName}
           />
         </ProfileSection>
@@ -310,7 +298,7 @@ function TruckerProfile() {
             value={profile.email}
             onChange={(value) => handleProfileChange('email', value)}
             type="email"
-            disabled={!isEditing}
+            disabled={true}
             error={errors.email}
           />
           <ProfileField
@@ -319,7 +307,7 @@ function TruckerProfile() {
             value={profile.phone}
             onChange={(value) => handleProfileChange('phone', value)}
             type="tel"
-            disabled={!isEditing}
+            disabled={true}
             error={errors.phone}
           />
         </ProfileSection>

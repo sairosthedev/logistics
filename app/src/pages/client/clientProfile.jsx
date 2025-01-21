@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, Lock, Edit2, X, Save, AlertTriangle } from 'lucide-react';
+import { User, Mail, Phone, Lock, Camera, Edit2, X, Save, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import ClientLayout from '../../components/layouts/clientLayout'; // Ensure this import is correct
 import axios from 'axios';
@@ -62,6 +62,13 @@ const ProfileField = ({
 
 function ClientProfile() {
   const [isEditing, setIsEditing] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Get auth data
+  const { user, accessToken, clientID } = useAuthStore();
+  console.log(user);
   const [profile, setProfile] = useState({
     firstName: '',
     lastName: '',
@@ -72,14 +79,6 @@ function ClientProfile() {
     confirmPassword: ''
   });
 
-  const [errors, setErrors] = useState({});
-  const [successMessage, setSuccessMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Get auth data
-  const { user, accessToken, clientID } = useAuthStore();
-  console.log(user);
-
   const validateForm = () => {
     const newErrors = {};
     
@@ -88,7 +87,8 @@ function ClientProfile() {
         newErrors.email = 'Please enter a valid email address';
       }
       
-      if (!/^\+?[\d\s-()]{10,}$/.test(profile.phone)) {
+      // Only validate phone if it's not empty
+      if (profile.phone && !/^\+?[\d\s-()]{10,}$/.test(profile.phone)) {
         newErrors.phone = 'Please enter a valid phone number';
       }
       
@@ -110,11 +110,15 @@ function ClientProfile() {
   };
 
   const handleProfileChange = (field, value) => {
-    setProfile(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
+    // Only allow password-related fields to be changed
+    if (field.includes('Password')) {
+      setProfile(prev => ({ ...prev, [field]: value }));
+      if (errors[field]) {
+        setErrors(prev => ({ ...prev, [field]: null }));
+      }
     }
   };
+
 
   useEffect(() => {
     const setupProfile = () => {
@@ -155,13 +159,8 @@ function ClientProfile() {
     }
 
     try {
-      const updateData = {
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        email: profile.email,
-        phone: profile.phone
-      };
-
+      // Only send password update data
+      const updateData = {};
       if (profile.newPassword) {
         updateData.currentPassword = profile.currentPassword;
         updateData.newPassword = profile.newPassword;
@@ -278,7 +277,7 @@ function ClientProfile() {
             label="First Name"
             value={profile.firstName}
             onChange={(value) => handleProfileChange('firstName', value)}
-            disabled={!isEditing}
+            disabled={true}
             error={errors.firstName}
           />
           <ProfileField
@@ -286,7 +285,7 @@ function ClientProfile() {
             label="Last Name"
             value={profile.lastName}
             onChange={(value) => handleProfileChange('lastName', value)}
-            disabled={!isEditing}
+            disabled={true}
             error={errors.lastName}
           />
         </ProfileSection>
@@ -298,7 +297,7 @@ function ClientProfile() {
             value={profile.email}
             onChange={(value) => handleProfileChange('email', value)}
             type="email"
-            disabled={!isEditing}
+            disabled={true}
             error={errors.email}
           />
           <ProfileField
@@ -307,7 +306,7 @@ function ClientProfile() {
             value={profile.phone}
             onChange={(value) => handleProfileChange('phone', value)}
             type="tel"
-            disabled={!isEditing}
+            disabled={true}
             error={errors.phone}
           />
         </ProfileSection>
