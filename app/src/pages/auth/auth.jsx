@@ -31,6 +31,7 @@ const useAuthStore = create((set) => ({
                 email,
                 password,
             });
+            console.log(response.message);
 
             if (response.status !== 200) {
                 return { type: "error", message: response.data.message || "Login failed. Please try again." };

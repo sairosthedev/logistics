@@ -16,7 +16,10 @@ function Signup() {
     const [errorMessage, setErrorMessage] = useState('');
     const [passwordError, setPasswordError] = useState(''); // New state for password error
     const [loading, setLoading] = useState(false); // New loading state
-    const navigate = useNavigate();
+    const [successMessage, setSuccessMessage] = useState(''); // New success message state
+    const navigate = useNavigate(); 
+    const [stage, setStage] = useState("signup");//verify otp
+     const [otp, setOtp] = useState(['', '', '', '', '', '']); // 6-digit OTP
 
     const handleAccountTypeChange = (event) => {
         setAccountType(event.target.value);
@@ -49,14 +52,7 @@ function Signup() {
             return;
         }
 
-        const payload = {
-            firstName,
-            lastName,
-            email,
-            phone,
-            password,
-            accountType
-        };
+      
 
         try {
             const response = await fetch(`${BACKEND_Local}/api/auth/register`, {
@@ -75,7 +71,21 @@ function Signup() {
             });
 
             if (response.ok) {
-                navigate('/');
+                const otpresponse = await fetch(`${BACKEND_Local}/api/send-email/user/verification`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ email }),
+                            });
+                if (otpresponse.ok) {
+                setStage('otp');
+                setSuccessMessage('Account created successfully. Please verify your email address.');
+                }
+                else {
+                    const errorData = await otpresponse.json();
+                    setErrorMessage(`Error: ${errorData.message}`);
+                }
             } else {
                 const errorData = await response.json();
                 setErrorMessage(`Signup failed: ${errorData.message}`);
@@ -97,9 +107,77 @@ function Signup() {
         }
     };
 
+        
+        const handleOtpChange = (index, value) => {
+            const newOtp = [...otp];
+            newOtp[index] = value;
+            setOtp(newOtp);
+    
+            // Auto-focus next input if value is entered
+            if (value && index < 5) {
+                document.getElementById(`otp-${index + 1}`).focus();
+            }
+        };
+    
+        const handleVerifyOtp = async (event) => {
+            event.preventDefault();
+            setErrorMessage('');
+            setLoading(true);
+            
+    
+            const otpCode = otp.join('');
+    
+            try {
+                const response = await fetch(`${BACKEND_Local}/api/auth/submitOtp`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        email, 
+                        otp: otpCode 
+                    }),
+                });
+
+                if (response.ok) {
+                    // OTP verification successful, show success message
+                    const response1 = await fetch(`${BACKEND_Local}/api/auth/verifyUser`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            email, 
+                            status: "verified" 
+                        }),
+                    });
+                    console.log(response1);
+                    if (response1.ok) {
+                    setTimeout(() => {
+                        navigate('/');
+                    }, 3000);
+                }
+                    setSuccessMessage('OTP verified successfully. Go signin to your account.');
+                 
+                } else {
+                    const errorData = await response.json();
+                    setErrorMessage(`Error: ${errorData.message}`);
+                }
+
+               
+            } catch (error) {
+                setErrorMessage('Error verifying OTP: ' + error.message);
+            } finally {
+                setLoading(false);
+            }
+
+            
+        };
+    
+
     return (
         <section className="min-h-screen flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImage})` }}>
-            <div className="px-4 md:h-fit h-4/5 relative xl:h-fit 2xl:h-fit w-fit">
+            {stage==="signup" && <div className="px-4 md:h-fit h-4/5 relative xl:h-fit 2xl:h-fit w-fit">
                 <div className="bg-white px-8  rounded-2xl shadow-2xl backdrop-filter backdrop-blur-lg border border-gray-200">
                     <div className="text-center mb-8">
                         <img className="w-auto h-24 sm:h-16 md:h-24 mx-auto" src={mainLogo} alt="Main Logo" />
@@ -199,6 +277,47 @@ function Signup() {
                     </div>
                 </div>
             </div>
+}
+
+{stage === 'otp' && ( <div className="px-4 md:h-fit h-4/5 relative xl:h-fit 2xl:h-fit w-fit bg-white p-8 rounded-2xl shadow-2xl backdrop-filter backdrop-blur-lg border border-gray-200">
+    <div className="text-center mb-8">
+                        <img className="w-auto h-24 sm:h-16 md:h-24 mx-auto" src={mainLogo} alt="Main Logo" />
+                        <h1 className="text-2xl sm:text-lg md:text-2xl font-extrabold text-gray-900">Join Truck-Stop</h1>
+                        <p className="text-lg sm:text-base md:text-lg text-gray-600">Enter an OTP that was sent to your email</p>
+                    </div>
+
+                    {errorMessage && <div className="mb-2 text-red-600 text-center">{errorMessage}</div>}
+                    {loading && <div className="mb-2 text-blue-600 text-center">Loading...</div>} {/* Loading animation */}
+
+                        <form onSubmit={handleVerifyOtp} className="space-y-4">
+                            <div className="flex justify-center mt-4 space-x-1">
+                                {otp.map((digit, index) => (
+                                    <input
+                                        key={index}
+                                        id={`otp-${index}`}
+                                        type="text"
+                                        maxLength="1"
+                                        placeholder="0"
+                                        className="w-10 h-10 px-2 py-1 border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        value={digit}
+                                        onChange={(e) => handleOtpChange(index, e.target.value)}
+                                        required
+                                    />
+                                ))}
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="w-full flex justify-center py-1 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out transform hover:scale-105"
+                                disabled={loading}
+                            >
+                                {loading ? 'Verifying OTP...' : 'Verify OTP'}
+                            </button>
+                        </form>
+                        </div>
+                    )}
+
+
         </section>
     )
 }
