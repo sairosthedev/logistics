@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, Lock, Camera, Edit2, X, Save, AlertTriangle } from 'lucide-react';
+import { User, Mail, Phone, Lock, Edit2, X, Save, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import ClientLayout from '../../components/layouts/clientLayout'; // Ensure this import is correct
 import axios from 'axios';
@@ -62,13 +62,6 @@ const ProfileField = ({
 
 function ClientProfile() {
   const [isEditing, setIsEditing] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [successMessage, setSuccessMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Get auth data
-  const { user, accessToken, clientID } = useAuthStore();
-  console.log(user);
   const [profile, setProfile] = useState({
     firstName: '',
     lastName: '',
@@ -79,7 +72,13 @@ function ClientProfile() {
     confirmPassword: ''
   });
 
-  const [profileImage, setProfileImage] = useState('/api/placeholder/150/150');
+  const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Get auth data
+  const { user, accessToken, clientID } = useAuthStore();
+  console.log(user);
 
   const validateForm = () => {
     const newErrors = {};
@@ -114,19 +113,6 @@ function ClientProfile() {
     setProfile(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }));
-    }
-  };
-
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors(prev => ({ ...prev, image: 'Image must be less than 5MB' }));
-        return;
-      }
-      const imageUrl = URL.createObjectURL(file);
-      setProfileImage(imageUrl);
-      setErrors(prev => ({ ...prev, image: null }));
     }
   };
 
@@ -286,34 +272,6 @@ function ClientProfile() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="flex items-center justify-center mb-8">
-          <div className="relative group">
-            <div className="h-32 w-32 overflow-hidden rounded-full ring-4 ring-blue-100 dark:ring-blue-900">
-              <img
-                src={profileImage}
-                alt="Profile"
-                className="h-full w-full object-cover transition-transform group-hover:scale-105"
-              />
-            </div>
-            {isEditing && (
-              <label className="absolute bottom-0 right-0 cursor-pointer rounded-full bg-blue-600 p-2 shadow-lg transition-all hover:bg-blue-700">
-                <Camera className="h-4 w-4 text-white" />
-                <input 
-                  type="file" 
-                  className="hidden" 
-                  accept="image/*" 
-                  onChange={handleImageUpload} 
-                />
-              </label>
-            )}
-          </div>
-        </div>
-        {errors.image && (
-          <Alert className="mb-6 bg-red-50 border-red-200 text-red-800">
-            <AlertDescription>{errors.image}</AlertDescription>
-          </Alert>
-        )}
-
         <ProfileSection title="Personal Information">
           <ProfileField
             icon={User}
