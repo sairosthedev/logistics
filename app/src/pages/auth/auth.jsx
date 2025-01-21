@@ -38,7 +38,7 @@ const useAuthStore = create((set) => ({
             }
 
             const { token, userId: clientID,user , accountType} = response.data;
-            console.log(response.data);
+            
             // Store everything in localStorage
             localStorage.setItem('authToken', token);
             localStorage.setItem('clientID', clientID);

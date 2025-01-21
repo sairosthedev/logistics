@@ -67,8 +67,8 @@ function ClientProfile() {
   const [isLoading, setIsLoading] = useState(true);
   
   // Get auth data
-  const { user, accessToken, clientID } = useAuthStore();
-  console.log(user);
+  const { user, accessToken, clientID, logout } = useAuthStore();
+
   const [profile, setProfile] = useState({
     firstName: '',
     lastName: '',
@@ -119,6 +119,7 @@ function ClientProfile() {
     }
   };
 
+  
 
   useEffect(() => {
     const setupProfile = () => {
@@ -159,61 +160,49 @@ function ClientProfile() {
     }
 
     try {
-      // Only send password update data
-      const updateData = {};
+      // Only proceed if there's a new password to update
       if (profile.newPassword) {
-        updateData.currentPassword = profile.currentPassword;
-        updateData.newPassword = profile.newPassword;
-      }
-
-      console.log('Sending update request with data:', updateData);
-
-      const response = await api.put(
-        `/api/auth/user/${clientID}`,
-        updateData,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        }
-      );
-      
-      console.log('Update response:', response.data);
-      
-      setSuccessMessage("Profile updated successfully!");
-      setIsEditing(false);
-      
-      // Update local storage and state
-      if (response.data) {
-        const newData = {
-          ...response.data,
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        };
-        setProfile(newData);
-        localStorage.setItem('loginData', JSON.stringify(response.data));
-
-        // Update auth store user data
-        const [firstName, lastName] = response.data.name.split(' ');
-        useAuthStore.getState().setAuth({
-          token: accessToken,
-          user: {
-            ...user,
-            name: `${firstName} ${lastName}`,
-            email: response.data.email
+        const response = await api.post(
+          `/api/auth/resetPassword`,
+          {
+            email: profile.email,
+            currentPassword: profile.currentPassword,
+            password: profile.newPassword
           },
-          clientID,
-          accountType: user.accountType
-        });
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`
+            }
+          }
+        );
+        
+        if (response.data) {
+          setSuccessMessage("Password updated successfully! Please login with your new password.");
+          
+          // Reset password fields
+          setProfile(prev => ({
+            ...prev,
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: ''
+          }));
+          setIsEditing(false);
+
+          // Log the user out
+          setTimeout(() => {
+            logout();
+            // Store success message in localStorage to show after redirect
+            localStorage.setItem('passwordUpdateSuccess', 'Password updated successfully! Please login with your new password.');
+            // Redirect to login page
+            window.location.href = '/';
+          }, 1500);
+        }
       }
-      
-      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
-      console.error('Error updating profile:', error);
-      let errorMessage = 'Failed to update profile. Please try again.';
+      console.error('Error updating password:', error);
+      let errorMessage = 'Failed to update password. Please try again.';
       if (error.response?.status === 401) {
-        errorMessage = 'Unauthorized. Please log in again.';
+        errorMessage = 'Current password is incorrect.';
       } else if (error.code === 'ERR_NETWORK') {
         errorMessage = 'Network error. Please check your connection and try again.';
       }

@@ -24,7 +24,7 @@ const LoadDetailsModal = ({
   isOngoingSection = false
 }) => {
   const [rejectionReason, setRejectionReason] = useState('');
-  console.log("selectedLoad", selectedLoad);
+
 
   // Show status bar if we're in Ongoing Jobs section AND the load exists
   const shouldShowStatusBar = selectedLoad && isOngoingSection;
@@ -129,7 +129,7 @@ const LoadDetailsModal = ({
               <StatusActionBar 
                 load={selectedLoad} 
                 onStatusUpdate={(newStatus) => {
-                  console.log('Status updated to:', newStatus);
+                 
                 }} 
               />
             )}

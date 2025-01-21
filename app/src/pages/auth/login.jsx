@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import mainLogo from './../../assets/images/logos/mainLogo.png'
 import backgroundImage from './../../assets/images/bg.jpg'
@@ -12,8 +12,17 @@ function Login() {
     const [showModal, setShowModal] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [loading, setLoading] = useState(false); // State to manage loading
+    const [successMessage, setSuccessMessage] = useState('');
     const navigate = useNavigate();
     const { loginUser, setAuth } = useAuthStore(); // Get the loginUser function from the store
+
+    useEffect(() => {
+        const successMessage = localStorage.getItem('passwordUpdateSuccess');
+        if (successMessage) {
+            setSuccessMessage(successMessage); // Assuming you have a success message state
+            localStorage.removeItem('passwordUpdateSuccess');
+        }
+    }, []);
 
     const handleAccountTypeChange = (event) => {
         setAccountType(event.target.value);
@@ -37,7 +46,7 @@ function Login() {
                 setErrorMessage(response.message);
                 setShowModal(true);
             } else {
-                console.log(response);
+               
                 // Handle successful login
                 switch (response.data.accountType) {
                     case 'admin':
