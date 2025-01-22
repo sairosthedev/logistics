@@ -29,7 +29,7 @@ import Home from './pages/admin/home'
 import Availabletrucks from './pages/admin/availabletrucks'
 import AdminMyLoads from './pages/admin/myloads'
 import Services from './pages/admin/services'
-import Settings from './pages/admin/settings'
+import AdminProfile from './pages/admin/adminProfile'
 import UserManagement from './pages/admin/userManagement';
 import Analytics from './pages/admin/Analytics';
 
@@ -112,7 +112,7 @@ function App() {
                 } />
               } />
               <Route path="app/services" element={<PrivateRoute element={<Services />} />} />
-              <Route path="app/settings" element={<PrivateRoute element={<Settings />} />} />
+              <Route path="app/adminprofile" element={<PrivateRoute element={<AdminProfile />} />} />
 
               {/* client routes */}
               <Route path="client" element={<PrivateRoute element={<ClientHome />} />} />

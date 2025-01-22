@@ -552,8 +552,6 @@ const AdminDashboard = () => {
 
             <div className="flex space-x-4 mb-8">
               <TabButton name="overview" label="Overview" icon={Calendar} />
-              <TabButton name="users" label="Users" icon={Users} />
-              <TabButton name="jobs" label="Jobs" icon={Package} />
               <TabButton name="analytics" label="Analytics" icon={BarChart} />
             </div>
 
