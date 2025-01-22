@@ -113,7 +113,13 @@ function Home() {
 
       setDeliveredTrucks(deliveredTruckIds);
 
-      const nonDeliveredBids = response.data.filter(
+      // Map the bids to include the negotiation price
+      const bidsWithPrice = response.data.map(bid => ({
+        ...bid,
+        negotiationPrice: bid.negotiationPrice || (bid.requestID && bid.requestID.negotiationPrice)
+      }));
+
+      const nonDeliveredBids = bidsWithPrice.filter(
         (bid) => bid.status !== "delivered"
       );
       setAcceptedBids(
@@ -263,26 +269,26 @@ function Home() {
       );
 
       if (response.status === 200) {
+        // Update the selected load status
         setSelectedLoad((prev) => ({
           ...prev,
           status: status,
         }));
 
-        setLoads((prevLoads) =>
-          prevLoads.map((load) =>
-            load._id === requestID ? { ...load, status: status } : load
-          )
+        // Update the bid in acceptedBids array
+        setAcceptedBids((prev) =>
+          prev.map((bid) => {
+            if (bid._id === requestID) {
+              return { ...bid, status: status };
+            }
+            return bid;
+          })
         );
 
+        // If the status is delivered, remove it from the ongoing jobs list
         if (status === "delivered") {
           setAcceptedBids((prev) =>
             prev.filter((bid) => bid._id !== requestID)
-          );
-        } else {
-          setAcceptedBids((prev) =>
-            prev.map((bid) =>
-              bid._id === requestID ? { ...bid, status: status } : bid
-            )
           );
         }
 
@@ -291,7 +297,7 @@ function Home() {
           setResponseMessage("");
         }, 2000);
 
-        await fetchLoads();
+        // Refresh the data
         await fetchAcceptedBids();
       }
     } catch (error) {

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 
@@ -14,7 +13,13 @@ const AcceptedBidsTable = ({ currentBids, openJobModal }) => {
   const currentBidsPage = sortedBids.slice(indexOfFirstBid, indexOfLastBid);
 
   const handleViewClick = (bid) => {
-    openJobModal(bid, bid.status !== 'bid');
+    // Format the bid data to match the expected structure
+    const formattedBid = {
+      ...bid,
+      rate: bid.rate || (bid.requestID && bid.requestID.rate),
+      negotiationPrice: bid.negotiationPrice || (bid.requestID && bid.requestID.negotiationPrice)
+    };
+    openJobModal(formattedBid);
   };
 
   const handlePageChange = (pageNumber) => setCurrentPage(pageNumber);
@@ -144,7 +149,7 @@ const AcceptedBidsTable = ({ currentBids, openJobModal }) => {
             </div>
 
             <button
-              onClick={() => openJobModal(bid)}
+              onClick={() => handleViewClick(bid)}
               className="w-full mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               View Details

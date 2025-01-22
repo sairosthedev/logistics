@@ -58,8 +58,30 @@ const StatusActionBar = ({ load, onStatusUpdate }) => {
       if (!load || !accessToken) return;
 
       try {
+        // Debug load object
+        console.log("Load object:", load);
+        console.log("RequestID:", load.requestID);
+        console.log("_id:", load._id);
+
+        // Get the request ID, ensuring we handle both string and ObjectId cases
+        let requestId;
+        if (typeof load.requestID === 'string') {
+          requestId = load.requestID;
+        } else if (load.requestID?._id) {
+          requestId = load.requestID._id;
+        } else if (load._id) {
+          requestId = typeof load._id === 'string' ? load._id : load._id.toString();
+        }
+
+        if (!requestId) {
+          console.error("No valid request ID found in load object:", load);
+          return;
+        }
+
+        console.log("Using requestId:", requestId);
+
         const response = await axios.get(
-          `${BACKEND_Local}/api/trucker/truck-requests/${load.requestID}`,
+          `${BACKEND_Local}/api/trucker/truck-requests/${requestId}`,
           {
             headers: {
               Authorization: `Bearer ${accessToken}`,
@@ -74,6 +96,10 @@ const StatusActionBar = ({ load, onStatusUpdate }) => {
         }
       } catch (error) {
         console.error("Error fetching current status:", error);
+        console.error("Request details:", {
+          url: `${BACKEND_Local}/api/trucker/truck-requests/${load.requestID}`,
+          load: load
+        });
       }
     };
 
@@ -85,17 +111,39 @@ const StatusActionBar = ({ load, onStatusUpdate }) => {
 
   const handleStatusUpdate = useCallback(
     async (newStatus) => {
-      if (!load || !accessToken) return;
+      if (!load || !accessToken) {
+        console.error("Missing load or access token");
+        return;
+      }
 
       try {
         setIsUpdating(true);
+        
+        // Get the request ID using the same logic as fetchCurrentStatus
+        let requestId;
+        if (typeof load.requestID === 'string') {
+          requestId = load.requestID;
+        } else if (load.requestID?._id) {
+          requestId = load.requestID._id;
+        } else if (load._id) {
+          requestId = typeof load._id === 'string' ? load._id : load._id.toString();
+        }
 
+        if (!requestId) {
+          console.error("No valid request ID found in load object:", load);
+          return;
+        }
+
+        console.log("Using requestId for status update:", requestId);
+
+        const formattedToken = accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`;
+        
         const response = await axios.put(
-          `${BACKEND_Local}/api/trucker/truck-requests/bid/status/${load.requestID}`,
+          `${BACKEND_Local}/api/trucker/truck-requests/bid/status/${requestId}`,
           { status: newStatus },
           {
             headers: {
-              Authorization: `Bearer ${accessToken}`,
+              Authorization: formattedToken,
               "Content-Type": "application/json",
             },
           }
@@ -106,12 +154,12 @@ const StatusActionBar = ({ load, onStatusUpdate }) => {
           // Update local state with the new status
           setCurrentStatus(newStatus);
 
-          // Prefer prop method if provided, otherwise use state update
+          // Call parent's update function with both requestID and status
           if (onStatusUpdate) {
-            onStatusUpdate(newStatus);
+            onStatusUpdate(requestId, newStatus);
           }
 
-          // Optional: Instead of full page reload, update local state
+          // Update local state
           if (load) {
             load.status = newStatus;
           }
@@ -130,7 +178,7 @@ const StatusActionBar = ({ load, onStatusUpdate }) => {
               { status: truckStatus },
               {
                 headers: {
-                  Authorization: `Bearer ${accessToken}`,
+                  Authorization: formattedToken,
                   "Content-Type": "application/json",
                 },
               }
@@ -139,12 +187,13 @@ const StatusActionBar = ({ load, onStatusUpdate }) => {
         } else {
           throw new Error("Status update failed");
         }
+        
         const response1 = await axios.put(
-          `${BACKEND_Local}/api/trucker/truck-requests/status/${load.requestID}`,
+          `${BACKEND_Local}/api/trucker/truck-requests/status/${requestId}`,
           { status: newStatus },
           {
             headers: {
-              Authorization: `Bearer ${accessToken}`,
+              Authorization: formattedToken,
               "Content-Type": "application/json",
             },
           }

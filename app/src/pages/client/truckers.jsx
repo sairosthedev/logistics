@@ -35,6 +35,9 @@ function AvailableTrucks() {
         }
       });
       
+      // Log the response data to check the structure
+      console.log('Fetched truckers data:', response.data);
+      
       // Separate truckers: only 'bid' status in available, others in accepted
       const allTruckers = response.data;
       const available = allTruckers.filter(trucker => trucker.status === 'bid');
@@ -151,6 +154,8 @@ function AvailableTrucks() {
 
   const openViewMoreModal = (trucker) => {
     console.log('Opening modal with trucker:', trucker);
+    console.log('Rate value:', trucker.rate);
+    console.log('Negotiation price:', trucker.negotiationPrice);
     setSelectedBidDetails(trucker);
     setIsViewMoreModalOpen(true);
   };
@@ -293,6 +298,7 @@ function AvailableTrucks() {
                   <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Driver Name</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Truck Type</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Price</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Contact</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Created At</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Action</th>
@@ -324,6 +330,11 @@ function AvailableTrucks() {
                       }`}>
                         {trucker.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        ${trucker.negotiationPrice ? trucker.negotiationPrice.toLocaleString() : 'N/A'}
+                      </div>
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
@@ -386,6 +397,12 @@ function AvailableTrucks() {
                     <p className="text-gray-500 dark:text-gray-400">Contact</p>
                     <p className="font-medium text-gray-900 dark:text-white">
                       {trucker.truckInfo.driverPhone}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 dark:text-gray-400">Price</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      ${trucker.negotiationPrice ? trucker.negotiationPrice.toLocaleString() : 'N/A'}
                     </p>
                   </div>
                   <div>
@@ -582,12 +599,16 @@ function AvailableTrucks() {
                   <h3 className="text-sm font-medium text-gray-900 mb-3">Pricing</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
-                      <span className="font-medium w-24 mb-1 sm:mb-0">Estimated:</span>
-                      <span className="text-lg font-semibold">${selectedBidDetails.estimatedPrice}</span>
+                      <span className="font-medium w-32 mb-1 sm:mb-0">Original Price:</span>
+                      <span className="text-lg font-semibold">
+                        ${selectedBidDetails?.rate ? selectedBidDetails.rate.toLocaleString() : 'N/A'}
+                      </span>
                     </p>
                     <p className="text-sm text-gray-900 flex flex-col sm:flex-row sm:items-center">
-                      <span className="font-medium w-24 mb-1 sm:mb-0">Bid Price:</span>
-                      <span className="text-lg font-semibold text-green-600">${selectedBidDetails.negotiationPrice}</span>
+                      <span className="font-medium w-32 mb-1 sm:mb-0">Trucker's Bid:</span>
+                      <span className={`text-lg font-semibold ${selectedBidDetails?.negotiationPrice < selectedBidDetails?.rate ? 'text-green-600' : 'text-red-600'}`}>
+                        ${selectedBidDetails?.negotiationPrice ? selectedBidDetails.negotiationPrice.toLocaleString() : 'N/A'}
+                      </span>
                     </p>
                   </div>
                 </div>

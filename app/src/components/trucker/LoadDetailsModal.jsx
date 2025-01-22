@@ -93,8 +93,27 @@ const LoadDetailsModal = ({
                     <td className="py-2">{selectedLoad.comments}</td>
                   </tr>
                   <tr>
-                    <td className="py-2 text-gray-700 dark:text-gray-300">Price (USD):</td>
-                    <td className="py-2">{selectedLoad.rate}</td>
+                    <td className="py-2 text-gray-700 dark:text-gray-300">Original Price (USD):</td>
+                    <td className="py-2 dark:text-white">${selectedLoad.rate ? selectedLoad.rate.toLocaleString() : 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 text-gray-700 dark:text-gray-300">Your Bid Price (USD):</td>
+                    <td className="py-2">
+                      {isOngoingSection || selectedLoad.status !== 'pending' ? (
+                        <span className="dark:text-white">${selectedLoad.negotiationPrice ? selectedLoad.negotiationPrice.toLocaleString() : 'N/A'}</span>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="number"
+                            value={negotiationPrice}
+                            onChange={(e) => setNegotiationPrice(e.target.value)}
+                            className="border rounded px-2 py-1 w-32 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            placeholder="Enter bid"
+                          />
+                          <span className="text-sm text-gray-500 dark:text-gray-400">USD</span>
+                        </div>
+                      )}
+                    </td>
                   </tr>
                   {selectedLoad.acceptedAt && (
                     <tr>
@@ -128,9 +147,7 @@ const LoadDetailsModal = ({
             {shouldShowStatusBar && (
               <StatusActionBar 
                 load={selectedLoad} 
-                onStatusUpdate={(newStatus) => {
-                 
-                }} 
+                onStatusUpdate={updateRequestStatus}
               />
             )}
 
