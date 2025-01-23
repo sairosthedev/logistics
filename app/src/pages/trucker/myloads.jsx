@@ -8,8 +8,6 @@ import { BACKEND_Local } from '../../../url.js';
 import useAuthStore from '../auth/auth';
 import { X } from 'lucide-react';
 
-import Ratings from "./Ratings.jsx";
-
 Modal.setAppElement('#root');
 
 function MyLoads() {
@@ -211,17 +209,6 @@ function MyLoads() {
                           {selectedLoad.dropoffLocation}
                         </p>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Ratings Card */}
-                  <div className="bg-gray-50 dark:bg-gray-800/50 p-4 sm:p-6 rounded-xl shadow-sm">
-                    <h3 className="text-lg sm:text-xl font-semibold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
-                      <span className="bg-green-100 dark:bg-green-900 p-1.5 rounded-lg">⭐</span>
-                      Ratings
-                    </h3>
-                    <div>
-                      <Ratings />
                     </div>
                   </div>
                 </div>
