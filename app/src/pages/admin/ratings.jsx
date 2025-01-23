@@ -3,103 +3,129 @@ import { Star, MessageSquare, Filter, Search } from 'lucide-react';
 import AdminLayout from '../../components/layouts/appLayout';
 import axios from 'axios';
 import { BACKEND_Local } from '../../../url.js';
-import { useAuthStore } from '../auth/auth';
+import useAuthStore from '../auth/auth';
 
-const api = axios.create({
-  baseURL: BACKEND_Local,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
-
-const ReviewCard = ({ review }) => (
-  <div className="p-6 border rounded-lg mb-4 bg-white dark:bg-gray-800 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
-    <div className="flex justify-between items-start">
-      <div>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-            <span className="text-blue-600 dark:text-blue-400 font-semibold">
-              {review.userName.charAt(0).toUpperCase()}
-            </span>
+const ReviewCard = ({ review }) => {
+  console.log('Rendering review:', review);
+  return (
+    <div className="p-6 border rounded-lg mb-4 bg-white dark:bg-gray-800 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+              <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                {review.fromUser?.name?.charAt(0)?.toUpperCase() || 'U'}
+              </span>
+            </div>
+            <div>
+              <h3 className="font-semibold dark:text-gray-100">
+                {review.fromUser?.name || 'Unknown User'}
+                <span className="ml-2 text-sm text-gray-500">({review.fromUserType})</span>
+              </h3>
+              <p className="text-sm text-gray-500">{review.fromUser?.email}</p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-semibold dark:text-gray-100">{review.userName}</h3>
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {review.userType === 'client' ? 'Client' : 'Trucker'}
+          <div className="mt-2">
+            <span className="text-sm text-gray-500 dark:text-gray-400">Rating for: </span>
+            <span className="font-medium dark:text-gray-300">
+              {review.toUser?.name || 'Unknown User'}
+              <span className="ml-2 text-sm text-gray-500">({review.toUserType})</span>
             </span>
+            <p className="text-sm text-gray-500">{review.toUser?.email}</p>
           </div>
+          {review.comment && (
+            <p className="text-gray-700 dark:text-gray-300 mt-2">{review.comment}</p>
+          )}
         </div>
-        <p className="text-gray-700 dark:text-gray-300 mt-2">{review.comment}</p>
+        <div className="flex items-center gap-1">
+          {[...Array(5)].map((_, i) => (
+            <Star
+              key={i}
+              className={`w-5 h-5 ${
+                i < review.rating 
+                  ? 'text-yellow-400 fill-yellow-400' 
+                  : 'text-gray-300'
+              }`}
+            />
+          ))}
+        </div>
       </div>
-      <div className="flex items-center gap-1">
-        {[...Array(5)].map((_, i) => (
-          <Star
-            key={i}
-            className={`w-5 h-5 ${
-              i < review.rating 
-                ? 'text-yellow-400 fill-yellow-400' 
-                : 'text-gray-300'
-            }`}
-          />
-        ))}
+      <div className="mt-4 flex justify-between items-center">
+        <span className="text-sm text-gray-500">
+          {new Date(review.createdAt).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })}
+        </span>
+        <div className="flex gap-2">
+          <span className={`px-3 py-1 rounded-full text-sm ${
+            review.fromUserType === 'Client' 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-blue-100 text-blue-800'
+          }`}>
+            From: {review.fromUserType}
+          </span>
+          <span className={`px-3 py-1 rounded-full text-sm ${
+            review.toUserType === 'Client' 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-blue-100 text-blue-800'
+          }`}>
+            To: {review.toUserType}
+          </span>
+        </div>
       </div>
     </div>
-    <div className="mt-4 flex justify-between items-center">
-      <span className="text-sm text-gray-500">
-        {new Date(review.createdAt).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })}
-      </span>
-      <span className={`px-3 py-1 rounded-full text-sm ${
-        review.userType === 'client' 
-          ? 'bg-green-100 text-green-800' 
-          : 'bg-blue-100 text-blue-800'
-      }`}>
-        {review.userType}
-      </span>
-    </div>
-  </div>
-);
+  );
+};
 
 function AdminRatings() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('latest');
   const { accessToken } = useAuthStore();
-    useEffect(() => {
-      const fetchReviews = async () => {
-        try {
-          const clientReviews = await api.get('/api/ratings', {
-            headers: {
-              Authorization: `Bearer ${accessToken}`
-            }
-          });
 
-          const formattedReviews = clientReviews.data.map(review => ({ 
-            ...review, 
-            userType: 'client' 
-          }));
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await axios.get(`${BACKEND_Local}/api/ratings/admin/all`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
 
-          setReviews(formattedReviews);
-          setLoading(false);
-        } catch (error) {
-          console.error('Error fetching reviews:', error);
-          setLoading(false);
-        }
-      };
+        console.log('Fetched ratings:', response.data);
+        setReviews(response.data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+        setError('Failed to fetch reviews. Please try again later.');
+        setLoading(false);
+      }
+    };
 
-      fetchReviews();
-    }, [accessToken]);
+    fetchReviews();
+  }, [accessToken]);
+
   const filteredReviews = reviews
-    .filter(review => 
-      (activeTab === 'all' || review.userType === activeTab) &&
-      (review.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       review.comment.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
+    .filter(review => {
+      if (activeTab !== 'all') {
+        return review.fromUserType === activeTab || review.toUserType === activeTab;
+      }
+      return true;
+    })
+    .filter(review => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        review.fromUser?.name?.toLowerCase().includes(searchLower) ||
+        review.toUser?.name?.toLowerCase().includes(searchLower) ||
+        review.comment?.toLowerCase().includes(searchLower)
+      );
+    })
     .sort((a, b) => {
       if (sortBy === 'latest') {
         return new Date(b.createdAt) - new Date(a.createdAt);
@@ -141,8 +167,8 @@ function AdminRatings() {
           </div>
         </div>
 
-        {/* <div className="flex gap-4 mb-6">
-          {['all', 'client', 'trucker'].map((tab) => (
+        <div className="flex gap-4 mb-6">
+          {['all', 'Client', 'Trucker', 'ServiceProvider'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -152,10 +178,16 @@ function AdminRatings() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300'
               }`}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'all' ? 'All' : tab}
             </button>
           ))}
-        </div> */}
+        </div>
+
+        {error && (
+          <div className="text-center py-4 px-6 bg-red-100 text-red-700 rounded-lg mb-6">
+            {error}
+          </div>
+        )}
 
         {loading ? (
           <div className="text-center py-8">
@@ -163,8 +195,8 @@ function AdminRatings() {
           </div>
         ) : filteredReviews.length > 0 ? (
           <div className="grid gap-4">
-            {filteredReviews.map((review, index) => (
-              <ReviewCard key={index} review={review} />
+            {filteredReviews.map((review) => (
+              <ReviewCard key={review.id} review={review} />
             ))}
           </div>
         ) : (
