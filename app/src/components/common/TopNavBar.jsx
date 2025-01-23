@@ -29,8 +29,8 @@ function TopNavBar({ userType, onLogout }) {
         trucker: [
             { path: '/trucker', label: 'Home', icon: Home },
             { path: '/trucker/trucks', label: 'My Trucks', icon: Truck },
-            { path: '/trucker/myloads', label: 'Jobs', icon: Briefcase },
             { path: '/trucker/truckerProfile', label: 'Profile', icon: User },
+           
         ],
         service: [
             { path: '/service', label: 'Home', icon: Home },

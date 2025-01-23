@@ -259,12 +259,7 @@ const AdminDashboard = () => {
       )
     );
 
-    // Filter system alerts
-    const filteredAlerts = stats.systemAlerts.filter(alert =>
-      alert.message?.toLowerCase().includes(searchTerm) ||
-      alert.type?.toLowerCase().includes(searchTerm) ||
-      alert.timestamp?.toLowerCase().includes(searchTerm)
-    );
+    
 
     // Filter stats based on their string values
     const filteredStats = {
@@ -278,7 +273,6 @@ const AdminDashboard = () => {
     setFilteredData({
       stats: filteredStats,
       chartData: filteredChartData,
-      systemAlerts: filteredAlerts,
       users: stats.users.filter(user =>
         user.firstName?.toLowerCase().includes(searchTerm) ||
         user.lastName?.toLowerCase().includes(searchTerm) ||
@@ -581,14 +575,7 @@ const AdminDashboard = () => {
                     color="green"
                     trend="up"
                   />
-                  <StatCard
-                    title="Revenue"
-                    value={filteredData.stats.revenue?.total || '$0'}
-                    subValue={`${filteredData.stats.revenue?.growth || '0%'} (30d)`}
-                    icon={DollarSign}
-                    color="yellow"
-                    trend="up"
-                  />
+                 
                   <StatCard
                     title="Active Jobs"
                     value={filteredData.stats.jobs?.inProgress || 0}
@@ -599,15 +586,6 @@ const AdminDashboard = () => {
                   />
                 </div>
 
-                <div className="grid gap-6 mb-8 md:grid-cols-2">
-                  <div className="bg-white p-6 rounded-xl shadow-lg">
-                    <h2 className="text-xl font-semibold mb-4">System Alerts</h2>
-                    <AnimatePresence>
-                      {filteredData.systemAlerts.map((alert, index) => (
-                        <AlertItem key={index} alert={alert} />
-                      ))}
-                    </AnimatePresence>
-                  </div>
 
                   <div className="bg-white p-6 rounded-xl shadow-lg">
                     <h2 className="text-xl font-semibold mb-4">User Distribution</h2>
@@ -639,40 +617,6 @@ const AdminDashboard = () => {
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
-                </div>
-
-                <div className="grid gap-6 mb-8 md:grid-cols-2">
-                  <div className="bg-white p-6 rounded-xl shadow-lg">
-                    <h2 className="text-xl font-semibold mb-4">Revenue vs Expenses</h2>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <AreaChart data={filteredData.chartData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" tickFormatter={formatDate} />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Area type="monotone" dataKey="revenue" stackId="1" stroke="#8884d8" fill="#8884d8" />
-                        <Area type="monotone" dataKey="expenses" stackId="1" stroke="#82ca9d" fill="#82ca9d" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-
-                  <div className="bg-white p-6 rounded-xl shadow-lg">
-                    <h2 className="text-xl font-semibold mb-4">User Growth</h2>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={filteredData.chartData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" tickFormatter={formatDate} />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="clients" stroke="#8884d8" />
-                        <Line type="monotone" dataKey="truckers" stroke="#82ca9d" />
-                        <Line type="monotone" dataKey="serviceProviders" stroke="#ffc658" />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
 
                 <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg mb-8`}>
                   <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : ''}`}>Activity Overview</h2>

@@ -15,13 +15,8 @@ const Analytics = () => {
   const [error, setError] = useState(null);
   const [data, setData] = useState({
     userGrowth: [],
-    revenueData: [],
     jobDistribution: [],
-    topRoutes: [],
-    serviceProviderPerformance: [],
-    systemMetrics: [],
     userActivity: [],
-    deliveryPerformance: [],
     totalUsers: 0,
     userDistribution: {
       clients: 0,
@@ -60,7 +55,6 @@ const Analytics = () => {
 
       setData({
         ...analyticsResponse.data,
-        systemMetrics: analyticsResponse.data.systemMetrics || [],
         userActivity: analyticsResponse.data.userActivity || [],
         deliveryPerformance: analyticsResponse.data.deliveryPerformance || [],
         totalUsers: allUsers.length,
@@ -152,22 +146,6 @@ const Analytics = () => {
           trend="up"
           color="green"
         />
-        <StatCard
-          title="Revenue"
-          value={`$${data.totalRevenue || '0'}`}
-          subValue="+8% from last month"
-          icon={DollarSign}
-          trend="up"
-          color="yellow"
-        />
-        <StatCard
-          title="System Health"
-          value={data.systemHealth || '98%'}
-          subValue="All systems operational"
-          icon={Activity}
-          trend="up"
-          color="purple"
-        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -203,219 +181,9 @@ const Analytics = () => {
           </ResponsiveContainer>
         </div>
 
-        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg`}>
-          <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-            Revenue vs Expenses
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={data.revenueData}>
-              <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridColor} />
-              <XAxis 
-                dataKey="name" 
-                stroke={chartTheme.textColor}
-                tick={{ fill: chartTheme.textColor }}
-              />
-              <YAxis 
-                stroke={chartTheme.textColor}
-                tick={{ fill: chartTheme.textColor }}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: chartTheme.tooltipBackground,
-                  color: chartTheme.tooltipText,
-                  border: 'none',
-                  borderRadius: '8px'
-                }}
-              />
-              <Legend wrapperStyle={{ color: chartTheme.textColor }} />
-              <Area type="monotone" dataKey="revenue" stackId="1" stroke="#8884d8" fill="#8884d8" />
-              <Area type="monotone" dataKey="expenses" stackId="1" stroke="#82ca9d" fill="#82ca9d" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg`}>
-          <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-            Job Distribution
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={data.jobDistribution || []}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              >
-                {(data.jobDistribution || []).map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: chartTheme.tooltipBackground,
-                  color: chartTheme.tooltipText,
-                  border: 'none',
-                  borderRadius: '8px'
-                }}
-              />
-              <Legend 
-                wrapperStyle={{ color: chartTheme.textColor }}
-                formatter={(value) => <span style={{ color: chartTheme.textColor }}>{value}</span>}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg`}>
-          <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-            Top Routes
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={data.topRoutes} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridColor} />
-              <XAxis 
-                type="number" 
-                stroke={chartTheme.textColor}
-                tick={{ fill: chartTheme.textColor }}
-              />
-              <YAxis 
-                dataKey="name" 
-                type="category" 
-                stroke={chartTheme.textColor}
-                tick={{ fill: chartTheme.textColor }}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: chartTheme.tooltipBackground,
-                  color: chartTheme.tooltipText,
-                  border: 'none',
-                  borderRadius: '8px'
-                }}
-              />
-              <Legend 
-                wrapperStyle={{ color: chartTheme.textColor }}
-                formatter={(value) => <span style={{ color: chartTheme.textColor }}>{value}</span>}
-              />
-              <Bar dataKey="value" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg mb-8`}>
-        <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-          Service Provider Performance
-        </h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data.serviceProviderPerformance}>
-            <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridColor} />
-            <XAxis 
-              dataKey="name" 
-              stroke={chartTheme.textColor}
-              tick={{ fill: chartTheme.textColor }}
-            />
-            <YAxis 
-              yAxisId="left" 
-              orientation="left" 
-              stroke="#8884d8"
-              tick={{ fill: chartTheme.textColor }}
-            />
-            <YAxis 
-              yAxisId="right" 
-              orientation="right" 
-              stroke="#82ca9d"
-              tick={{ fill: chartTheme.textColor }}
-            />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: chartTheme.tooltipBackground,
-                color: chartTheme.tooltipText,
-                border: 'none',
-                borderRadius: '8px'
-              }}
-            />
-            <Legend 
-              wrapperStyle={{ color: chartTheme.textColor }}
-              formatter={(value) => <span style={{ color: chartTheme.textColor }}>{value}</span>}
-            />
-            <Bar yAxisId="left" dataKey="rating" fill="#8884d8" />
-            <Bar yAxisId="right" dataKey="jobs" fill="#82ca9d" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* System Health Metrics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg`}>
-          <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-            System Performance
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data.systemMetrics}>
-              <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridColor} />
-              <XAxis 
-                dataKey="timestamp" 
-                stroke={chartTheme.textColor}
-                tick={{ fill: chartTheme.textColor }}
-              />
-              <YAxis 
-                stroke={chartTheme.textColor}
-                tick={{ fill: chartTheme.textColor }}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: chartTheme.tooltipBackground,
-                  color: chartTheme.tooltipText,
-                  border: 'none',
-                  borderRadius: '8px'
-                }}
-              />
-              <Legend wrapperStyle={{ color: chartTheme.textColor }} />
-              <Line type="monotone" dataKey="cpu" stroke="#8884d8" name="CPU Usage" />
-              <Line type="monotone" dataKey="memory" stroke="#82ca9d" name="Memory Usage" />
-              <Line type="monotone" dataKey="responseTime" stroke="#ffc658" name="Response Time" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg`}>
-          <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-            Delivery Performance
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={data.deliveryPerformance}>
-              <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridColor} />
-              <XAxis 
-                dataKey="name" 
-                stroke={chartTheme.textColor}
-                tick={{ fill: chartTheme.textColor }}
-              />
-              <YAxis 
-                stroke={chartTheme.textColor}
-                tick={{ fill: chartTheme.textColor }}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: chartTheme.tooltipBackground,
-                  color: chartTheme.tooltipText,
-                  border: 'none',
-                  borderRadius: '8px'
-                }}
-              />
-              <Legend wrapperStyle={{ color: chartTheme.textColor }} />
-              <Bar dataKey="onTime" stackId="a" fill="#8884d8" name="On Time" />
-              <Bar dataKey="delayed" stackId="a" fill="#82ca9d" name="Delayed" />
-              <Bar dataKey="failed" stackId="a" fill="#ffc658" name="Failed" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+      
     </div>
   );
 };

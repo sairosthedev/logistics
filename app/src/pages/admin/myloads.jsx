@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { FaSearch, FaSort, FaEye, FaTruck, FaTimes, FaMapMarkerAlt } from 'react-icons/fa'
+import { FaSearch, FaSort, FaEye, FaTruck, FaTimes, FaMapMarkerAlt, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import axios from 'axios'
 import { BACKEND_Local } from '../../../url.js'
 import useAuthStore from '../auth/auth'
@@ -15,6 +15,8 @@ function MyLoads() {
   const [clientRequests, setClientRequests] = useState([])
   const [loading, setLoading] = useState(true)
   const { darkMode } = useDarkMode();
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
 
   useEffect(() => {
     const fetchRequests = async () => {
@@ -36,6 +38,13 @@ function MyLoads() {
   }, [accessToken])
 
   const filteredRequests = clientRequests.filter(request => {
+    // First filter by status
+    const validStatuses = ['loaded', 'in transit', 'delivered'];
+    if (!validStatuses.includes(request.status?.toLowerCase())) {
+      return false;
+    }
+    
+    // Then filter by search term if it exists
     if (!searchTerm) return true;
     
     const searchFields = [
@@ -61,6 +70,16 @@ function MyLoads() {
     }
     return 0
   })
+
+  // Pagination calculations
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = sortedRequests.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(sortedRequests.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
   const handleSort = (column) => {
     setSortColumn(column)
@@ -109,7 +128,7 @@ function MyLoads() {
                 } text-sm`} />
               </div>
               <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Showing {sortedRequests.length} of {clientRequests.length} jobs
+                Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, sortedRequests.length)} of {sortedRequests.length} jobs
               </div>
             </div>
           </div>
@@ -118,7 +137,7 @@ function MyLoads() {
               <table className={`min-w-full ${darkMode ? 'text-gray-300' : 'text-gray-900'}`}>
                 <thead className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                   <tr>
-                    {['Client Name', 'Pickup Location', 'Dropoff Location', 'Goods Type', 'Status', 'Weight', 'Estimated Price', 'Negotiation Price', 'Actions'].map((header) => (
+                    {['Client Name', 'Pickup Location', 'Status', 'Actions'].map((header) => (
                       <th
                         key={header}
                         className="py-2 px-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
@@ -133,45 +152,100 @@ function MyLoads() {
                   </tr>
                 </thead>
                 <tbody className={`${darkMode ? 'bg-gray-800' : 'bg-white'} divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
-                  {sortedRequests.map((request, index) => (
-                    <tr key={index} className="hover:bg-gray-50 transition duration-200">
-                      <td className="py-2 px-3 whitespace-nowrap">{request.clientName}</td>
-                      <td className="py-2 px-3 whitespace-nowrap">{request.pickupLocation}</td>
-                      <td className="py-2 px-3 whitespace-nowrap">{request.dropoffLocation}</td>
-                      <td className="py-2 px-3 whitespace-nowrap">{request.goodsType}</td>
-                      <td className="py-2 px-3 whitespace-nowrap">
-                        <span className={`px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full ${
-                          request.status === "pending" ? "bg-yellow-100 text-yellow-800" :
-                          request.status === "in transit" ? "bg-blue-100 text-blue-800" :
-                          "bg-green-100 text-green-800"
-                        }`}>
-                          {request.status}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3 whitespace-nowrap">{request.weight}</td>
-                      <td className="py-2 px-3 whitespace-nowrap">{request.estimatedPrice}</td>
-                      <td className="py-2 px-3 whitespace-nowrap">{request.negotiationPrice}</td>
-                      <td className="py-2 px-3 whitespace-nowrap text-xs font-medium">
-                        <button 
-                          className="text-blue-600 hover:text-blue-900 mr-2" 
-                          title="View Details"
-                          onClick={() => handleViewJob(request)}
-                        >
-                          <FaEye className="inline-block mr-1" /> View
-                        </button>
-                        <button 
-                          className="text-green-600 hover:text-green-900" 
-                          title="Track Load"
-                          onClick={() => handleTrackLoad(request)}
-                        >
-                          <FaTruck className="inline-block mr-1" /> Track
-                        </button>
+                  {loading ? (
+                    <tr>
+                      <td colSpan="4" className="text-center py-4">
+                        <div className="flex items-center justify-center">
+                          Loading...
+                        </div>
                       </td>
                     </tr>
-                  ))}
+                  ) : currentItems.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" className="text-center py-4">
+                        No jobs found
+                      </td>
+                    </tr>
+                  ) : (
+                    currentItems.map((request, index) => (
+                      <tr key={index} className="hover:bg-gray-50 transition duration-200">
+                        <td className="py-2 px-3 whitespace-nowrap">{request.clientName}</td>
+                        <td className="py-2 px-3 whitespace-nowrap">{request.pickupLocation}</td>
+                        <td className="py-2 px-3 whitespace-nowrap">
+                          <span className={`px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full ${
+                            request.status === "loaded" ? "bg-yellow-100 text-yellow-800" :
+                            request.status === "in transit" ? "bg-blue-100 text-blue-800" :
+                            request.status === "delivered" ? "bg-green-100 text-green-800" :
+                            "bg-gray-100 text-gray-800"
+                          }`}>
+                            {request.status}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 whitespace-nowrap text-xs font-medium">
+                          <button 
+                            className="text-blue-600 hover:text-blue-900 mr-2" 
+                            title="View Details"
+                            onClick={() => handleViewJob(request)}
+                          >
+                            <FaEye className="inline-block mr-1" /> View
+                          </button>
+                          <button 
+                            className="text-green-600 hover:text-green-900" 
+                            title="Track Load"
+                            onClick={() => handleTrackLoad(request)}
+                          >
+                            <FaTruck className="inline-block mr-1" /> Track
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex justify-center items-center space-x-2 mt-4 mb-6">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded-md ${
+                darkMode 
+                  ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              <FaChevronLeft className="h-4 w-4" />
+            </button>
+            
+            {[...Array(totalPages)].map((_, index) => (
+              <button
+                key={index + 1}
+                onClick={() => handlePageChange(index + 1)}
+                className={`px-3 py-1 rounded-md ${
+                  currentPage === index + 1
+                    ? 'bg-blue-500 text-white'
+                    : darkMode 
+                      ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' 
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {index + 1}
+              </button>
+            ))}
+            
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1 rounded-md ${
+                darkMode 
+                  ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              <FaChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
@@ -185,15 +259,29 @@ function MyLoads() {
                   <FaTimes />
                 </button>
               </div>
-              <div className="mt-2">
+              <div className="mt-2 space-y-3">
                 <p><strong>Client Name:</strong> {selectedJob.clientName}</p>
                 <p><strong>Pickup Location:</strong> {selectedJob.pickupLocation}</p>
                 <p><strong>Dropoff Location:</strong> {selectedJob.dropoffLocation}</p>
                 <p><strong>Goods Type:</strong> {selectedJob.goodsType}</p>
-                <p><strong>Status:</strong> {selectedJob.status}</p>
+                <p><strong>Status:</strong> 
+                  <span className={`ml-2 px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full ${
+                    selectedJob.status === "loaded" ? "bg-yellow-100 text-yellow-800" :
+                    selectedJob.status === "in transit" ? "bg-blue-100 text-blue-800" :
+                    selectedJob.status === "delivered" ? "bg-green-100 text-green-800" :
+                    "bg-gray-100 text-gray-800"
+                  }`}>
+                    {selectedJob.status}
+                  </span>
+                </p>
                 <p><strong>Weight:</strong> {selectedJob.weight}</p>
                 <p><strong>Estimated Price:</strong> {selectedJob.estimatedPrice}</p>
                 <p><strong>Negotiation Price:</strong> {selectedJob.negotiationPrice}</p>
+                <div className="border-t pt-3 mt-3">
+                  <p className="text-sm text-gray-500">Additional Information</p>
+                  <p><strong>Created At:</strong> {new Date(selectedJob.createdAt).toLocaleDateString()}</p>
+                  {selectedJob.notes && <p><strong>Notes:</strong> {selectedJob.notes}</p>}
+                </div>
               </div>
               <div className="mt-4">
                 <button

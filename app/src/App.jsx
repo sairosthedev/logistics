@@ -37,15 +37,12 @@ import AdminRatings from './pages/admin/Ratings';
 // client pages
 import ClientHome from './pages/client/home'
 import AvailableTrucks from './pages/client/truckers'
-// import ClientMyLoads from './pages/client/myloads'
 import ClientTrackLoad from './pages/client/trackload'
 import ClientSettings from './pages/client/settings'
 
 // trucker pages
 import TruckerHome from './pages/trucker/home'
 import Trucks from './pages/trucker/trucks'
-import TruckerMyLoads from './pages/trucker/myloads'
-//
 import TruckersServices from './pages/trucker/services'
 import TruckerSettings from './pages/trucker/settings'
 import TruckerProfile from './pages/trucker/truckerProfile';
@@ -127,8 +124,6 @@ function App() {
               {/* trucker routes */}
               <Route path="trucker" element={<PrivateRoute element={<TruckerHome />} />} />
               <Route path="trucker/trucks" element={<PrivateRoute element={<Trucks />} />} />
-              <Route path="trucker/myloads" element={<PrivateRoute element={<TruckerMyLoads />} />} />
-            
               <Route path="trucker/services" element={<PrivateRoute element={<TruckersServices />} />} /> 
               <Route path="trucker/settings" element={<PrivateRoute element={<TruckerSettings />} />} />
               <Route path="trucker/truckerProfile" element={<PrivateRoute element={<TruckerProfile />} />} />
