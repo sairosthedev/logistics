@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
     Menu, X, Home, Truck, Briefcase, MapPin, 
     Settings, Users, LogOut, Wrench, 
-    ClipboardList, HandCoins, User
+    ClipboardList, HandCoins, User, Star
 } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 
@@ -18,6 +18,7 @@ function TopNavBar({ userType, onLogout }) {
             { path: '/app/myloads', label: 'Jobs', icon: Briefcase },
             { path: '/app/users', label: 'Users', icon: Users },
             { path: '/app/adminProfile', label: 'Profile', icon: User },
+            {path: '/app/ratings', label: 'Ratings', icon: Star}
         ],
         client: [
             { path: '/client', label: 'Home', icon: Home },

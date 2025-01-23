@@ -32,6 +32,7 @@ import Services from './pages/admin/services'
 import AdminProfile from './pages/admin/adminProfile'
 import UserManagement from './pages/admin/userManagement';
 import Analytics from './pages/admin/Analytics';
+import AdminRatings from './pages/admin/ratings';
 
 // client pages
 import ClientHome from './pages/client/home'
@@ -95,6 +96,7 @@ function App() {
 
               {/* admin routes */}
               <Route path="app" element={<PrivateRoute element={<Home />} />} />
+              <Route path="app/ratings" element={<PrivateRoute element={<AdminRatings />} />} />
               <Route path="app/availabletrucks" element={<PrivateRoute element={<Availabletrucks />} />} />
               <Route path="app/myloads" element={
                 <PrivateRoute element={
