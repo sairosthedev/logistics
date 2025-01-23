@@ -70,39 +70,30 @@ function AdminRatings() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('latest');
   const { accessToken } = useAuthStore();
-
-  useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const [clientReviews, truckerReviews] = await Promise.all([
-          api.get('/api/client/ratings', {
+    useEffect(() => {
+      const fetchReviews = async () => {
+        try {
+          const clientReviews = await api.get('/api/client/ratings', {
             headers: {
               Authorization: `Bearer ${accessToken}`
             }
-          }),
-          api.get('/api/trucker/ratings', {
-            headers: {
-              Authorization: `Bearer ${accessToken}`
-            }
-          })
-        ]);
+          });
 
-        const combinedReviews = [
-          ...clientReviews.data.map(review => ({ ...review, userType: 'client' })),
-          ...truckerReviews.data.map(review => ({ ...review, userType: 'trucker' }))
-        ];
+          const formattedReviews = clientReviews.data.map(review => ({ 
+            ...review, 
+            userType: 'client' 
+          }));
 
-        setReviews(combinedReviews);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching reviews:', error);
-        setLoading(false);
-      }
-    };
+          setReviews(formattedReviews);
+          setLoading(false);
+        } catch (error) {
+          console.error('Error fetching reviews:', error);
+          setLoading(false);
+        }
+      };
 
-    fetchReviews();
-  }, [accessToken]);
-
+      fetchReviews();
+    }, [accessToken]);
   const filteredReviews = reviews
     .filter(review => 
       (activeTab === 'all' || review.userType === activeTab) &&
@@ -150,7 +141,7 @@ function AdminRatings() {
           </div>
         </div>
 
-        <div className="flex gap-4 mb-6">
+        {/* <div className="flex gap-4 mb-6">
           {['all', 'client', 'trucker'].map((tab) => (
             <button
               key={tab}
@@ -164,7 +155,7 @@ function AdminRatings() {
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
-        </div>
+        </div> */}
 
         {loading ? (
           <div className="text-center py-8">
