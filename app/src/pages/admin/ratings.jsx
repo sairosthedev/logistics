@@ -73,7 +73,7 @@ function AdminRatings() {
     useEffect(() => {
       const fetchReviews = async () => {
         try {
-          const clientReviews = await api.get('/api/client/ratings', {
+          const clientReviews = await api.get('/api/ratings', {
             headers: {
               Authorization: `Bearer ${accessToken}`
             }

@@ -32,7 +32,7 @@ import Services from './pages/admin/services'
 import AdminProfile from './pages/admin/adminProfile'
 import UserManagement from './pages/admin/userManagement';
 import Analytics from './pages/admin/Analytics';
-import AdminRatings from './pages/admin/ratings';
+import AdminRatings from './pages/admin/Ratings';
 
 // client pages
 import ClientHome from './pages/client/home'

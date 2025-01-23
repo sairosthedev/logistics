@@ -18,6 +18,7 @@ function TrackLoad() {
     const [rating, setRating] = useState(0);
     const [review, setReview] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [previousRating, setPreviousRating] = useState(null);
 
     useEffect(() => {
         const fetchLoads = async () => {
@@ -111,31 +112,101 @@ function TrackLoad() {
 
     const handleSubmitRating = async (loadId) => {
         setIsSubmitting(true);
+        setError(null);
         try {
-            await axios.post(`${BACKEND_Local}/api/client/ratings`, {
-                loadId,
-                rating,
-                review,
-                clientId: clientID
-            }, {
+            // First get the request bid for this load
+            const bidResponse = await axios.get(`${BACKEND_Local}/api/client/request-bids/${clientID}`, {
                 headers: {
-                    Authorization: `Bearer ${accessToken}`
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            // Find the bid for this load
+            const loadBid = bidResponse.data.find(bid => bid.requestID._id === loadId);
+            if (!loadBid) {
+                setError('Could not find the bid for this load');
+                return;
+            }
+
+            const ratingData = {
+                toUserID: loadBid.truckerID,
+                toUserType: 'Trucker',
+                requestID: loadId,
+                requestType: 'TruckRequest',
+                rating,
+                comment: review
+            };
+
+            try {
+                const response = await axios.post(`${BACKEND_Local}/api/ratings`, ratingData, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Rating submission successful:', response.data);
+
+                // Fetch the updated rating
+                await fetchRating(loadId);
+
+                // Update loads list
+                const updatedLoads = loads.map(load => {
+                    if (load._id === loadId) {
+                        return { ...load, hasRated: true };
+                    }
+                    return load;
+                });
+                setLoads(updatedLoads);
+            } catch (postError) {
+                const errorMessage = postError.response?.data?.error || postError.response?.data?.message || 'Failed to submit rating';
+                setError(errorMessage);
+                console.error('Rating submission error:', errorMessage);
+            }
+        } catch (error) {
+            const errorMessage = error.response?.data?.error || error.response?.data?.message || 'An error occurred while submitting the rating';
+            setError(errorMessage);
+            console.error('Error:', errorMessage);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const fetchRating = async (loadId) => {
+        try {
+            const response = await axios.get(`${BACKEND_Local}/api/ratings/check/${loadId}`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
                 }
             });
             
-            // Refresh the loads after rating
-            setSelectedLoad(null);
-            const updatedLoads = loads.map(load => {
-                if (load._id === loadId) {
-                    return { ...load, hasRated: true };
-                }
-                return load;
-            });
-            setLoads(updatedLoads);
+            if (response.data && response.data.rating) {
+                setPreviousRating(response.data.rating);
+                // Update the load's hasRated status
+                setSelectedLoad(prev => ({
+                    ...prev,
+                    hasRated: true
+                }));
+            } else {
+                setPreviousRating(null);
+                // Update the load's hasRated status
+                setSelectedLoad(prev => ({
+                    ...prev,
+                    hasRated: false
+                }));
+            }
         } catch (error) {
-            console.error('Error submitting rating:', error);
-        } finally {
-            setIsSubmitting(false);
+            console.error('Error fetching rating:', error);
+            setPreviousRating(null);
+        }
+    };
+
+    const handleLoadSelect = async (load) => {
+        setSelectedLoad(load);
+        if (load.status === 'delivered') {
+            await fetchRating(load._id);
         }
     };
 
@@ -208,7 +279,7 @@ function TrackLoad() {
                                         </td>
                                         <td className="px-2 py-2 whitespace-nowrap">
                                             <button
-                                                onClick={() => setSelectedLoad(load)}
+                                                onClick={() => handleLoadSelect(load)}
                                                 className="px-2 py-1 text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                             >
                                                 Track
@@ -238,7 +309,7 @@ function TrackLoad() {
                                     </p>
                                 </div>
                                 <button
-                                    onClick={() => setSelectedLoad(load)}
+                                    onClick={() => handleLoadSelect(load)}
                                     className="px-3 py-1 text-sm font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                 >
                                     Track
@@ -359,69 +430,87 @@ function TrackLoad() {
                                 </div>
 
                                 {/* Ratings Section - Only show for delivered loads */}
-                                {selectedLoad && selectedLoad.status === 'delivered' && !selectedLoad.hasRated && (
+                                {selectedLoad && selectedLoad.status === 'delivered' && (
                                     <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
                                         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">
-                                            Rate this Delivery
+                                            {previousRating ? 'Your Rating' : 'Rate this Delivery'}
                                         </h3>
                                         <div className="space-y-4">
-                                            <div className="flex flex-col items-center">
-                                                <Typography component="legend" className="mb-2">
-                                                    How was your experience?
-                                                </Typography>
-                                                <Rating
-                                                    name="delivery-rating"
-                                                    value={rating}
-                                                    onChange={(event, newValue) => {
-                                                        setRating(newValue);
-                                                    }}
-                                                    size="large"
-                                                />
-                                            </div>
-                                            
-                                            <div className="flex flex-col space-y-2">
-                                                <label className="text-gray-700 dark:text-gray-300">
-                                                    Leave a review (optional)
-                                                </label>
-                                                <textarea
-                                                    value={review}
-                                                    onChange={(e) => setReview(e.target.value)}
-                                                    placeholder="Share your experience..."
-                                                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md 
-                                                             focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
-                                                             dark:bg-gray-700 dark:text-white"
-                                                    rows="4"
-                                                />
-                                            </div>
+                                            {error && (
+                                                <div className="mb-4 p-4 text-red-700 bg-red-100 rounded-lg">
+                                                    {error}
+                                                </div>
+                                            )}
+                                            {previousRating ? (
+                                                <div className="flex flex-col items-center">
+                                                    <Typography component="legend" className="mb-2">
+                                                        Your rating for this delivery
+                                                    </Typography>
+                                                    <Rating
+                                                        name="read-only-rating"
+                                                        value={previousRating.rating}
+                                                        readOnly
+                                                        size="large"
+                                                        precision={1}
+                                                    />
+                                                    {previousRating.comment && (
+                                                        <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg w-full">
+                                                            <p className="text-gray-600 dark:text-gray-300">
+                                                                Your review:
+                                                            </p>
+                                                            <p className="mt-2 text-gray-800 dark:text-gray-200">
+                                                                {previousRating.comment}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div className="flex flex-col items-center">
+                                                        <Typography component="legend" className="mb-2">
+                                                            How was your experience?
+                                                        </Typography>
+                                                        <Rating
+                                                            name="delivery-rating"
+                                                            value={rating}
+                                                            onChange={(event, newValue) => {
+                                                                setRating(newValue);
+                                                            }}
+                                                            size="large"
+                                                            precision={1}
+                                                        />
+                                                    </div>
+                                                    
+                                                    <div className="flex flex-col space-y-2">
+                                                        <label className="text-gray-700 dark:text-gray-300">
+                                                            Leave a review (optional)
+                                                        </label>
+                                                        <textarea
+                                                            value={review}
+                                                            onChange={(e) => setReview(e.target.value)}
+                                                            placeholder="Share your experience..."
+                                                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md 
+                                                                     focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                                                                     dark:bg-gray-700 dark:text-white"
+                                                            rows="4"
+                                                        />
+                                                    </div>
 
-                                            <div className="flex justify-end">
-                                                <button
-                                                    onClick={() => handleSubmitRating(selectedLoad._id)}
-                                                    disabled={!rating || isSubmitting}
-                                                    className={`px-4 py-2 rounded-md text-white 
-                                                        ${(!rating || isSubmitting) 
-                                                            ? 'bg-gray-400 cursor-not-allowed' 
-                                                            : 'bg-blue-600 hover:bg-blue-700'}`}
-                                                >
-                                                    {isSubmitting ? 'Submitting...' : 'Submit Rating'}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Show submitted rating if it exists */}
-                                {selectedLoad && selectedLoad.status === 'delivered' && selectedLoad.hasRated && (
-                                    <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
-                                        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">
-                                            Your Rating
-                                        </h3>
-                                        <div className="flex items-center space-x-2">
-                                            <Rating value={selectedLoad.rating} readOnly />
-                                            {selectedLoad.review && (
-                                                <p className="text-gray-600 dark:text-gray-400 mt-2">
-                                                    {selectedLoad.review}
-                                                </p>
+                                                    <div className="flex justify-end">
+                                                        <button
+                                                            onClick={() => handleSubmitRating(selectedLoad._id)}
+                                                            disabled={!rating || isSubmitting}
+                                                            className={`px-4 py-2 rounded-md text-white 
+                                                                ${(!rating || isSubmitting) 
+                                                                    ? 'bg-gray-400 cursor-not-allowed' 
+                                                                    : error 
+                                                                        ? 'bg-red-600 hover:bg-red-700'
+                                                                        : 'bg-blue-600 hover:bg-blue-700'}`}
+                                                        >
+                                                            {isSubmitting ? 'Submitting...' : 'Submit Rating'}
+                                                        </button>
+                                                    </div>
+                                                </>
                                             )}
                                         </div>
                                     </div>
