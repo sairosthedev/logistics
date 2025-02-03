@@ -11,15 +11,16 @@
     "start": "vite"
   },
   "dependencies": {
-    "@emotion/react": "^11.11.3",
-    "@emotion/styled": "^11.11.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@fontsource/roboto": "^5.1.0",
     "@headlessui/react": "^1.7.18",
     "@mui/icons-material": "^5.15.7",
-    "@mui/material": "^5.15.7",
+    "@mui/material": "^5.16.14",
+    "@mui/styled-engine-sc": "^6.4.2",
+    "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-popover": "^1.0.7",
     "@radix-ui/react-scroll-area": "^1.0.5",
-    "@radix-ui/react-dialog": "^1.0.5",
     "@shadcn/ui": "^0.0.4",
     "@turf/turf": "^7.1.0",
     "axios": "^1.6.7",
@@ -70,9 +71,9 @@
     "vite": "^5.0.12"
   },
   "resolutions": {
-  "@types/react": "18.2.48",
-  "react": "18.2.0",
-  "react-dom": "18.2.0",
-  "@types/react-dom": "18.2.18"
-}
+    "@types/react": "18.2.48",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "@types/react-dom": "18.2.18"
+  }
 }
