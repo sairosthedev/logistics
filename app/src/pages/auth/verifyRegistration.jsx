@@ -18,7 +18,7 @@ function ForgotPassword() {
         setErrorMessage('');
         setSuccessMessage('');    
         setLoading(true);
-    
+    // change the url to the new one
         try {
             const response = await fetch(`${BACKEND_Local}/api/send-email/forgot-password`, {
                 method: 'POST',
