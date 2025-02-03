@@ -5,21 +5,10 @@ import path from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: './',
   server: {
     fs: {
       // Allow serving files from node_modules
       allow: ['..', '../../node_modules']
-    }
-  },
-  build: {
-    outDir: 'dist',
-    assetsDir: 'assets',
-    sourcemap: false,
-    rollupOptions: {
-      output: {
-        manualChunks: undefined
-      }
     }
   },
   resolve: {
