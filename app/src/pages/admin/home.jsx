@@ -13,7 +13,6 @@ import {
   CheckCircle, 
   XCircle, 
   Download, 
-  Printer, 
   ArrowUp, 
   ArrowDown, 
   TrendingUp, 
@@ -31,6 +30,9 @@ import axios from 'axios';
 import useAuthStore from '../auth/auth';
 import { BACKEND_Local } from '../../../url.js'
 import { useDarkMode } from '../../contexts/DarkModeContext';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 const AdminDashboard = () => {
   const { accessToken } = useAuthStore(); // Get the accessToken from the store
@@ -345,32 +347,137 @@ const AdminDashboard = () => {
     setIsSettingsOpen(!isSettingsOpen);
   };
 
-  const handleDownload = useCallback(() => {
-    const input = dashboardRef.current;
-    html2canvas(input).then((canvas) => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdfWidth = 210; // A4 width in mm
-      const pdfHeight = 297; // A4 height in mm
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 30;
-
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-      pdf.save('admin_dashboard_report.pdf');
-    });
-  }, []);
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  // Update the charts to format dates properly
+  // Move formatDate function before handleDownload
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', { month: 'short' });
   };
+
+  const handleDownload = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      // Create table data from dashboard stats
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      // Set title
+      doc.setFontSize(16);
+      doc.text('Admin Dashboard Report', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+      
+      // Add date
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
+
+      // Start y position for tables
+      let yPos = 30;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      
+      // User Statistics Table
+      doc.setFontSize(12);
+      doc.text('User Statistics', 14, yPos);
+      yPos += 8;
+
+      const userHeaders = [['Category', 'Total', 'Active', 'New']];
+      const userData = [
+        ['Clients', stats.clients.total, stats.clients.active, stats.clients.new],
+        ['Truckers', stats.truckers.total, stats.truckers.active, stats.truckers.new],
+        ['Service Providers', stats.serviceProviders.total, stats.serviceProviders.active, stats.serviceProviders.new]
+      ];
+
+      doc.autoTable({
+        startY: yPos,
+        head: userHeaders,
+        body: userData,
+        margin: { left: 14 },
+        theme: 'grid'
+      });
+
+      yPos = doc.lastAutoTable.finalY + 15;
+
+      // Jobs Statistics Table
+      doc.setFontSize(12);
+      doc.text('Jobs Statistics', 14, yPos);
+      yPos += 8;
+
+      const jobHeaders = [['Category', 'Value']];
+      const jobData = [
+        ['Total Jobs', stats.jobs.total],
+        ['Completed Jobs', stats.jobs.completed],
+        ['In Progress', stats.jobs.inProgress]
+      ];
+
+      doc.autoTable({
+        startY: yPos,
+        head: jobHeaders,
+        body: jobData,
+        margin: { left: 14 },
+        theme: 'grid'
+      });
+
+      yPos = doc.lastAutoTable.finalY + 15;
+
+      // Revenue Statistics
+      doc.setFontSize(12);
+      doc.text('Revenue Statistics', 14, yPos);
+      yPos += 8;
+
+      const revenueHeaders = [['Category', 'Value']];
+      const revenueData = [
+        ['Total Revenue', stats.revenue.total],
+        ['Growth', stats.revenue.growth]
+      ];
+
+      doc.autoTable({
+        startY: yPos,
+        head: revenueHeaders,
+        body: revenueData,
+        margin: { left: 14 },
+        theme: 'grid'
+      });
+
+      yPos = doc.lastAutoTable.finalY + 15;
+
+      // Monthly Activity Table
+      doc.setFontSize(12);
+      doc.text('Monthly Activity', 14, yPos);
+      yPos += 8;
+
+      const activityHeaders = [['Month', 'Clients', 'Truckers', 'Service Providers', 'Revenue']];
+      const activityData = filteredData.chartData.map(data => [
+        formatDate(data.name),
+        data.clients,
+        data.truckers,
+        data.serviceProviders,
+        `$${data.revenue}`
+      ]);
+
+      doc.autoTable({
+        startY: yPos,
+        head: activityHeaders,
+        body: activityData,
+        margin: { left: 14 },
+        theme: 'grid'
+      });
+
+      // Add page numbers
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+      }
+
+      // Save the PDF
+      doc.save(`admin_dashboard_report_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [stats, filteredData.chartData, formatDate]);
 
   // Add this component inside AdminDashboard before the return statement
   const UserCard = ({ title, count, icon: Icon, color, type }) => (
@@ -478,7 +585,11 @@ const AdminDashboard = () => {
 
   return (
     <AppLayout>
-      <div className={`container mx-auto px-4 py-8 ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100'}`} ref={dashboardRef}>
+      <div 
+        className={`container mx-auto px-4 py-8 ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100'}`} 
+        ref={dashboardRef}
+        style={{ minHeight: '100vh' }}
+      >
         {/* Check if stats are defined before rendering */}
         {stats && (
           <>
@@ -639,21 +750,13 @@ const AdminDashboard = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg flex items-center"
-                    onClick={handleDownload}
+                    onClick={() => {
+                      console.log('Download button clicked');
+                      handleDownload();
+                    }}
                   >
                     <Download className="w-5 h-5 mr-2" />
-                    Download Report
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`px-4 py-2 rounded-lg flex items-center ${
-                      darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'
-                    }`}
-                    onClick={handlePrint}
-                  >
-                    <Printer className="w-5 h-5 mr-2" />
-                    Print Dashboard
+                    {loading ? 'Generating PDF...' : 'Download Report'}
                   </motion.button>
                 </div>
               </>
