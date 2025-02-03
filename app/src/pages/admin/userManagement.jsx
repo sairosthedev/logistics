@@ -114,6 +114,11 @@ function UserManagement() {
   };
 
   const handleStatusChange = async (userId, newStatus) => {
+    if (!userId) {
+      toast.error('Invalid user ID');
+      return;
+    }
+
     try {
       const response = await fetch(`${BACKEND_Local}/api/admin/users/${userId}/status`, {
         method: 'PUT',
@@ -125,15 +130,21 @@ function UserManagement() {
       });
 
       if (response.ok) {
-        toast.success(`User ${newStatus} successfully`);
+        toast.success(`User status updated to ${newStatus} successfully`);
         fetchUsers(); // Refresh the users list
       } else {
-        const errorData = await response.json();
-        toast.error(`Failed to update user status: ${errorData.message}`);
+        // Check if the response is JSON before trying to parse it
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          toast.error(`Failed to update user status: ${errorData.message}`);
+        } else {
+          toast.error(`Failed to update user status: ${response.status} ${response.statusText}`);
+        }
       }
     } catch (error) {
       console.error('Error updating user status:', error);
-      toast.error('Failed to update user status');
+      toast.error('Failed to update user status. Please check your connection and try again.');
     }
   };
 
