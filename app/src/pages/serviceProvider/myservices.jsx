@@ -44,19 +44,42 @@ function MyServices() {
     const fetchServices = async () => {
         setIsLoading(true);
         try {
+            if (!clientID) {
+                console.error('No clientID available');
+                toast.error('Authentication error: No client ID available');
+                return;
+            }
+
+            console.log('Fetching services for provider:', clientID);
             const response = await axios.get(`${BACKEND_Local}/api/service/provider/${clientID}`, {
                 headers: {
-                    Authorization: `Bearer ${accessToken}`
+                    Authorization: `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
                 }
             });
-            if (response.status === 200) {
+            
+            if (response.status === 200 && response.data) {
+                console.log('Services fetched successfully:', response.data);
                 setServiceRequests(response.data);
             } else {
-                toast.error('Failed to fetch services');
+                console.error('Unexpected response:', response);
+                toast.error('Failed to fetch services: Unexpected response');
             }
         } catch (error) {
             console.error('Error fetching service requests:', error);
-            toast.error('Failed to fetch services');
+            console.error('Error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+                headers: error.response?.headers,
+                clientID
+            });
+            
+            if (error.response?.status === 404) {
+                toast.error('No services found for this provider');
+            } else {
+                toast.error(`Failed to fetch services: ${error.response?.data?.message || error.message}`);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -91,17 +114,17 @@ function MyServices() {
                 }
             });
 
-            if (response.status === 200) {
-                setServiceRequests([...serviceRequests, response.data]);
+            if (response.data) {
+                setServiceRequests(prevServices => [...prevServices, response.data]);
                 setIsAddServiceModalOpen(false);
                 resetNewService();
                 toast.success('Service added successfully');
-            } else {
-                toast.error('Failed to add service');
+                // Refresh the services list
+                await fetchServices();
             }
         } catch (error) {
             console.error('Error adding service:', error);
-            toast.error('Failed to add service');
+            toast.error(error.response?.data?.message || 'Failed to add service. Please try again.');
         } finally {
             setIsLoading(false);
         }

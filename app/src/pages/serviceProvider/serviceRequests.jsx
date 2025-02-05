@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Search } from 'lucide-react';
 import ServiceProviderLayout from '../../components/layouts/serviceProviderLayout';
+import axios from 'axios';
+import { BACKEND_Local } from '../../../url.js';
+import useAuthStore from '../auth/auth';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // UI Components
 const Table = ({ children }) => (
@@ -137,16 +142,73 @@ export default function ServiceRequestManager() {
   const [filterPriority, setFilterPriority] = useState('');
   const [showMoreModal, setShowMoreModal] = useState(false);
   const [selectedMoreRequest, setSelectedMoreRequest] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { accessToken, clientID } = useAuthStore();
 
   useEffect(() => {
-    const mockRequests = [
-      { id: 1, truckerName: 'John Doe', requestDate: '2023-10-01', serviceDetails: 'Towing', location: 'Location A', contact: '123-456-7890', priority: 'High', status: 'Pending', description: 'Need urgent towing', expectedPrice: '$100', vehicleDetails: { make: 'Toyota', model: 'Camry', year: 2020, vin: '1HGBH41JXMN109186' } },
-      { id: 2, truckerName: 'Jane Smith', requestDate: '2023-10-02', serviceDetails: 'Repair', location: 'Location B', contact: '987-654-3210', priority: 'Medium', status: 'Ongoing', description: 'Repair needed for flat tire', expectedPrice: '$50', vehicleDetails: { make: 'Honda', model: 'Civic', year: 2019, vin: '2HGBH41JXMN109187' } },
-      // Add more mock requests as needed
-    ];
+    fetchServiceRequests();
+  }, [accessToken, clientID]);
 
-    setRequests(mockRequests);
-  }, []);
+  const fetchServiceRequests = async () => {
+    if (!accessToken || !clientID) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await axios.get(
+        `${BACKEND_Local}/api/service/serviceRequests/${clientID}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        }
+      );
+      
+      if (response.status === 200) {
+        const requests = response.data.serviceRequests || [];
+        setRequests(requests);
+      } else {
+        toast.error('Failed to fetch service requests');
+      }
+    } catch (error) {
+      console.error('Error fetching service requests:', error);
+      toast.error('Failed to fetch service requests');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (requestId, newStatus) => {
+    try {
+      const updateData = {
+        ...selectedMoreRequest,
+        status: newStatus,
+        requestDate: selectedMoreRequest.requestDate || new Date().toISOString()
+      };
+
+      const response = await axios.put(
+        `${BACKEND_Local}/api/service/serviceRequests/update/${requestId}`,
+        updateData,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        }
+      );
+
+      if (response.status === 200) {
+        setRequests(requests.map(request => 
+          request._id === requestId ? { ...request, status: newStatus } : request
+        ));
+        toast.success('Status updated successfully');
+        closeMoreModal();
+      } else {
+        toast.error('Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('Failed to update status');
+    }
+  };
 
   const BackButton = () => (
     <button
@@ -205,6 +267,7 @@ export default function ServiceRequestManager() {
   return (
     <ServiceProviderLayout>
       <div className="container mx-auto px-4 py-8 dark:bg-gray-900">
+        <ToastContainer />
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-xl sm:text-2xl font-bold dark:text-white">Service Requests</h1>
         </div>
@@ -244,45 +307,75 @@ export default function ServiceRequestManager() {
         </div>
         
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="px-2 py-2 sm:px-4 sm:py-3 text-left dark:text-gray-300">Trucker Name</TableHead>
-                <TableHead className="px-2 py-2 sm:px-4 sm:py-3 text-left dark:text-gray-300">Date</TableHead>
-                <TableHead className="px-2 py-2 sm:px-4 sm:py-3 text-left dark:text-gray-300">Service Type</TableHead>
-                <TableHead className="px-2 py-2 sm:px-4 sm:py-3 hidden sm:table-cell dark:text-gray-300">Location</TableHead>
-                <TableHead className="px-2 py-2 sm:px-4 sm:py-3 text-left dark:text-gray-300">Priority</TableHead>
-                <TableHead className="px-2 py-2 sm:px-4 sm:py-3 text-left dark:text-gray-300">Status</TableHead>
-                <TableHead className="px-2 py-2 sm:px-4 sm:py-3 text-left dark:text-gray-300">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody className="dark:bg-gray-800">
-              {filteredRequests.slice(0, visibleRequests).map((request) => (
-                <TableRow key={request.id}>
-                  <TableCell className="px-2 py-2 sm:px-4 sm:py-3">{request.truckerName}</TableCell>
-                  <TableCell className="px-2 py-2 sm:px-4 sm:py-3">{new Date(request.requestDate).toLocaleDateString()}</TableCell>
-                  <TableCell className="px-2 py-2 sm:px-4 sm:py-3">{request.serviceDetails}</TableCell>
-                  <TableCell className="px-2 py-2 sm:px-4 sm:py-3 hidden sm:table-cell">{request.location || 'N/A'}</TableCell>
-                  <TableCell className="px-2 py-2 sm:px-4 sm:py-3">
-                    <Badge className={`text-white ${request.priority === 'High' ? 'bg-red-500' : request.priority === 'Medium' ? 'bg-yellow-500' : 'bg-green-500'} w-full text-center`}>
-                      {request.priority === 'High' ? 'H' : request.priority === 'Medium' ? 'M' : 'L'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="px-2 py-2 sm:px-4 sm:py-3">
-                    <Badge className={`${request.status === 'Pending' ? 'bg-yellow-500' : request.status === 'Ongoing' ? 'bg-blue-500' : 'bg-green-500'} flex items-center w-fit`}>
-                      {request.status === 'Pending' ? '⏳' : request.status === 'Ongoing' ? '🔄' : '✅'}
-                      <span className="ml-1 hidden sm:inline">{request.status}</span>
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="px-2 py-2 sm:px-4 sm:py-3">
-                    <Button onClick={() => handleViewMore(request)} variant="outline" className="w-full sm:w-auto">
-                      View More
-                    </Button>
-                  </TableCell>
+          {isLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+          ) : requests.length === 0 ? (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              No service requests found
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="px-2 py-2 sm:px-4 sm:py-3 text-left dark:text-gray-300">Trucker Name</TableHead>
+                  <TableHead className="px-2 py-2 sm:px-4 sm:py-3 text-left dark:text-gray-300">Date</TableHead>
+                  <TableHead className="px-2 py-2 sm:px-4 sm:py-3 text-left dark:text-gray-300">Service Type</TableHead>
+                  <TableHead className="px-2 py-2 sm:px-4 sm:py-3 hidden sm:table-cell dark:text-gray-300">Location</TableHead>
+                  <TableHead className="px-2 py-2 sm:px-4 sm:py-3 text-left dark:text-gray-300">Priority</TableHead>
+                  <TableHead className="px-2 py-2 sm:px-4 sm:py-3 text-left dark:text-gray-300">Status</TableHead>
+                  <TableHead className="px-2 py-2 sm:px-4 sm:py-3 text-left dark:text-gray-300">Action</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody className="dark:bg-gray-800">
+                {filteredRequests.slice(0, visibleRequests).map((request) => (
+                  <TableRow key={request._id}>
+                    <TableCell className="px-2 py-2 sm:px-4 sm:py-3">
+                      {request.truckerDetails?.name || 'N/A'}
+                    </TableCell>
+                    <TableCell className="px-2 py-2 sm:px-4 sm:py-3">
+                      {new Date(request.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="px-2 py-2 sm:px-4 sm:py-3">
+                      {request.serviceType || 'N/A'}
+                    </TableCell>
+                    <TableCell className="px-2 py-2 sm:px-4 sm:py-3 hidden sm:table-cell">
+                      {request.location || 'N/A'}
+                    </TableCell>
+                    <TableCell className="px-2 py-2 sm:px-4 sm:py-3">
+                      <Badge 
+                        className={`text-white ${
+                          request.priority === 'High' ? 'bg-red-500' : 
+                          request.priority === 'Medium' ? 'bg-yellow-500' : 
+                          'bg-green-500'
+                        } w-full text-center`}
+                      >
+                        {request.priority === 'High' ? 'H' : request.priority === 'Medium' ? 'M' : 'L'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-2 py-2 sm:px-4 sm:py-3">
+                      <Badge 
+                        className={`${
+                          request.status === 'pending' ? 'bg-yellow-500' : 
+                          request.status === 'ongoing' ? 'bg-blue-500' : 
+                          'bg-green-500'
+                        } flex items-center w-fit`}
+                      >
+                        {request.status === 'pending' ? '⏳' : request.status === 'ongoing' ? '🔄' : '✅'}
+                        <span className="ml-1 hidden sm:inline">{request.status}</span>
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-2 py-2 sm:px-4 sm:py-3">
+                      <Button onClick={() => handleViewMore(request)} variant="outline" className="w-full sm:w-auto">
+                        View More
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </div>
         
         {visibleRequests < filteredRequests.length && (
@@ -307,18 +400,35 @@ export default function ServiceRequestManager() {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 dark:text-gray-300">
-                <p><strong>Trucker Name:</strong> {selectedMoreRequest.truckerName}</p>
-                <p><strong>Request Date:</strong> {new Date(selectedMoreRequest.requestDate).toLocaleDateString()}</p>
-                <p><strong>Service Type:</strong> {selectedMoreRequest.serviceDetails}</p>
-                <p><strong>Location:</strong> {selectedMoreRequest.location}</p>
+                <p><strong>Trucker Name:</strong> {selectedMoreRequest.truckerDetails?.name || 'N/A'}</p>
+                <p><strong>Request Date:</strong> {new Date(selectedMoreRequest.createdAt).toLocaleDateString()}</p>
+                <p><strong>Service Type:</strong> {selectedMoreRequest.serviceType || 'N/A'}</p>
+                <p><strong>Location:</strong> {selectedMoreRequest.location || 'N/A'}</p>
                 <p><strong>Status:</strong> {selectedMoreRequest.status}</p>
-                <p><strong>Description:</strong> {selectedMoreRequest.description}</p>
-                <p><strong>Expected Price:</strong> {selectedMoreRequest.expectedPrice}</p>
-                <p><strong>Contact:</strong> {selectedMoreRequest.contact}</p>
-                <p><strong>Vehicle Make:</strong> {selectedMoreRequest.vehicleDetails.make}</p>
-                <p><strong>Vehicle Model:</strong> {selectedMoreRequest.vehicleDetails.model}</p>
-                <p><strong>Vehicle Year:</strong> {selectedMoreRequest.vehicleDetails.year}</p>
-                <p><strong>VIN:</strong> {selectedMoreRequest.vehicleDetails.vin}</p>
+                <p><strong>Description:</strong> {selectedMoreRequest.description || 'N/A'}</p>
+                <p><strong>Expected Price:</strong> {selectedMoreRequest.expectedPrice || 'N/A'}</p>
+                <p><strong>Contact:</strong> {selectedMoreRequest.truckerDetails?.phone || 'N/A'}</p>
+                
+                {selectedMoreRequest.vehicleDetails && (
+                  <>
+                    <h4 className="font-semibold mt-4 mb-2">Vehicle Details</h4>
+                    <p><strong>Make:</strong> {selectedMoreRequest.vehicleDetails.make || 'N/A'}</p>
+                    <p><strong>Model:</strong> {selectedMoreRequest.vehicleDetails.model || 'N/A'}</p>
+                    <p><strong>Year:</strong> {selectedMoreRequest.vehicleDetails.year || 'N/A'}</p>
+                    <p><strong>VIN:</strong> {selectedMoreRequest.vehicleDetails.vin || 'N/A'}</p>
+                  </>
+                )}
+
+                {selectedMoreRequest.status === 'pending' && (
+                  <div className="mt-6">
+                    <Button
+                      onClick={() => handleUpdateStatus(selectedMoreRequest._id, 'ongoing')}
+                      className="w-full"
+                    >
+                      Accept Request
+                    </Button>
+                  </div>
+                )}
               </div>
               <DialogFooter>
                 <Button onClick={closeMoreModal} className="dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
