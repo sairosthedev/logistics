@@ -6,6 +6,7 @@ import {
     ClipboardList, HandCoins, User, Star
 } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
+import mainLogo from '../../assets/images/logos/mainLogo.png';
 
 function TopNavBar({ userType, onLogout }) {
     const location = useLocation();
@@ -53,7 +54,7 @@ function TopNavBar({ userType, onLogout }) {
                                 onClick={() => navigate(`/${userType}`)}
                                 className="h-16 w-16 bg-white rounded-2xl shadow-lg flex items-center justify-center cursor-pointer transform transition-all duration-300 hover:scale-105 hover:rotate-3 hover:shadow-xl hover:shadow-blue-500/30"
                             >
-                                <img src="/src/assets/images/logos/mainLogo.png" alt="Logo" className="h-full w-full object-contain" onError={(e) => { e.target.onerror = null; e.target.src = 'fallbackLogo.png'; }} />
+                                <img src={mainLogo} alt="Logo" className="h-full w-full object-contain" onError={(e) => { e.target.onerror = null; e.target.src = 'fallbackLogo.png'; }} />
                             </div>
                         </div>
 
