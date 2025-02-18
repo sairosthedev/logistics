@@ -52,8 +52,8 @@
     "styled-components": "^6.1.14",
     "typeface-roboto": "^1.1.13",
     "vercel": "^32.3.0",
-    "zustand": "^5.0.1",
-    "vite": "^6.0.4"
+    "vite": "^6.0.4",
+    "zustand": "^5.0.1"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",

@@ -5,8 +5,9 @@ import { BACKEND_Local } from '../../../url';
 import useAuthStore from '../../pages/auth/auth';
 import notificationSound from '../../assets/sounds/notification.mp3';
 
-export const NotificationBell = ({ userType }) => {
+export const NotificationBell = () => {
     const [notifications, setNotifications] = useState([]);
+    const [filteredNotifications, setFilteredNotifications] = useState([]);
     const [showNotifications, setShowNotifications] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const [selectedStatus, setSelectedStatus] = useState('all');
@@ -46,6 +47,14 @@ export const NotificationBell = ({ userType }) => {
         prevNotificationsRef.current = notifications;
     }, [notifications]);
 
+    useEffect(() => {
+        if (selectedStatus === 'all') {
+            setFilteredNotifications(notifications);
+        } else {
+            setFilteredNotifications(notifications.filter(notif => notif.status === selectedStatus));
+        }
+    }, [selectedStatus, notifications]);
+
     const playNotificationSound = () => {
         try {
             audioRef.current.currentTime = 0;
@@ -62,15 +71,23 @@ export const NotificationBell = ({ userType }) => {
             let endpoint;
             
             // Admin can see all notifications
-            if (userType === 'admin') {
-                endpoint = `${BACKEND_Local}/api/notifications/all`;
+            if (accountType === 'admin') {
+                endpoint = `${BACKEND_Local}/api/notifications/user/admin/all`;
             } else {
                 endpoint = `${BACKEND_Local}/api/notifications/user/${clientID}`;
             }
 
+            console.log('Fetching notifications with:', {
+                accountType,
+                clientID,
+                endpoint
+            });
+
             const response = await axios.get(endpoint, {
                 headers: { Authorization: `Bearer ${accessToken}` }
             });
+            
+            console.log('Notifications response:', response.data);
             
             if (response.data) {
                 setNotifications(response.data);
@@ -78,7 +95,7 @@ export const NotificationBell = ({ userType }) => {
                 setUnreadCount(unread);
             }
         } catch (error) {
-            console.error('Error fetching notifications:', error);
+            console.error('Error fetching notifications:', error.response?.data || error.message);
         }
     };
 
@@ -98,6 +115,29 @@ export const NotificationBell = ({ userType }) => {
             setUnreadCount(prev => Math.max(0, prev - 1));
         } catch (error) {
             console.error('Error marking notification as read:', error);
+        }
+    };
+
+    const deleteNotification = async (e, notificationId) => {
+        e.stopPropagation(); // Prevent triggering the markAsRead when clicking delete
+        try {
+            const endpoint = `${BACKEND_Local}/api/notifications/${notificationId}`;
+            
+            await axios.delete(endpoint, {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+            
+            setNotifications(prevNotifications => 
+                prevNotifications.filter(notif => notif._id !== notificationId)
+            );
+            
+            // Update unread count if we're deleting an unread notification
+            const deletedNotification = notifications.find(n => n._id === notificationId);
+            if (deletedNotification?.status === 'new') {
+                setUnreadCount(prev => Math.max(0, prev - 1));
+            }
+        } catch (error) {
+            console.error('Error deleting notification:', error);
         }
     };
 
@@ -164,13 +204,13 @@ export const NotificationBell = ({ userType }) => {
                         </div>
                     </div>
                     <div className="divide-y divide-gray-100">
-                        {notifications.length > 0 ? (
-                            notifications.map((notification) => (
+                        {filteredNotifications.length > 0 ? (
+                            filteredNotifications.map((notification) => (
                                 <div
                                     key={notification._id}
                                     className={`p-4 hover:bg-blue-50/50 cursor-pointer transition-all duration-300 
                                         ${notification.status === 'new' ? 'bg-blue-50/80' : ''}
-                                        group`}
+                                        group relative`}
                                     onClick={() => markAsRead(notification._id)}
                                 >
                                     <div className="flex items-start space-x-3">
@@ -192,9 +232,21 @@ export const NotificationBell = ({ userType }) => {
                                                 </p>
                                             )}
                                         </div>
-                                        {notification.status === 'new' && (
-                                            <span className="h-2.5 w-2.5 bg-blue-500 rounded-full ring-4 ring-blue-500/20"></span>
-                                        )}
+                                        <div className="flex items-center space-x-2">
+                                            {notification.status === 'new' && (
+                                                <span className="h-2.5 w-2.5 bg-blue-500 rounded-full ring-4 ring-blue-500/20"></span>
+                                            )}
+                                            <button
+                                                onClick={(e) => deleteNotification(e, notification._id)}
+                                                className="p-1 text-gray-400 hover:text-red-500 transition-colors duration-200
+                                                    opacity-0 group-hover:opacity-100"
+                                                title="Delete notification"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))
@@ -202,7 +254,11 @@ export const NotificationBell = ({ userType }) => {
                             <div className="p-8 text-center text-gray-500">
                                 <div className="text-4xl mb-3">🔔</div>
                                 <p className="text-sm font-medium">No notifications</p>
-                                <p className="text-xs text-gray-400 mt-1">You're all caught up!</p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                    {selectedStatus === 'all' 
+                                        ? "You're all caught up!"
+                                        : `No ${selectedStatus === 'new' ? 'unread' : 'read'} notifications`}
+                                </p>
                             </div>
                         )}
                     </div>

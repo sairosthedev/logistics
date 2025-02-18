@@ -11,7 +11,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import useAuthStore from './pages/auth/auth'
-import { DarkModeProvider } from './contexts/DarkModeContext';
+import { DarkModeProvider } from './contexts/DarkModeContext.jsx';
 import { TruckProvider } from './pages/trucker/truckContext';
 
 // import the pages
