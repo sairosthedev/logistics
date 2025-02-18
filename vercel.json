@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "app/*",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "app/dist"
+      }
+    }
+  ],
+  "routes": [
+    { "handle": "filesystem" },
+    {
+      "src": "/(.*)",
+      "dest": "/app/index.html"
+    }
+  ]
+} 

@@ -52,13 +52,13 @@
     "styled-components": "^6.1.14",
     "typeface-roboto": "^1.1.13",
     "vercel": "^32.3.0",
-    "vite": "^4.5.2",
     "zustand": "^5.0.1"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^4.5.2",
     "autoprefixer": "^10.4.19",
     "daisyui": "^4.12.23",
     "eslint": "^8.57.0",
